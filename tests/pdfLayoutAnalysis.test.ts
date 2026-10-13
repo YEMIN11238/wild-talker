@@ -522,6 +522,31 @@ describe('PDF visible graphics geometry', () => {
 });
 
 describe('PDF baseline and structural reading analysis', () => {
+    it('uses finite cell boundaries for tiny glyphs on merged table edges and baselines at the outer rules', () => {
+        // PDF 字形框与 baseline 独立；接近重合的笔画会合并，边缘字形仍必须有可绘制的单元格。
+        const graphics = [100, 130].map(y => ({kind: 'path' as const, x: 100, y, width: 200, height: 0}));
+        graphics.push({kind: 'path', x: 100.4, y: 100, width: 0, height: 30}, {kind: 'path', x: 299.6, y: 100, width: 0, height: 30},
+            {kind: 'path', x: 150, y: 110, width: 50, height: 5});
+        const cells = analyze([
+            atom('Left', 100, 110, 0.1, 1), atom('Right', 299.9, 120, 0.2, 1),
+            {...atom('Top', 150, 99, 0.1, 1), y: 99}, {...atom('Bottom', 200, 132, 0.1, 1), y: 130.6},
+        ], graphics).blocks;
+        expect(cells.every(cell => cell.kind === 'table')).toBe(true);
+        expect(cells.map(cell => [cell.source, cell.cellBounds])).toEqual([
+            ['Top', {x: 100.4, y: 99, width: 199.6, height: 1}],
+            ['Left', {x: 100, y: 100, width: 1, height: 30}],
+            ['Right', {x: 300, y: 100, width: 1, height: 30}],
+            ['Bottom', {x: 100.4, y: 130, width: 199.6, height: 1}],
+        ]);
+    });
+    it('falls back to the enclosing table height when duplicate hairline rules collapse to one detected row edge', () => {
+        const graphics = [100, 100.2].map(y => ({kind: 'path' as const, x: 100, y, width: 200, height: 0}));
+        const result = analyze([atom('Cell', 150, 100.2, 0.1, 1)], graphics);
+        const cell = result.blocks[0];
+        expect(cell).toMatchObject({source: 'Cell', kind: 'table', cellBounds: {x: 100, y: 99, width: 200}});
+        expect(cell.cellBounds!.height).toBeCloseTo(2.2);
+        expect(cell.cellBounds!.height).toBe(result.preservedRegions[0].height);
+    });
     it('keeps superscripts with their baseline and rejoins numbered section headings', () => {
         const lines = pdfLayoutLines([atom('h', 50, 50, 5), atom('t', 55, 53, 3, 7), atom('=', 62, 50, 5), atom('value', 70, 50, 25), atom('1', 50, 80, 5, 12), atom('Introduction', 69, 80, 90, 12)]);
         expect(lines).toHaveLength(2); expect(lines[0].text).toBe('ht = value'); expect(lines[0].fontSize).toBe(10); expect(lines[0].runs).toHaveLength(4);

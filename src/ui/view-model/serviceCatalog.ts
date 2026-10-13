@@ -1,7 +1,7 @@
 /**
  * @file src/ui/view-model/serviceCatalog.ts
  * 文件职责：为服务与模型选择界面提供无框架的视图模型转换，把扁平配置选项整理成可搜索、可分层和可稳定展示的数据。
- * 主要内容：定义服务目录分组与官方网站入口，提供云服务厂商的免费额度与开通指引，安全派生自定义服务站点，按服务与模型关键词搜索，并把选择面板的服务拆成按使用意图排序的常用区与更多区。
+ * 主要内容：定义服务目录分组与真实厂商官方网站入口，不把上游项目教程作为本版组合翻译、本地模型或未配置自建接口的说明站点，提供云服务厂商的免费额度与开通指引，安全派生自定义服务站点，按服务与模型关键词搜索，并把选择面板的服务拆成按使用意图排序的常用区与更多区。
  * 模块边界：这些函数不读取 Vue 状态、不修改 Config，也不判断平台能力或发起连接测试；原始目录由 core/config 提供，Popup/Options 等调用方负责交互与渲染。
  */
 import { resolveConfiguredModel, services } from '@/src/core/config/catalog'
@@ -12,12 +12,9 @@ export interface ServiceWebsite {
   kind: 'website' | 'documentation'
 }
 
-const serviceGuide = 'https://fluent.thinkstu.com/config/translation-engines'
-
 // 这里只保存供人操作的官网/控制台，不使用翻译 API endpoint 或推广链接。
 const serviceWebsites = {
   microsoft: 'https://www.bing.com/translator',
-  freeTranslation: serviceGuide,
   bilibili: 'https://github.com/bilibili/Index-Translate',
   myMemory: 'https://mymemory.translated.net/doc/spec.php',
   deepL: 'https://www.deepl.com/en/products/api',
@@ -32,7 +29,6 @@ const serviceWebsites = {
   baiduTranslation: 'https://fanyi-api.baidu.com/',
   volcTranslation: 'https://console.volcengine.com/translate',
   chromeTranslator: 'https://developer.chrome.com/docs/ai/translator-api',
-  localTranslation: serviceGuide,
   openai: 'https://platform.openai.com/',
   azureOpenai: 'https://ai.azure.com/',
   gemini: 'https://aistudio.google.com/',
@@ -41,7 +37,6 @@ const serviceWebsites = {
   zhipu: 'https://bigmodel.cn/',
   moonshot: 'https://platform.kimi.com/',
   claude: 'https://platform.claude.com/',
-  custom: serviceGuide,
   infini: 'https://cloud.infini-ai.com/',
   baichuan: 'https://platform.baichuan-ai.com/',
   lingyi: 'https://platform.lingyiwanwu.com/',
@@ -65,7 +60,7 @@ const serviceWebsites = {
   cerebras: 'https://cloud.cerebras.ai/',
   deepinfra: 'https://deepinfra.com/dash',
   perplexity: 'https://www.perplexity.ai/account/api',
-} satisfies Record<keyof typeof services, string>
+} satisfies Partial<Record<keyof typeof services, string>>
 
 /**
  * 云服务厂商的开通指引。这些服务都要先在控制台开通产品、再签发密钥，
@@ -179,12 +174,11 @@ export function getServiceWebsite(
         return { url: `${endpoint.origin}/`, kind: 'website' }
       }
     } catch {
-      // 正在输入、尚未配置或无效地址仍提供配置说明入口。
+      // 正在输入或无效地址不制造跳转；New API 自身的官方文档单独保留。
     }
-    return {
-      url: service === services.newapi ? serviceWebsites.newapi : serviceGuide,
-      kind: 'documentation',
-    }
+    return service === services.newapi
+      ? {url: serviceWebsites.newapi, kind: 'documentation'}
+      : undefined
   }
 
   if (!Object.hasOwn(serviceWebsites, service)) return undefined
@@ -192,7 +186,7 @@ export function getServiceWebsite(
     url: service === services.minimax && context.minimaxRegion === 'global'
       ? 'https://platform.minimax.io/login'
       : serviceWebsites[service as keyof typeof serviceWebsites],
-    kind: [services.freeTranslation, services.bilibili, services.chromeTranslator, services.myMemory, services.localTranslation].includes(service)
+    kind: [services.bilibili, services.chromeTranslator, services.myMemory].includes(service)
       ? 'documentation'
       : 'website',
   }

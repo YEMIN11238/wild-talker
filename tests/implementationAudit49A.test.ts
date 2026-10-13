@@ -143,9 +143,9 @@ describe('49A real floating-ball client template', () => {
   it.each(['translate', 'settings', 'none'] as const)('品牌语言刷新保留 %s 入口身份和行为', async action => {
     const f = mountBall(action);
     const settings = f.container.querySelector('.floating-ball-settings')!;
-    expect(f.main.getAttribute('aria-label')).toContain('流畅阅读');
+    expect(f.main.getAttribute('aria-label')).toContain('万能说客（Wild Talker）');
     expect(f.main.getAttribute('aria-label')).not.toContain('FluentRead');
-    expect(settings.getAttribute('aria-label')).toBe('打开 流畅阅读 设置');
+    expect(settings.getAttribute('aria-label')).toBe('打开 万能说客（Wild Talker） 设置');
     for (const language of ['en-US', 'ja-JP', 'zh-CN'] as const) {
       uiLanguage.value = language; await nextTick();
       const brand = translate('common.brand', language);

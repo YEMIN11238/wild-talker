@@ -23,6 +23,23 @@ describe('QQ mail frame session snapshots', () => {
         }
     });
 
+    it('admits both native batch choices and rejects malformed batch preferences before frame startup', async () => {
+        for (const enableNativeBatch of [undefined, false, true]) {
+            expect(isFrameTranslationState(state({translationConfig: {...config, enableNativeBatch}}))).toBe(true);
+        }
+        for (const enableNativeBatch of [null, 'true', 1, {}, []]) {
+            const snapshot = state({translationConfig: {...config, enableNativeBatch} as never});
+            expect(isFrameTranslationState(snapshot)).toBe(false);
+            const deps = {readState: vi.fn(async () => snapshot), isEnabled: () => true,
+                setAvailable: vi.fn(), start: vi.fn(), restore: vi.fn()};
+            await createFrameSessionController(deps).refresh();
+            expect(deps.start).not.toHaveBeenCalled();
+            expect(deps.setAvailable).toHaveBeenCalledOnce();
+            expect(deps.setAvailable).toHaveBeenCalledWith(false);
+            expect(deps.restore).toHaveBeenCalledOnce();
+        }
+    });
+
     it('validates glossary versions and bounded selections before sharing a full-page session', () => {
         for (const glossaryIds of [null, [], ['technical']]) {
             expect(isFrameTranslationState(state({translationConfig: {...config, glossaryIds, glossaryRevision: 'glossary-v1:disabled'}}))).toBe(true);

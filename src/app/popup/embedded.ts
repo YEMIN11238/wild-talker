@@ -126,7 +126,7 @@ export function closePopupSurface(): void {
 export function observeEmbeddedPopupSize(): void {
     if (!embeddedPort || disposed || stopSizeObservation) return;
     const probe = document.createElement('div');
-    probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;height:0;contain:strict;width:var(--fluentread-localized-popup-width,var(--interface-popup-width,320px));';
+    probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;height:0;contain:strict;width:var(--fluentread-localized-popup-width,var(--interface-popup-width,360px));';
     document.body.append(probe);
     let lastWidth = 0, lastHeight = 0;
     let requestedWidth = 0, placedWidth = 0;

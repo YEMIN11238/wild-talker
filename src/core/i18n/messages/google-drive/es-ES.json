@@ -1,7 +1,7 @@
 {
   "messages": {
     "settings.drive.privacyBadge": "Protección de la privacidad",
-    "settings.drive.privacyTitle": "Cómo protege FluentRead tu privacidad",
+    "settings.drive.privacyTitle": "Cómo protege 万能说客（Wild Talker） tu privacidad",
     "settings.drive.privacyEncryption": "La configuración se cifra en tu dispositivo antes de enviarla; la nube guarda un archivo cifrado.",
     "settings.drive.privacyStorage": "Solo se accede al espacio de datos de la aplicación en tu Google Drive, no a tus archivos habituales.",
     "settings.drive.privacyAuthorization": "La caché de autorización temporal se borra al finalizar o cancelar la sincronización.",

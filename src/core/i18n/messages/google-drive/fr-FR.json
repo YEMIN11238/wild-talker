@@ -1,7 +1,7 @@
 {
   "messages": {
     "settings.drive.privacyBadge": "Protection de la vie privée",
-    "settings.drive.privacyTitle": "Comment FluentRead protège votre vie privée",
+    "settings.drive.privacyTitle": "Comment 万能说客（Wild Talker） protège votre vie privée",
     "settings.drive.privacyEncryption": "La configuration est chiffrée sur votre appareil avant son envoi ; le cloud conserve un fichier chiffré.",
     "settings.drive.privacyStorage": "Seul l’espace de données de l’application dans votre Google Drive est accessible, pas vos fichiers ordinaires.",
     "settings.drive.privacyAuthorization": "Les caches d’autorisation temporaires sont effacés à la fin ou à l’annulation de la synchronisation.",

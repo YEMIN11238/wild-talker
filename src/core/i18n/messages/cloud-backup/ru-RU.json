@@ -72,7 +72,7 @@
     "settings.webdav.error.decrypt": "Не удалось расшифровать копию или она повреждена. Локальные настройки не изменены.",
     "settings.webdav.error.failure": "Операция не завершена. Проверьте сеть и локальное хранилище и повторите попытку.",
     "settings.cloud.privacyEncryption": "Настройки шифруются до загрузки. Пароль приложения общедоступен; основную защиту обеспечивают учетная запись, права папки и безопасность устройства.",
-    "settings.cloud.privacyWebDavStorage": "Доступ только к резервной копии FluentRead в выбранной папке сервера.",
+    "settings.cloud.privacyWebDavStorage": "Доступ только к резервной копии 万能说客（Wild Talker） в выбранной папке сервера.",
     "settings.cloud.privacyWebDavConnection": "Пароль подключения хранится на этом устройстве. Доступ к серверу требует ручного действия.",
     "settings.cloud.currentAccount": "Аккаунт резервного копирования: {email}",
     "settings.cloud.changed.credentials": "Ключи API, токены OAuth и авторизация",

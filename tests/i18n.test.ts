@@ -43,7 +43,25 @@ import {registerAllUiLanguageBundles} from '@/src/core/i18n/bundles';
 // 扩展运行时按需加载界面语言；本文件验证全部语言的文案契约，因此一次注册全部资源包。
 registerAllUiLanguageBundles();
 
+// 用户要求所有语言都显示完整中文/英文品牌，语言审计只排除这一精确商标，仍检查其余文案。
+const withoutProductBrand = (value: string) => value.replaceAll('万能说客（Wild Talker）', '');
+// 旧品牌输入作为迁移别名继续保留；源码归属审计只归一化这三种确定的品牌写法。
+const normalizeProductBrand = (value: string) => value.replace(/万能说客（Wild Talker）|FluentRead|流畅阅读/gu, '<product-brand>');
+
 describe('界面 i18n 契约', () => {
+  it('翻译提示词预设的按钮和替换说明在七种界面语言中完整可用', () => {
+    const keys = ['presetsTitle', 'presetsHelp', 'presetNatural', 'presetNaturalHelp', 'presetTechnical', 'presetTechnicalHelp', 'presetFaithful', 'presetFaithfulHelp'];
+    for (const language of ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'ru-RU', 'es-ES'] as const) {
+      const catalog = JSON.parse(readFileSync(join(process.cwd(), 'src/core/i18n/messages/settings-copy', `${language}.json`), 'utf8')).messages;
+      for (const suffix of keys) {
+        const key = `settings.services.prompts.${suffix}`;
+        expect(catalog[key]?.trim()).not.toBe('');
+        expect(translate(key, language)).toBe(catalog[key]);
+        if (language !== 'zh-CN') expect(catalog[key]).not.toBe(translate(key, 'zh-CN'));
+      }
+    }
+  });
+
   it('Popup 站点规则的保存、暂停与网站范围反馈覆盖六种语言并保留用户域名', () => {
     for (const language of ['en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'ru-RU', 'es-ES'] as const) {
       for (const text of ['自动翻译已暂停', '应用于此网站及其子域名，跳转后按新网站规则执行', '禁用会停止此网站的翻译，保留始终翻译偏好', '禁用优先于自动翻译', '恢复扩展后继续自动翻译', '请先恢复扩展', '无法读取当前网站，请重试']) {
@@ -70,7 +88,7 @@ describe('界面 i18n 契约', () => {
       expect(translate('settings.webdav.error.http', languages[index], {status: 502})).toContain('502');
       if (languages[index] !== 'zh-CN') for (const source of ['请先设置 WebDAV 服务器和应用密码。', '同步连接已变化，请重新生成预览。', '删除预览已失效，请重新检查云端备份。', '删除目标账号或连接已变化，请重新检查云端备份。', '云端备份已变化，请重新检查后再删除。', '云端备份缺少安全删除所需的版本信息，请到服务商管理页面手动删除。', '删除后仍检测到云端备份，可能已被其他设备重新创建，请重新检查。', '删除预览属于其他页面或已失效，请在原设置页面继续。']) expect(translateLegacyText(source, languages[index])).not.toBe(source);
     }
-    expect(JSON.stringify(catalogs[1])).not.toMatch(/[\u3400-\u9fff]/u);
+    expect(withoutProductBrand(JSON.stringify(catalogs[1]))).not.toMatch(/[\u3400-\u9fff]/u);
     expect(translate('settings.cloud.syncNow', 'zh-CN', {provider: 'Google Drive'})).toBe('立即与Google Drive同步');
   });
 
@@ -733,7 +751,7 @@ describe('界面 i18n 契约', () => {
       for (const source of [...navigationCopy, ...skinCopy]) {
         const localized = translateLegacyText(source, language);
         expect(localized, `${language}: ${source}`).not.toBe(source);
-        if (language !== 'ja-JP') expect(localized).not.toMatch(/[\u3400-\u9fff]/u);
+        if (language !== 'ja-JP') expect(withoutProductBrand(localized)).not.toMatch(/[\u3400-\u9fff]/u);
       }
       for (const key of fontKeys) expect(translate(key, language), `${language}: ${key}`).not.toBe(key);
     }
@@ -813,7 +831,7 @@ describe('界面 i18n 契约', () => {
 
     const allowedNativeLabels = new Set(['中文', '日本語']);
     const unexpectedHan = Object.entries(enUSLegacyText).filter(([, value]) => (
-      /[\u3400-\u9fff]/u.test(value) && !allowedNativeLabels.has(value)
+      /[\u3400-\u9fff]/u.test(withoutProductBrand(value)) && !allowedNativeLabels.has(value)
     ));
     expect(unexpectedHan).toEqual([]);
   });
@@ -853,8 +871,8 @@ describe('界面 i18n 契约', () => {
 
   it('人工校正容易发生语义误判的高频设置文案', () => {
     expect(translateLegacyText('日本語', 'en-US')).toBe('Japanese');
-    expect(translateLegacyText('显示 FluentRead 字幕', 'ja-JP')).toBe('FluentRead 字幕を表示');
-    expect(translateLegacyText('显示 FluentRead 字幕', 'ko-KR')).toBe('FluentRead 자막 표시');
+    expect(translateLegacyText('显示 FluentRead 字幕', 'ja-JP')).toBe('万能说客（Wild Talker） 字幕を表示');
+    expect(translateLegacyText('显示 FluentRead 字幕', 'ko-KR')).toBe('万能说客（Wild Talker） 자막 표시');
     expect(translateLegacyText('禁用扩展网站', 'fr-FR')).toBe('Sites où désactiver l’extension');
     expect(translateLegacyText('禁用扩展网站', 'ru-RU')).toBe('Сайты с отключённым расширением');
     expect(translateLegacyText('禁用扩展网站', 'es-ES')).toBe('Sitios con la extensión desactivada');
@@ -952,7 +970,7 @@ describe('i18n 全量界面扫描', () => {
       if (examples.has(source)) continue;
       for (const locale of ['en-US', 'ko-KR', 'fr-FR', 'ru-RU', 'es-ES'] as const) {
         const result = translateLegacyText(source, locale);
-        if (/[\u3400-\u9fff]/u.test(result)) missing.push(`${locale} ${files.join(', ')}: ${source}`);
+        if (/[\u3400-\u9fff]/u.test(withoutProductBrand(result))) missing.push(`${locale} ${files.join(', ')}: ${source}`);
       }
     }
     expect(audit.files.length).toBeGreaterThan(50);
@@ -1073,14 +1091,14 @@ describe('运行期反馈文案资源', () => {
       + collectSourceText('userscript', () => true);
     const sources = getRuntimeFeedbackSources();
     expect(new Set(sources).size).toBe(sources.length);
-    expect(sources.filter((source) => !sourceText.includes(source))).toEqual([]);
+    expect(sources.filter((source) => !normalizeProductBrand(sourceText).includes(normalizeProductBrand(source)))).toEqual([]);
     for (const locale of locales) {
       const catalog = createRuntimeFeedbackLegacyText(locale);
       for (const source of sources) {
         const translated = translateLegacyText(source, locale);
         expect(translated, `${locale} ${source}`).toBe(catalog[source]);
         expect(translated.trim(), `${locale} ${source}`).not.toBe('');
-        if (locale !== 'ja-JP') expect(translated, `${locale} ${source}`).not.toMatch(han);
+        if (locale !== 'ja-JP') expect(withoutProductBrand(translated), `${locale} ${source}`).not.toMatch(han);
       }
     }
   });
@@ -1124,13 +1142,22 @@ describe('旧界面译文人工校正', () => {
   it('校正原文仍在界面源码中使用，不重复，并覆盖此前的译文', () => {
     const sourceText = collectSourceText('src', (path) => !path.includes('/i18n/messages/'));
     const sources = getLegacyCorrectionSources();
+    // 这两处已改用稳定品牌 key 拼接，旧资源键仍供兼容使用；核对实际模板 owner。
+    const dynamicBrandOwners = new Map([
+      ['<product-brand>图标', "`${t('common.brand')}图标`"],
+      ['<product-brand>文档翻译', "`${t('common.brand')} · 文档翻译`"],
+    ]);
+    for (const owner of dynamicBrandOwners.values()) expect(sourceText).toContain(owner);
     expect(new Set(sources).size).toBe(sources.length);
-    expect(sources.filter((source) => !sourceText.includes(source))).toEqual([]);
+    expect(sources.filter((source) => {
+      const normalized = normalizeProductBrand(source);
+      return !normalizeProductBrand(sourceText).includes(normalized) && !dynamicBrandOwners.has(normalized);
+    })).toEqual([]);
     for (const locale of ['en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'ru-RU', 'es-ES'] as const) {
       const catalog = createLegacyCorrectionText(locale);
       for (const source of sources) {
         expect(translateLegacyText(source, locale), `${locale} ${source}`).toBe(catalog[source]);
-        if (locale !== 'ja-JP') expect(catalog[source], `${locale} ${source}`).not.toMatch(/[\u3400-\u9fff]/u);
+        if (locale !== 'ja-JP') expect(withoutProductBrand(catalog[source]), `${locale} ${source}`).not.toMatch(/[\u3400-\u9fff]/u);
       }
     }
   });
@@ -1156,9 +1183,10 @@ it('localizes word-class labels and learning explanations from the shared regist
     }
 });
 
-it('中文展示使用流畅阅读，首启七语品牌与正式目录一致并保留外部身份和技术路径', () => {
+it('七语界面使用万能说客，首启品牌与正式目录一致并保留上游来源和技术路径', () => {
+    const brand = '万能说客（Wild Talker）';
     const localizedKeys = [
-        'settings.backup.restoreHint', 'options.userscriptUnavailableDescription', 'glossary.builtin.source',
+        'settings.backup.restoreHint', 'options.userscriptUnavailableDescription',
         'language.settingsDescription', 'language.onboardingWelcomeTitle', 'language.onboardingDescription',
         'language.onboardingSuccessDescription', 'video.panelAriaLabel', 'video.translationOverlayAriaLabel',
         'video.buttonAriaLabel', 'video.globalDisabled', 'metadata.optionsTitle', 'metadata.popupTitle',
@@ -1166,18 +1194,21 @@ it('中文展示使用流畅阅读，首启七语品牌与正式目录一致并�
         'shareCard.showBrand', 'learning.collection.fileReadFailed', 'settings.cloud.privacyWebDavStorage',
     ];
     for (const key of localizedKeys) {
-        expect(translate(key, 'zh-CN'), key).toContain('流畅阅读');
+        expect(translate(key, 'zh-CN'), key).toContain(brand);
+        expect(translate(key, 'zh-CN'), key).not.toContain('流畅阅读');
         expect(translate(key, 'zh-CN'), key).not.toContain('FluentRead');
     }
-    expect(translate('options.userscriptUnavailableDescription', 'zh-CN')).toBe('此功能需要浏览器扩展的运行环境。请安装流畅阅读浏览器扩展后使用。');
-    expect(translate('metadata.optionsTitle', 'zh-CN')).toBe('流畅阅读 · 设置');
-    expect(translate('metadata.popupTitle', 'zh-CN')).toBe('流畅阅读');
-    expect(translate('metadata.documentTitle', 'zh-CN')).toBe('流畅阅读 · 文档翻译');
+    expect(translate('options.userscriptUnavailableDescription', 'zh-CN')).toBe(`此功能需要浏览器扩展的运行环境。请安装${brand}浏览器扩展后使用。`);
+    expect(translate('metadata.optionsTitle', 'zh-CN')).toBe(`${brand} · 设置`);
+    expect(translate('metadata.popupTitle', 'zh-CN')).toBe(brand);
+    expect(translate('metadata.documentTitle', 'zh-CN')).toBe(`${brand} · 文档翻译`);
+    expect(translate('glossary.builtin.source', 'zh-CN')).toContain('流畅阅读独立整理');
     expect(translate('settings.cloud.deleteManualDrive', 'zh-CN')).toBe('请前往 Google Drive 设置 → 管理应用 → FluentRead，清理该应用的数据。');
     expect(translate('settings.cloud.deleteManualWebDav', 'zh-CN')).toBe('请在 WebDAV 服务商页面手动删除 FluentRead/fluentread-config.encrypted.json，保留目录内其他文件。');
     for (const {value} of UI_LANGUAGE_OPTIONS) {
         expect(onboardingMessages.onboardingProductNames[value], value).toBe(translate('common.brand', value));
-        expect(translate('common.brand', value)).toBe(value === 'zh-CN' ? '流畅阅读' : 'FluentRead');
+        expect(translate('common.brand', value)).toBe(brand);
+        expect(translate('options.aboutPersonalDescription', value), value).toContain('FluentRead');
         expect(translateLegacyText(translate('video.panelAriaLabel', 'zh-CN'), value), value).toBe(translate('video.panelAriaLabel', value));
     }
     expect(translateLegacyText('用户输入 FluentRead', 'zh-CN')).toBe('用户输入 FluentRead');

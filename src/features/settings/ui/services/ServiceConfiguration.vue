@@ -1,7 +1,7 @@
 <!--
  * @file src/features/settings/ui/services/ServiceConfiguration.vue
  * 文件职责：渲染当前翻译服务的详细连接配置：连接字段（密钥、区域、端点等）直接排在服务标题下方、不再单设“连接与密钥”标题，输入下方是添加密钥与密钥使用方式；其后用模型偏好、提示词、请求限制、接口兼容几个页签显示代理、密钥要求、提示词、自定义请求体与请求头、按域名移除来源头等字段，以及服务和模型的独立请求限制；只有一个页签的服务改用小节标题。
- * 主要内容：组件派生字段可见性与连接示例，密钥列表始终展示全部已保存的密钥并区分参与请求与备用的行，密钥要求放在接口兼容页签，提示词可在确认后一键同步到所有 AI 服务；原生支持多文本的服务在请求限制中独立编辑默认开启的合并请求开关，当前模型限额按自定义请求体覆盖后的真实模型显示、读取和保存，保留其他模型限额；将成对密钥 ID 同步到 apiKeys 和兼容 token，区分缺少必填 Key 与允许匿名的连接检查并管理等待超时；免费翻译检查完整目录并逐服务展示结果，Chrome 在点击时准备当前语言对并用进度条显示模型下载比例，通过配置 store 提交修改；隐藏、缓存停用或配置变化取消所属等待，Chrome 状态只在活跃服务订阅，恢复、同步模板和删除共用当前操作所属确认，同步复验来源并按确认时刻重算目标。
+ * 主要内容：组件派生字段可见性与连接示例，密钥列表始终展示全部已保存的密钥并区分参与请求与备用的行，密钥要求放在接口兼容页签；用户点击自然阅读、技术文档或忠实直译按钮后，只替换当前服务的两段提示词，仍可手工编辑或在确认后同步到所有 AI 服务；原生支持多文本的服务在请求限制中独立编辑默认开启的合并请求开关，当前模型限额按自定义请求体覆盖后的真实模型显示、读取和保存，保留其他模型限额；将成对密钥 ID 同步到 apiKeys 和兼容 token，区分缺少必填 Key 与允许匿名的连接检查并管理等待超时；免费翻译检查完整目录并逐服务展示结果，Chrome 在点击时准备当前语言对并用进度条显示模型下载比例，通过配置 store 提交修改；隐藏、缓存停用或配置变化取消所属等待，Chrome 状态只在活跃服务订阅，恢复、同步模板和删除共用当前操作所属确认，同步复验来源并按确认时刻重算目标。
  * 模块边界：本地模型设置只在对应服务首次呈现时异步加载，实例归属与后台下载由子组件维持；本组件不执行网页正文翻译或保存公开配置中的明文凭据；Chrome 内置翻译仅在当前点击页完成模型自检，其他连接测试经后台消息，字段规则来自 core/config，服务切换由 ServiceCatalog 和 SettingsSections 负责。
  -->
 <template>
@@ -372,6 +372,17 @@
             </div>
           </div>
 
+          <div class="prompt-preset-list" role="group" :aria-label="t('settings.services.prompts.presetsTitle')" data-testid="prompt-preset-list">
+            <p>{{ t('settings.services.prompts.presetsHelp') }}</p>
+            <div class="prompt-preset-buttons">
+              <button v-for="preset in promptPresetActions" :key="preset.id" type="button" class="prompt-preset-button"
+                :data-prompt-preset="preset.id" :title="t(preset.descriptionKey)"
+                :disabled="!active || activeSettingsTab !== 'prompts' || serviceActionOpen" :onClick="preset.apply">
+                <strong>{{ t(preset.labelKey) }}</strong><span>{{ t(preset.descriptionKey) }}</span>
+              </button>
+            </div>
+          </div>
+
           <div class="prompt-template-list" data-testid="prompt-template-list">
             <PromptTemplateEditor v-model="config.system_role[service]" role="system" :active="active && activeSettingsTab === 'prompts'" :context="config" :context-key="service" />
             <PromptTemplateEditor v-model="config.user_role[service]" role="user" :active="active && activeSettingsTab === 'prompts'" :context="config" :context-key="service" />
@@ -498,6 +509,7 @@ import RequestLimitSettings from './RequestLimitSettings.vue'
 import RequestHeaderSettings from './RequestHeaderSettings.vue'
 import { checkAllFreeTranslationProviders, type FreeTranslationChecks } from './freeTranslationChecks'
 import { listPromptTemplateSyncTargets, syncPromptTemplates as applyPromptTemplateSync } from './promptTemplateSync'
+import {TRANSLATION_PROMPT_PRESETS} from './promptTemplatePresets'
 import {waitForSettingsTask} from '../../model/taskWait'
 import {useSettingsActionContext} from '../../model/useSettingsActionContext'
 
@@ -1133,6 +1145,17 @@ const syncPromptTemplates = computed(() => {
   return () => {if (current()) openServiceAction('sync')}
 })
 
+const promptPresetActions = computed(() => {
+  const owner = config.value, ownerService = service.value
+  const current = captureServiceActionContext()
+  return TRANSLATION_PROMPT_PRESETS.map(preset => ({...preset, apply: () => {
+    if (!current() || !compute.value.showAI || activeSettingsTab.value !== 'prompts' || serviceActionOpen.value) return
+    // 只有本次可见按钮的明确点击才替换模板；不自动应用，也不改其他服务的编辑内容。
+    owner.system_role[ownerService] = preset.system
+    owner.user_role[ownerService] = preset.user
+  }}))
+})
+
 function confirmDeleteProvider(): void {
   openServiceAction('delete')
 }
@@ -1161,14 +1184,14 @@ watch(serviceActionOpen, open => {if (!open) pendingServiceAction.value = null},
 </script>
 
 <style scoped>
-.service-connection-section { container-type: inline-size; display: grid; gap: 0; color: var(--ink, #172033); }
-.connection-card { min-width: 0; border: 1px solid var(--line, #e4e7ef); border-radius: 14px; background: var(--surface, #fff); }
+.service-connection-section { container-type: inline-size; display: grid; gap: 0; color: var(--ink, #252a24); }
+.connection-card { min-width: 0; border: 1px solid var(--line, #dce3d2); border-radius: 14px; background: var(--surface, #fff); }
 .connection-card { padding: 20px; }
 .configuration-group-heading { margin-bottom: 8px; }
 .configuration-group-heading h5 { margin: 0; color: var(--ink); font-size: 14px; font-weight: 650; line-height: 1.5; }
 .configuration-group-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
 .connection-field { display: grid; grid-template-columns: 140px minmax(0, 1fr); align-items: start; gap: 16px; padding: 14px 0; }
-.connection-field + .connection-field { border-top: 1px solid var(--line, #e4e7ef); }
+.connection-field + .connection-field { border-top: 1px solid var(--line, #dce3d2); }
 .connection-field-label { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; min-height: 38px; }
 .connection-field-label small { flex-basis: 100%; }
 .connection-field-label strong { color: var(--ink); font-size: 13px; font-weight: 550; line-height: 1.5; }
@@ -1179,7 +1202,7 @@ watch(serviceActionOpen, open => {if (!open) pendingServiceAction.value = null},
 .service-connection-section :deep(.el-input__wrapper), .service-connection-section :deep(.el-select:not(.fluentread-select) .el-select__wrapper) { min-height: 38px; padding: 0 11px; border-radius: 10px; background: var(--surface, #fff); border-color: var(--line); }
 .service-connection-section :deep(.el-input__inner), .service-connection-section :deep(.el-select__selected-item) { font-size: 13px; }
 .service-connection-section :deep(.el-textarea__inner) { border-radius: 10px; background: var(--surface); font-size: 13px; padding: 10px 12px; }
-.service-connection-section :deep(.el-switch) { --el-switch-on-color: var(--brand, #ef4776); }
+.service-connection-section :deep(.el-switch) { --el-switch-on-color: var(--brand, #648433); }
 .provider-field-help, .custom-headers-help { display: block; align-self: stretch; margin: 7px 0 0; }
 .provider-field-help code { font-size: 11px; }
 .credential-control { display: grid; justify-items: end; gap: 8px; }
@@ -1205,14 +1228,22 @@ watch(serviceActionOpen, open => {if (!open) pendingServiceAction.value = null},
 .credential-modes { display: flex; flex-wrap: wrap; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); }
 .credential-modes label { position: relative; display: inline-flex; align-items: center; min-height: 24px; padding: 2px 10px; border-radius: 7px; color: var(--muted); font-size: 11px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: color 140ms ease, background 140ms ease, box-shadow 140ms ease; }
 .credential-modes label:not(.is-selected):hover { color: var(--ink); }
-.credential-modes label.is-selected { color: var(--brand-strong); background: var(--surface); box-shadow: 0 2px 7px rgba(31, 40, 61, .09); }
+.credential-modes label.is-selected { color: var(--brand-strong); background: var(--surface); box-shadow: 0 2px 7px rgba(37, 42, 36, .09); }
 .credential-modes input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .credential-modes label:has(input:focus-visible) { outline: 2px solid var(--brand); outline-offset: 2px; }
 .credential-requirement { max-width: 360px; }
 .custom-template-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin: 2px 0 12px; }
 .custom-template-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-left: auto; }
+.prompt-preset-list { margin-bottom: 16px; }
+.prompt-preset-list > p { margin: 0 0 9px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.prompt-preset-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 8px; }
+.prompt-preset-button { display: flex; flex-direction: column; gap: 5px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 11px; color: var(--ink); background: var(--surface-soft); text-align: left; cursor: pointer; }
+.prompt-preset-button strong { font-size: 12px; }
+.prompt-preset-button span { color: var(--muted); font-size: 10px; line-height: 1.5; }
+.prompt-preset-button:hover:not(:disabled), .prompt-preset-button:focus-visible { border-color: var(--brand); outline: 2px solid var(--brand-soft); outline-offset: 2px; }
+.prompt-preset-button:disabled { cursor: default; opacity: .5; }
 .prompt-sync-button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--surface); font-size: 12px; font-weight: 550; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
-.prompt-sync-button:hover:not(:disabled) { border-color: var(--brand-border, #f3c0ce); color: var(--brand-strong); background: var(--brand-soft); }
+.prompt-sync-button:hover:not(:disabled) { border-color: var(--brand-border, color-mix(in srgb, var(--brand, #648433) 35%, var(--line, #dce3d2))); color: var(--brand-strong); background: var(--brand-soft); }
 .prompt-sync-button:disabled { opacity: .5; cursor: not-allowed; }
 .prompt-template-list { display: grid; gap: 14px; }
 .service-connection-section :deep(.request-limit-settings) { width: 100%; }
@@ -1220,7 +1251,7 @@ watch(serviceActionOpen, open => {if (!open) pendingServiceAction.value = null},
 .connection-card > :deep(.api-key-list:first-child) { border-top: 0; }
 .connection-card > .configuration-scope { padding: 14px 0 6px; }
 .connection-test-inline { display: flex; align-items: center; justify-content: flex-start; gap: 12px; flex-wrap: wrap; margin: 14px 0; }
-.connection-test-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 12px; border: 1px solid var(--brand-border, #f3c0ce); border-radius: 9px; color: var(--brand-strong, #bd2853); background: var(--brand-soft, #fff0f4); font-size: 12px; font-weight: 600; cursor: pointer; }
+.connection-test-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 12px; border: 1px solid var(--brand-border, color-mix(in srgb, var(--brand, #648433) 35%, var(--line, #dce3d2))); border-radius: 9px; color: var(--brand-strong, #456021); background: var(--brand-soft, #edf5dd); font-size: 12px; font-weight: 600; cursor: pointer; }
 .connection-test-button:hover:not(:disabled) { border-color: var(--brand); }
 .connection-test-button:disabled { cursor: wait; opacity: .65; }
 .connection-action-icon { flex: none; }

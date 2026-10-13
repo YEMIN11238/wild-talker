@@ -10,7 +10,7 @@ beforeAll(async () => {
   component = (await import('@/src/features/image-translation/ui/MangaEntry.vue')).default;
   expect(component.render).toBeTypeOf('function');
 });
-afterEach(() => {unmount?.(); unmount = undefined; vi.useRealTimers();});
+afterEach(() => {unmount?.(); unmount = undefined; vi.useRealTimers(); vi.unstubAllGlobals();});
 
 interface HostNode {
   tag: string; children: HostNode[]; props: Record<string, any>; text: string; parent: HostNode | null;
@@ -27,11 +27,11 @@ function deferred<T>() {
   const promise = new Promise<T>((yes, no) => {resolve = yes; reject = no;});
   return {promise, resolve, reject};
 }
-async function mountEntry(toolsDisplay?: 'hover' | 'always') {
+async function mountEntry(toolsDisplay?: 'hover' | 'always', theme?: 'light' | 'dark' | 'auto') {
   const props = runtime.reactive({
     status:{available:true, active:false, pending:false, errors:0} as MangaTranslationStatus,
     page:{site:'fixture', route:'/chapter/1'},
-    settings:{promptEnabled:true, floatingBallVisible:false, downloadConfirmed:false, animations:true, ...(toolsDisplay === undefined ? {} : {toolsDisplay})},
+    settings:{promptEnabled:true, floatingBallVisible:false, downloadConfirmed:false, animations:true, theme, ...(toolsDisplay === undefined ? {} : {toolsDisplay})},
     toggle:vi.fn(), inspectResources:vi.fn(async () => false), persist:vi.fn(async (_patch: Record<string, unknown>) => undefined), openSettings:vi.fn(),
   });
   const remove = (value: HostNode) => {if (value.parent) {const at = value.parent.children.indexOf(value); if (at >= 0) value.parent.children.splice(at,1); value.parent = null;}};
@@ -229,5 +229,58 @@ describe('actual manga entry persistent display lifecycle', () => {
     expect(stopPropagation).toHaveBeenCalledOnce(); expect(button.blur).toHaveBeenCalledTimes(2); expect(panel.expanded).toBe(false); await expectExpanded();
     vi.advanceTimersByTime(60_000); await expectExpanded();
     expect(props.inspectResources).not.toHaveBeenCalled(); expect(props.persist).not.toHaveBeenCalled();
+  });
+});
+
+
+function systemThemeFixture(initial: boolean) {
+  const listeners = new Set<(event: MediaQueryListEvent) => void>();
+  const media = {matches:initial, addEventListener:vi.fn((event: string, listener: (event: MediaQueryListEvent) => void) => {
+    if (event === 'change') listeners.add(listener);
+  }), removeEventListener:vi.fn((event: string, listener: (event: MediaQueryListEvent) => void) => {
+    if (event === 'change') listeners.delete(listener);
+  })};
+  vi.stubGlobal('window',{matchMedia:vi.fn(() => media)});
+  return {media,listeners,change(matches: boolean) {media.matches=matches;for (const listener of listeners) listener({matches} as MediaQueryListEvent);}};
+}
+
+describe('manga theme selection and media listener ownership', () => {
+  it('saved light overrides a dark system in both real roots, without changing consent or translation behavior', async () => {
+    const system = systemThemeFixture(true);
+    const {panel,props,tick,find} = await mountEntry(undefined,'light');
+    const button = () => find(value => String(value.props.class).split(/\s+/).includes('fr-manga-launcher'))!;
+    expect(button().props['data-theme']).toBe('light');
+    await panel.start();await tick();const dialog = () => find(value => value.props.role === 'dialog')!;
+    expect(dialog().props['data-theme']).toBe('light');expect(panel.consent).toBe(true);
+    system.change(false);system.change(true);await tick();
+    expect(button().props['data-theme']).toBe('light');expect(dialog().props['data-theme']).toBe('light');
+    props.settings.theme='dark';await tick();expect(button().props['data-theme']).toBe('dark');expect(dialog().props['data-theme']).toBe('dark');
+    expect(props.inspectResources).toHaveBeenCalledOnce();expect(props.persist).not.toHaveBeenCalled();expect(props.toggle).not.toHaveBeenCalled();
+  });
+  it.each(['auto',undefined] as const)('auto or unset theme follows system changes while retaining explicit user precedence, theme=%s', async theme => {
+    const system = systemThemeFixture(false);
+    const {panel,props,tick,find} = await mountEntry(undefined,theme);
+    await panel.start();await tick();
+    const roots = () => [find(value => String(value.props.class).split(/\s+/).includes('fr-manga-launcher'))!,find(value => value.props.role === 'dialog')!];
+    expect(roots().map(value => value.props['data-theme'])).toEqual(['light','light']);
+    system.change(true);await tick();expect(roots().map(value => value.props['data-theme'])).toEqual(['dark','dark']);
+    props.settings.theme='light';await tick();system.change(false);system.change(true);await tick();
+    expect(roots().map(value => value.props['data-theme'])).toEqual(['light','light']);
+    props.settings.theme='auto';await tick();expect(roots().map(value => value.props['data-theme'])).toEqual(['dark','dark']);
+    system.change(false);await tick();expect(roots().map(value => value.props['data-theme'])).toEqual(['light','light']);
+    expect(system.media.addEventListener).toHaveBeenCalledOnce();expect(props.inspectResources).toHaveBeenCalledOnce();
+  });
+  it('unmount removes exactly its listener and subsequent OS changes cannot update the disposed component', async () => {
+    const system = systemThemeFixture(false);
+    const {panel,dispose} = await mountEntry(undefined,'auto');
+    expect(system.listeners.size).toBe(1);expect(panel.systemDark).toBe(false);
+    dispose();expect(system.listeners.size).toBe(0);
+    expect(system.media.removeEventListener).toHaveBeenCalledWith('change',system.media.addEventListener.mock.calls[0][1]);
+    system.change(true);expect(panel.systemDark).toBe(false);dispose();expect(system.media.removeEventListener).toHaveBeenCalledOnce();
+  });
+  it('an unavailable matchMedia port falls back safely and still respects explicit dark', async () => {
+    vi.stubGlobal('window',{});
+    const {panel,props,tick} = await mountEntry();expect(panel.resolvedTheme).toBe('light');
+    props.settings.theme='dark';await tick();expect(panel.resolvedTheme).toBe('dark');
   });
 });

@@ -404,45 +404,45 @@ onBeforeUnmount(() => {
 .fr-area-translator-root { position: fixed; inset: 0; z-index: 2147483647; width: 100vw; height: 100vh; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #272733; font-size: 13px; line-height: 1.5; }
 .fr-area-selecting { position: fixed; inset: 0; pointer-events: auto; cursor: crosshair; background: rgba(20, 20, 30, .08); touch-action: none; }
 .fr-area-hint { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px); box-sizing: border-box; border-radius: 12px; background: #292735; color: #fff; padding: 10px 16px; text-align: center; box-shadow: 0 4px 24px #0003; }
-.fr-area-selection { position: fixed; box-sizing: border-box; border: 2px solid #ef4b86; border-radius: 5px; background: rgba(239, 75, 134, .08); box-shadow: 0 0 0 1px #fff9; pointer-events: none; }
+.fr-area-selection { position: fixed; box-sizing: border-box; border: 2px solid #648433; border-radius: 5px; background: rgba(100, 132, 51, .08); box-shadow: 0 0 0 1px #fff9; pointer-events: none; }
 .fr-area-panel { position: fixed; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; border: 1px solid #e4dfe7; border-radius: 14px; background: #fff; box-shadow: 0 12px 40px #241c3833; pointer-events: auto; }
-.fr-area-toolbar { cursor: grab; touch-action: none; user-select: none; display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding: 12px 14px; border-bottom: 1px solid #ece8ef; }
+.fr-area-toolbar { cursor: grab; touch-action: none; user-select: none; display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding: 12px 14px; border-bottom: 1px solid #e7eae1; }
 .fr-area-heading { flex: 1; min-width: 0; }
 .fr-area-title-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
 .fr-area-provider { margin-top: 3px; color: #777080; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; user-select: text; }
 .fr-area-toolbar strong { font-size: 14px; }
 .fr-area-mode { color: #777080; font-size: 11px; }
 .fr-area-translator-root button { font: inherit; padding: 5px 9px; border: 1px solid #e5dce8; border-radius: 7px; background: transparent; color: inherit; cursor: pointer; }
-.fr-area-translator-root button:hover { background: #f7f0f5; }
+.fr-area-translator-root button:hover { background: #edf5dd; }
 .fr-area-translator-root button:focus-visible, .fr-area-translator-root summary:focus-visible { outline: 2px solid #db4781; outline-offset: 2px; }
 .fr-area-toolbar button { margin-left: auto; flex-shrink: 0; align-self: flex-start; border: 0; font-size: 22px; line-height: 22px; padding: 2px 6px; }
 .fr-area-loading { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 22px 16px; }
 .fr-area-loading button { margin-left: auto; }
-.fr-area-download { flex: 1 0 100%; --download-progress-track: #efe8ee; --download-progress-fill: #ef4b86; --download-progress-text: #6f6675; }
-.fr-area-dark .fr-area-download { --download-progress-track: #453c49; --download-progress-text: #b9afbd; }
-.fr-area-spinner { width: 16px; height: 16px; flex-shrink: 0; border: 2px solid #e4dbe3; border-top-color: #ef4b86; border-radius: 50%; animation: fr-area-spin .7s linear infinite; }
+.fr-area-download { flex: 1 0 100%; --download-progress-track: #e7eae1; --download-progress-fill: #648433; --download-progress-text: #737970; }
+.fr-area-dark .fr-area-download { --download-progress-track: #394035; --download-progress-text: #b9afbd; }
+.fr-area-spinner { width: 16px; height: 16px; flex-shrink: 0; border: 2px solid #e7eae1; border-top-color: #648433; border-radius: 50%; animation: fr-area-spin .7s linear infinite; }
 @keyframes fr-area-spin { to { transform: rotate(360deg); } }
 .fr-area-static { animation: none; }
 .fr-area-content { overflow: auto; min-height: 0; overscroll-behavior: contain; padding: 14px 16px; }
-.fr-area-text-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: #73677a; font-size: 12px; }
+.fr-area-text-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: #737970; font-size: 12px; }
 .fr-area-translator-root p { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .fr-area-translation { font-size: 15px; line-height: 1.75; user-select: text; }
-.fr-area-source { border-top: 1px solid #ece8ef; margin-top: 14px; padding-top: 11px; }
-.fr-area-source summary { cursor: pointer; color: #73677a; }
+.fr-area-source { border-top: 1px solid #e7eae1; margin-top: 14px; padding-top: 11px; }
+.fr-area-source summary { cursor: pointer; color: #737970; }
 .fr-area-source button { margin-top: 8px; }
 .fr-area-source img { display: block; width: 100%; height: auto; margin-top: 10px; border-radius: 5px; }
-.fr-area-translator-root .fr-area-note { font-size: 11px; color: #817584; margin-top: 14px; }
-.fr-area-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 11px 14px; border-top: 1px solid #ece8ef; flex-shrink: 0; }
+.fr-area-translator-root .fr-area-note { font-size: 11px; color: #737970; margin-top: 14px; }
+.fr-area-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 11px 14px; border-top: 1px solid #e7eae1; flex-shrink: 0; }
 .fr-area-error-body { padding: 16px; overflow: auto; }
 .fr-area-error-body > strong { color: #bc355e; }
 .fr-area-error-body .fr-area-actions { border: 0; padding: 14px 0 0; }
 .fr-area-translator-root .fr-area-feedback { margin: 0; padding: 7px 14px; color: #ab3565; font-size: 12px; flex-shrink: 0; }
-.fr-area-dark { color: #ece5ef; }
-.fr-area-dark .fr-area-panel { border-color: #514653; background: #2b2630; }
-.fr-area-dark .fr-area-toolbar, .fr-area-dark .fr-area-source, .fr-area-dark .fr-area-actions { border-color: #49404c; }
-.fr-area-dark button { border-color: #65556a; }
-.fr-area-dark button:hover { background: #413548; }
-.fr-area-dark .fr-area-provider, .fr-area-dark .fr-area-mode, .fr-area-dark .fr-area-note, .fr-area-dark .fr-area-text-heading, .fr-area-dark summary { color: #c1b1c5; }
+.fr-area-dark { color: #edf0e8; }
+.fr-area-dark .fr-area-panel { border-color: #394035; background: #262d25; }
+.fr-area-dark .fr-area-toolbar, .fr-area-dark .fr-area-source, .fr-area-dark .fr-area-actions { border-color: #394035; }
+.fr-area-dark button { border-color: #394035; }
+.fr-area-dark button:hover { background: #303b25; }
+.fr-area-dark .fr-area-provider, .fr-area-dark .fr-area-mode, .fr-area-dark .fr-area-note, .fr-area-dark .fr-area-text-heading, .fr-area-dark summary { color: #afb6a9; }
 .fr-area-dark .fr-area-feedback, .fr-area-dark .fr-area-error-body > strong { color: #ffa7ca; }
 @media (prefers-reduced-motion: reduce) { .fr-area-spinner { animation: none; } }
 </style>

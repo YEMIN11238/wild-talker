@@ -1,7 +1,7 @@
 {
   "messages": {
     "settings.drive.privacyBadge": "Privacy protection",
-    "settings.drive.privacyTitle": "How FluentRead protects your privacy",
+    "settings.drive.privacyTitle": "How 万能说客（Wild Talker） protects your privacy",
     "settings.drive.privacyEncryption": "Configuration is encrypted on your device before upload; the cloud stores an encrypted file.",
     "settings.drive.privacyStorage": "Only the application-data area of your Google Drive is accessed, not your regular Drive files.",
     "settings.drive.privacyAuthorization": "Temporary authorization caches are cleared when sync finishes or is canceled.",

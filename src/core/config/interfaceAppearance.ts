@@ -26,8 +26,8 @@ export const interfaceSkinOptions = [
     group: 'utility',
     kind: 'default',
     popupHeight: 'content',
-    popupWidth: 320,
-    preview: {canvas: '#ffffff', backdrop: '#ffffff', surface: '#ffffff', border: '#e7e9f0', radius: 5, ink: '#172033', title: '#172033', accent: '#ef4776', action: 'linear-gradient(135deg, #f35482, #e93267)'},
+    popupWidth: 360,
+    preview: {canvas: '#fffefb', backdrop: '#fffefb', surface: '#fffefb', border: '#202623', radius: 14, ink: '#202623', title: '#202623', accent: '#2aaab3', action: '#2aaab3'},
   },
   {
     value: 'minimal',
@@ -337,7 +337,7 @@ export const popupModuleOptions: readonly PopupModuleOption[] = [
   {
     id: 'footer',
     label: '底部信息栏',
-    description: '显示翻译统计、开源项目入口和清除缓存操作',
+    description: '显示翻译统计和清除缓存操作',
     labelKey: 'settings.interface.popupLayout.modules.footer.label',
     descriptionKey: 'settings.interface.popupLayout.modules.footer.description',
     visibilityKey: 'popupFooter',

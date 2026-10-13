@@ -2,18 +2,18 @@
  * @file src/ui/styles/tokens.css
  * 文件职责：声明扩展页面共享的基础视觉语义变量，为 Popup、Options、文档页和可复用组件提供一致的品牌、文字、边框与表面颜色。
  * 主要内容：在 :root 定义 fr-color-brand、brand-strong、brand-soft、ink、muted、line、surface 等 token，统一选择菜单圆角和亮暗阴影，并保留旧短变量名到新命名空间的兼容别名。
- * 模块边界：这里只提供原子颜色值和迁移别名，仅为反馈语义色提供亮暗值，不包含具体组件选择器或页面布局；各 app 页面在自己的 CSS 中消费并按场景覆盖。
+ * 模块边界：这里只提供原子颜色值和迁移别名，品牌和反馈语义均提供亮暗值，不包含具体组件选择器或页面布局；各 app 页面在自己的 CSS 中消费并按场景覆盖。
  */
-/* 跨扩展页面共享的视觉语义。旧变量名保留为别名，迁移不改变现有主题表现。 */
+/* 跨扩展页面共享纸面、墨色与青柠强调。旧变量名保留为消费端别名。 */
 :root {
-  --fr-color-brand: #ef4776;
-  --fr-color-brand-strong: #dc315f;
-  --fr-color-brand-soft: #fff0f4;
-  --fr-color-ink: #172033;
-  --fr-color-muted: #737c8f;
-  --fr-color-line: #e5e8ef;
+  --fr-color-brand: #648433;
+  --fr-color-brand-strong: #456021;
+  --fr-color-brand-soft: #edf5dd;
+  --fr-color-ink: #252a24;
+  --fr-color-muted: #737970;
+  --fr-color-line: #e7eae1;
   --fr-color-surface: #fff;
-  --fr-color-surface-soft: #f7f8fb;
+  --fr-color-surface-soft: #f5f7f0;
   --fr-menu-radius: 14px;
   --fr-menu-shadow: 0 8px 28px rgba(27, 36, 57, .12), 0 2px 6px rgba(27, 36, 57, .04);
 
@@ -39,6 +39,14 @@
   --fr-info-soft: #eaf3ff;
 }
 :root.dark {
+  --fr-color-brand: #bedf7b;
+  --fr-color-brand-strong: #d0e8a5;
+  --fr-color-brand-soft: #303b25;
+  --fr-color-ink: #edf0e8;
+  --fr-color-muted: #afb6a9;
+  --fr-color-line: #394035;
+  --fr-color-surface: #262d25;
+  --fr-color-surface-soft: #2b3328;
   --fr-menu-shadow: 0 10px 32px rgba(0, 0, 0, .28);
   --fr-success: #9edcc8;
   --fr-success-soft: #1c342d;

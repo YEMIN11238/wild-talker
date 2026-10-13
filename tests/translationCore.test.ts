@@ -214,6 +214,50 @@ describe('Explicit non-atomic inline reading containers', () => {
         expect(core.resolve(document.getElementById('empty'))).toBeNull();
     });
 
+    it('rescans the nearest explicit non-atomic owner after its directly owned inline child changes', () => {
+        const {document} = page('<main><span class="prose" id="source"><span id="dirty">The original directly owned opening.</span><p id="paragraph">A separate paragraph remains independently readable.</p>More directly owned closing text.</span><p id="neighbor">Outside this reading container.</p></main>');
+        const core = inlineCore();
+        const dirty = document.getElementById('dirty')!;
+        dirty.textContent = 'The updated opening must remain part of its declared reading owner.';
+        const candidates = core.discover(dirty);
+        expect(candidates.map(candidate => candidate.element.id)).toEqual(['paragraph', 'source', 'source']);
+        expect(extractTranslationTextFromNodes(candidates[1]!.nodes!)).toContain(dirty.textContent);
+        expect(extractTranslationTextFromNodes(candidates[1]!.nodes!)).not.toContain('separate paragraph');
+        expect(extractTranslationTextFromNodes(candidates[2]!.nodes!)).toBe('More directly owned closing text.');
+        expect(candidates.some(candidate => candidate.element.id === 'neighbor')).toBe(false);
+        expect(core.resolve(dirty.firstChild)?.nodes).toEqual(candidates[1]!.nodes);
+    });
+
+    it.each(['atomic', 'redirect', 'exclude'] as const)('does not promote a dirty inline subtree beyond its nearest %s adapter decision', kind => {
+        const {document} = page('<main><div id="outer"><div id="boundary"><span id="dirty">Updated text inside the nearest declared boundary.</span></div><p id="sibling">A sibling must not be included by a local rescan.</p></div><p id="redirect-target">A separate redirect target.</p></main>');
+        const outer = document.getElementById('outer')!;
+        const boundary = document.getElementById('boundary')!;
+        const target = document.getElementById('redirect-target') as HTMLElement;
+        const core = new TranslationCandidateCore({adapters: [{
+            id: 'local-rescan-boundary', matches: () => true, genericCandidatePolicy: 'targets-only',
+            decide: element => element === outer ? {kind: 'force-target', atomic: false, reason: 'outer-owner'}
+                : element === boundary ? kind === 'exclude' ? {kind: 'skip-self', reason: 'nearest-exclusion'}
+                    : {kind: 'force-target', atomic: kind === 'atomic', ...(kind === 'redirect' ? {target} : {}), reason: 'nearest-owner'}
+                    : {kind: 'pass'},
+        }]});
+        expect(core.discover(document.getElementById('dirty')!)).toEqual([]);
+        expect(document.getElementById('sibling')!.textContent).toBe('A sibling must not be included by a local rescan.');
+    });
+
+    it('uses the declaring ancestor itself when a non-atomic adapter omits an explicit target', () => {
+        const {document} = page('<main><div id="owner"><span id="dirty">A newly updated sentence belongs to this explicitly declared owner.</span></div><p id="neighbor">This neighboring paragraph must not be rescanned.</p></main>');
+        const owner = document.getElementById('owner')!;
+        const dirty = document.getElementById('dirty')!;
+        const core = new TranslationCandidateCore({adapters: [{
+            id: 'implicit-owner', matches: () => true, genericCandidatePolicy: 'targets-only',
+            decide: element => element === owner ? {kind: 'force-target', atomic: false, reason: 'declared-owner'} : {kind: 'pass'},
+        }]});
+        const candidates = core.discover(dirty);
+        expect(candidates.map(candidate => candidate.element)).toEqual([owner]);
+        expect(extractTranslationTextFromNodes(candidates[0]!.nodes ?? [candidates[0]!.element])).toBe(dirty.textContent);
+        expect(candidates[0]!.adapterId).toBe('implicit-owner');
+    });
+
     it('preserves an explicit container inside a shadow root without crossing its neighboring reading boundary', () => {
         const {document} = page('<main><div id="host"><p id="light-neighbor">The light DOM paragraph is outside the explicit rule.</p></div></main>');
         const host = document.getElementById('host')!;

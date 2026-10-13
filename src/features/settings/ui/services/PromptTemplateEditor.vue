@@ -271,9 +271,9 @@ const actions = computed(() => {
 }
 
 .prompt-template-field:hover {
-  border-color: #efb5c5;
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--line));
   background: var(--surface);
-  box-shadow: 0 8px 22px rgba(31, 40, 61, .045);
+  box-shadow: none;
 }
 
 .prompt-template-header {
@@ -298,7 +298,7 @@ const actions = computed(() => {
   min-width: 58px;
   min-height: 27px;
   padding: 3px 8px;
-  border: 1px solid #f2c4d1;
+  border: 1px solid color-mix(in srgb, var(--brand) 35%, var(--line));
   border-radius: 8px;
   color: var(--brand-strong);
   background: var(--brand-soft);
@@ -342,11 +342,11 @@ const actions = computed(() => {
   min-height: 110px;
   margin-top: 12px;
   padding: 12px 13px;
-  border: 1px solid #dfe4ed;
+  border: 1px solid var(--line);
   border-radius: 13px;
   color: var(--ink);
   background: var(--surface);
-  box-shadow: 0 1px 2px rgba(31, 40, 61, .035);
+  box-shadow: none;
   outline: none;
   resize: vertical;
   font-family: Inter, "SF Mono", ui-monospace, Menlo, monospace;
@@ -356,16 +356,16 @@ const actions = computed(() => {
 }
 
 .prompt-template-textarea:hover {
-  border-color: #ef9ab1;
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--line));
 }
 
 .prompt-template-textarea:focus {
   border-color: var(--brand);
   background: var(--surface);
-  box-shadow: 0 0 0 4px rgba(239, 71, 118, .1);
+  box-shadow: 0 0 0 2px var(--brand-soft);
 }
 
-.prompt-template-textarea::placeholder { color: #8992a5; }
+.prompt-template-textarea::placeholder { color: var(--muted); }
 
 .prompt-template-footer {
   display: flex;
@@ -388,7 +388,7 @@ const actions = computed(() => {
   gap: 5px;
   min-height: 29px;
   padding: 4px 8px;
-  border: 1px solid #e4d3da;
+  border: 1px solid color-mix(in srgb, var(--brand) 35%, var(--line));
   border-radius: 8px;
   color: var(--ink);
   background: var(--surface);
@@ -399,14 +399,14 @@ const actions = computed(() => {
 .prompt-token:disabled { opacity: .55; cursor: default; }
 
 .prompt-token:hover:not(:disabled) {
-  border-color: #ef9ab1;
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--line));
   color: var(--brand-strong);
   background: var(--brand-soft);
   transform: translateY(-1px);
 }
 
 .prompt-token:focus-visible {
-  outline: 3px solid rgba(239, 71, 118, .18);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 
@@ -422,8 +422,8 @@ const actions = computed(() => {
   font-size: 10px;
 }
 
-:root.dark .prompt-template-field:hover { border-color: rgba(255, 138, 171, .42); }
-:root.dark .prompt-role-badge { border-color: rgba(255, 138, 171, .36); }
+:root.dark .prompt-template-field:hover { border-color: color-mix(in srgb, var(--brand) 42%, transparent); }
+:root.dark .prompt-role-badge { border-color: color-mix(in srgb, var(--brand) 36%, transparent); }
 :root.dark .prompt-template-textarea { border-color: var(--line); }
 :root.dark .prompt-token { border-color: var(--line); }
 

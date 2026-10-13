@@ -1,7 +1,7 @@
 /**
  * @file src/features/reading-assistant/selectionContext.ts
  * 文件职责：在用户点击理解时，从原选区所在的最小正文块捕获有限上下文，并提取可明确展开的整句。
- * 主要内容：排除表单、交互控件、隐藏内容、代码及扩展译文，按选区位置裁剪段落，避免双击相同单词时关联错误句子。
+ * 主要内容：排除表单、交互控件、隐藏内容、代码及扩展译文；检查正文及祖先的计算可见性，包括 visibility:collapse；按选区位置裁剪段落，避免双击相同单词时关联错误句子。
  * 模块边界：不扫描整页、不读取网址、标题或存储，也不发送模型请求；只返回当前操作使用的纯文本快照。
  */
 import {summarizeSelectionContext} from '@/src/features/selection-translation/core/public';
@@ -10,6 +10,12 @@ import type {ReadingSelection} from './types';
 const EXCLUDED = 'script,style,noscript,template,textarea,input,select,button,code,pre,svg,math,nav,aside,[hidden],[inert],[aria-hidden="true"],[contenteditable]:not([contenteditable="false"]),[role="textbox"],[role="button"],.notranslate,[data-notranslate="true"],[data-fluent-read-ui],.fluent-read-bilingual-content';
 const PROSE = 'p,li,blockquote,dd,dt,figcaption,h1,h2,h3,h4,h5,h6';
 const normalize = (value: string) => value.replace(/\s+/gu, ' ').trim();
+
+function hidden(element: Element): boolean {
+    const view = element.ownerDocument.defaultView;
+    const style = typeof view?.getComputedStyle === 'function' ? view.getComputedStyle(element) : (element as HTMLElement).style;
+    return style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse';
+}
 
 /** 仅依据已经捕获的段落定位原选词所在句子，不改写浏览器的原生 Selection。 */
 export function sentenceAroundSelection(context: string, selected: string, selectedIndex = 0): string {
@@ -33,6 +39,10 @@ export function captureReadingSelection(range: Range, text: string, contextLimit
     const paragraph = start?.closest(PROSE) ?? start;
     if (!paragraph || paragraph.matches('body,html,main,article,section') || !paragraph.contains(range.endContainer)
         || paragraph.closest(EXCLUDED)) return fallback;
+    // 祖先 display:none 不会改变子段落的计算 display；必须沿祖先逐项核对。
+    for (let ancestor: Element | null = paragraph; ancestor; ancestor = ancestor.parentElement) {
+        if (hidden(ancestor)) return fallback;
+    }
     let raw = '';
     let selectedOffset = -1;
     let visited = 0;
@@ -40,9 +50,7 @@ export function captureReadingSelection(range: Range, text: string, contextLimit
         if (++visited > 2000) return;
         if (node.nodeType === 1) {
             const element = node as HTMLElement;
-            const view = element.ownerDocument.defaultView;
-            const style = typeof view?.getComputedStyle === 'function' ? view.getComputedStyle(element) : element.style;
-            if (element.matches(EXCLUDED) || style.display === 'none' || style.visibility === 'hidden') return;
+            if (element.matches(EXCLUDED) || hidden(element)) return;
             for (const child of Array.from(node.childNodes)) visit(child);
             return;
         }

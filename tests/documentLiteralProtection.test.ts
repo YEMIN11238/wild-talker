@@ -10,6 +10,7 @@ import {validateGlossaryProtectedTokens} from '@/src/core/glossary';
 import {Config} from '@/src/core/config/model';
 import {resolveConfiguredModel, servicesType} from '@/src/core/config/catalog';
 import {createTranslationBroker} from '@/src/services/translation/broker';
+import {createDocumentSegmentTranslator} from '@/src/features/document-translation/services/translation';
 import {prepareGlossaryRequest, getGlossaryProtectionEntries, isGlossaryOnlyResult, validateDocumentTranslationResult} from '@/src/services/translation/glossaryProtection';
 import {createTranslationProviderConfigSnapshot, getTranslationGlossaryTerms, getTranslationProviderConfig} from '@/src/services/translation/requestSnapshot';
 import type {TranslationRequestMessage} from '@/src/services/translation/types';
@@ -22,6 +23,65 @@ const documentConfig = () => ({...createTranslationProviderConfigSnapshot(new Co
     glossaryMatchContext: {context: 'document' as const, sourceLanguage: 'en', targetLanguage: 'zh-hans'}});
 
 describe('document literal protection', () => {
+
+    it('recovers the real 624-character MiMo PDF paragraph with strict tokens through broker, bounded requests and cache', async () => {
+        // 来源是用户本机 PDF 经真实解析得到的第 55 段；夹具不包含配置、密钥或模型响应。
+        const sentences = [
+            'The audio patch encoder follows the architectural design of MiMo-Audio and is trained jointly with the text backbone. ',
+            'At each time step, the audio tokens are embedded using separate embedding tables, one per RVQ codebook, and the resulting embeddings are summed to form a single frame representation. ',
+            'Every four consecutive frames are grouped into an audio patch and processed by a Transformer with bidirectional self-attention confined to that patch. ',
+            'The four output representations are then concatenated and linearly projected into a single backbone input embedding, reducing the audio sequence rate from 25 Hz to 6.25 Hz.',
+        ];
+        const targets = [
+            '音频分块编码器遵循 MiMo-Audio 的架构设计，并与文本骨干联合训练。',
+            '每个时间步通过独立嵌入表嵌入音频标记，每个 RVQ 码本对应一张表，再将嵌入求和得到单帧表示。',
+            '每四个连续帧组成一个音频块，由双向自注意力限制在该块内的 Transformer 处理。',
+            '随后拼接四个输出表示，并线性投影为一个骨干输入嵌入，将音频序列速率从 25 Hz 降至 6.25 Hz。',
+        ];
+        const source = sentences.join(''); expect(source).toHaveLength(624);
+        const config = Object.assign(new Config(), {service: 'deepseek', from: 'en', to: 'zh-Hans', useCache: true, enableAIContext: false});
+        const cache = new Map<string, string>(); const writes = vi.fn(async (key: string, value: string) => {cache.set(key, value); return true;});
+        const requests: Array<{source: string; tokenCount: number}> = [];
+        const provider = vi.fn(async (message: Record<string, unknown>) => {
+            const origin = String(message.origin);
+            const snapshot = getTranslationProviderConfig(message, createTranslationProviderConfigSnapshot(config));
+            const tokens = snapshot.glossaryProtectedTokens ?? [];
+            requests.push({source: origin, tokenCount: tokens.length});
+            // 回放模型丢弃不认识的保护标记：批次及完整长段都失效，不能把其结果存为完整译文。
+            if (origin.includes('___FLUENTREAD_')) return origin.replace(tokens[0]!, '音频模型');
+            if (origin.includes('At each time step') && origin.includes('The audio patch encoder')) return targets.join(' ');
+            const index = sentences.findIndex(sentence => origin.startsWith(sentence.slice(0, 20)));
+            if (index === 0) return targets[0].replace('MiMo', tokens[0]!);
+            if (index > 0) return targets[index];
+            return '另一段的完整译文。';
+        });
+        const broker = createTranslationBroker({ready: Promise.resolve(), getConfig: () => config, providers: {deepseek: provider},
+            cache: {get: async key => cache.get(key) ?? null, set: writes, clear: async () => {cache.clear();}, cleanup: async () => {}},
+            serviceTypes: servicesType, resolveConfiguredModel, getMissingCredentialMessage: () => null,
+            endpointResolver: {resolveOpenAICompatibleEndpoint: () => ({endpoint: 'https://fixture.invalid/v1'}), aiSdkTransportProfile: 'fixture'},
+            promptBuilder: {buildPageSummaryPrompt: text => text, buildPageSummarySystemPrompt: () => ''},
+            getTranslationLanguages: () => ({sourceLanguage: 'en', targetLanguage: 'zh-Hans'}),
+            buildTranslationCacheKey: identity => JSON.stringify(identity), logger: {warn: vi.fn()},
+        });
+        const translate = createDocumentSegmentTranslator({waitUntilReady: () => undefined, getDefaultService: () => 'deepseek',
+            getDefaultModel: () => 'deepseek-flash', supportsBatch: () => false, supportsAIMultiSegment: () => true,
+            translateText: (origin, _context, options) => broker.translateWithCache({origin, ...options}) as Promise<string>,
+            translateTextBatch: (origin, _context, options) => broker.translateWithCache({origin, ...options}) as Promise<string[]>,
+        });
+        const committed: Array<{id: number; translation: string}> = [];
+        const segments = [{id: 0, source}, {id: 1, source: 'Another paragraph describes the audio architecture.'}];
+        const result = await translate(segments, {fileName: 'MiMo_V2_6_technical_report.pdf', batchConcurrency: 1, onSegment: value => committed.push(value)});
+        expect(result).toEqual([targets.join(' '), '另一段的完整译文。']);
+        expect(provider).toHaveBeenCalledTimes(8); // 1 坏批次 + 2 坏长段 + 4 句 + 1 其它段。
+        expect(requests.slice(0, 4).map(row => row.tokenCount)).toEqual([1, 1, 1, 1]);
+        expect(requests[3].source).toContain('-Audio');
+        expect(committed).toEqual([{id: 0, translation: targets.join(' ')}, {id: 1, translation: '另一段的完整译文。'}]);
+        expect(writes).toHaveBeenCalledTimes(5); // 仅四个有效短句和另一段，三个无效结果都未缓存。
+        expect([...cache.values()].some(value => value === targets.join(' '))).toBe(false);
+        const resumed = await translate(segments, {fileName: 'MiMo_V2_6_technical_report.pdf', initialTranslations: [result[0], ''], batchTranslation: false});
+        expect(resumed).toEqual(result); expect(provider).toHaveBeenCalledTimes(8);
+    });
+
     it('coalesces automatic math separately in each native array packet and keeps serialized ownership unchanged', () => {
         const current = documentConfig();
         const origins = ['The relation 𝑓 ≃𝑆 𝑔 holds.', 'And 𝛾 ≃𝑆 𝛾′.'];

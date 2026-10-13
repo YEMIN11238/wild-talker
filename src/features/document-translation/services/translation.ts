@@ -1,11 +1,12 @@
 /**
  * @file src/features/document-translation/services/translation.ts
  * 文件职责：编排文档片段的批量翻译流程，在固定语言和服务快照下按数量及字符预算拆批，并向调用方持续报告确定性进度。
- * 主要内容：定义进度与逐段提交契约，在本次文档调用中默认启用机器批量或 AI 多段槽请求而不改变全局设置，按阅读位置重排待译片段并可收紧单批大小，同时保持数批请求在途、先返回的先提交，以章节内一次去重和游标领取避免重复原文挤占批量预算或反复扫描长文队列，按原生章节和位置构建有界篇章参考并区分人工确认译文，提交前移除服务凭空加入的表情符号，请求失败时可按退避间隔自动重试并向页面报告原因，被服务原样返回的专名与短词保留原文而不中断全文，复用已有译文继续未完成片段，提供文件解析所有权，固定文件级上下文，透传全局暂停状态、校验批次结果并阻止取消和失败后的迟到提交与继续回退请求。
+ * 主要内容：定义进度与逐段提交契约，在本次文档调用中默认启用机器批量或 AI 多段槽请求而不改变全局设置，按阅读位置重排待译片段并可收紧单批大小，同时保持数批请求在途、先返回的先提交，以章节内一次去重和游标领取避免重复原文挤占批量预算或反复扫描长文队列，按原生章节和位置构建有界篇章参考并区分人工确认译文，提交前移除服务凭空加入的表情符号，请求失败时可按退避间隔自动重试并向页面报告原因；文档术语标记损坏时批量降级为逐段，单段最多重试一次，再按真实句界拆成最多八段并保留当前段语境，全部经过原有严格校验才提交；被服务原样返回的专名与短词保留原文而不中断全文，复用已有译文继续未完成片段，提供文件解析所有权，固定文件级上下文，透传全局暂停状态、校验批次结果并阻止取消和失败后的迟到提交与继续回退请求。
  * 模块边界：该层不解析文件、不持久化配置，也不直接绑定具体 provider；上层负责冻结用户设置并注入 gateway，文档结构由 core 提供，网络和缓存语义由应用翻译客户端承担。
  */
 import {serializeTranslationError, TranslationRequestError} from '@/src/services/translation/errors';
 import {createDiscourseContext, discourseContextLimits, type DiscourseBlock} from '@/src/services/translation/context/discourse';
+import {iterateTranslationSentences} from '@/src/core/translation/lineBreak';
 import type {DocumentSegment} from '@/src/features/document-translation/core/document';
 
 export interface DocumentTranslationProgress {
@@ -177,6 +178,22 @@ function invalidAIMultiSegment(error: unknown): boolean {
     return (error as {code?: unknown} | null)?.code === 'AI_MULTI_SEGMENT_RESPONSE_INVALID';
 }
 
+/** 标记损坏属于响应协议问题；不能去掉校验，也不能按网络错误反复重发整批。 */
+function invalidDocumentProtection(error: unknown): boolean {
+    return (error as {code?: unknown} | null)?.code === 'GLOSSARY_PLACEHOLDER_INVALID';
+}
+
+/** 只在纯文本的句界恢复，不拆行内标签、代码或已有内部协议；预算之外仍明确失败。 */
+function documentRecoveryChunks(source: string): string[] | null {
+    if (/<\/?[A-Za-z]|__FRTERM_|___FLUENTREAD_|```/u.test(source)) return null;
+    const chunks: string[] = [];
+    for (const sentence of iterateTranslationSentences(source)) {
+        if (!sentence.trim() || chunks.length === 8) return null;
+        chunks.push(sentence);
+    }
+    return chunks.length > 1 ? chunks : null;
+}
+
 function abortableSleep(milliseconds: number, signal?: AbortSignal): Promise<void> {
     return new Promise((resolve) => {
         const finish = () => {clearTimeout(timer); signal?.removeEventListener('abort', finish); resolve();};
@@ -302,6 +319,40 @@ export function createDocumentSegmentTranslator(
             ...(options.enableAIContext === undefined ? {} : {enableAIContext}),
             ...(discourse ? {discourseContext: prepareDiscourse(segment.id, origins)!.context} : {}),
         });
+        /** 只恢复术语标记错误；任何认证、取消、暂停或其它错误仍走既有停止/退避规则。 */
+        const translateSingle = async (segment: DocumentSegment, isStopped: () => boolean): Promise<string> => {
+            const requestOptions: DocumentTranslationRequestOptions = {...glossaryOptions,
+                ...discourseOptions(segment, [segment.source]), enableNativeBatch: false, signal: options.signal, pageContext,
+                serviceOverride: service, modelOverride: model, sourceLanguage, targetLanguage, maxRetries: options.maxRetries};
+            const request = (source: string, contextOverride = pageContext) => withRetryBackoff(async () => {
+                throwIfAborted(options.signal);
+                const received = await gateway.translateText(source, context, {...requestOptions, pageContext: contextOverride});
+                if (!isStopped() && (typeof received !== 'string' || !received.trim())) throw new Error('翻译服务返回空译文，请重试');
+                return received;
+            }, options, isStopped);
+            try {return await request(segment.source);} catch (first) {
+                throwIfAborted(options.signal);
+                if (isStopped() || !invalidDocumentProtection(first)) throw first;
+            }
+            try {return await request(segment.source);} catch (second) {
+                throwIfAborted(options.signal);
+                if (isStopped() || !invalidDocumentProtection(second)) throw second;
+                const chunks = documentRecoveryChunks(segment.source);
+                if (!chunks) throw second;
+                // 短句仍使用完整段作不可信语境，防止模型丢失指代；参考总量与现有页面上下文同样有界。
+                const reference = `\nCurrent document paragraph (reference only):\n${segment.source.slice(0, 2000)}`;
+                const recoveryContext = pageContext.slice(0, Math.max(0, 4000 - reference.length)) + reference;
+                const restored: string[] = [];
+                for (const chunk of chunks) {
+                    throwIfAborted(options.signal);
+                    if (isStopped()) throw second;
+                    const translated = await request(chunk, recoveryContext);
+                    // 只有整段所有句子都通过 broker 校验才提交；保留原句界空白，不提前保存半段。
+                    restored.push(translated.trim() + (chunk.match(/\s+$/u)?.[0] ?? ''));
+                }
+                return restored.join('').trim();
+            }
+        };
         try {
             let completed = segments.length - pending.length;
             const reportProgress = () => options.onProgress?.({completed, total: segments.length});
@@ -377,7 +428,7 @@ export function createDocumentSegmentTranslator(
                     const single = singleFallback;
                     const batch = nextBatch(single ? 1 : itemLimit, characterLimit);
                     try {
-                        const result = await withRetryBackoff(async () => {
+                        const result = single ? [await translateSingle(batch[0], () => failed)] : await withRetryBackoff(async () => {
                         const requestOptions: DocumentTranslationRequestOptions = {
                             ...glossaryOptions,
                             ...discourseOptions(batch[0], batch.map(segment => segment.source)),
@@ -390,7 +441,7 @@ export function createDocumentSegmentTranslator(
                             targetLanguage,
                             maxRetries: options.maxRetries,
                         };
-                        const result = single ? [await gateway.translateText(batch[0].source, context, requestOptions)] : await gateway.translateTextBatch(
+                        const result = await gateway.translateTextBatch(
                             batch.map((segment) => segment.source),
                             context,
                             {
@@ -417,15 +468,17 @@ export function createDocumentSegmentTranslator(
                             reportProgress();
                             continue;
                         }
-                        if (untranslatedEcho(error) || (aiMultiSegment && invalidAIMultiSegment(error))) {
-                            if (invalidAIMultiSegment(error)) singleFallback = true;
+                        if (untranslatedEcho(error) || (!single && invalidDocumentProtection(error)) || (aiMultiSegment && invalidAIMultiSegment(error))) {
+                            if (invalidAIMultiSegment(error) || invalidDocumentProtection(error)) singleFallback = true;
                             // 整批里只要有一段被原样返回就会整批报错；逐段重译，仍被原样返回的那几段保留原文。
                             for (const segment of batch) {
                                 throwIfAborted(options.signal);
                                 let translation = segment.source;
                                 try {
-                                    const received = await gateway.translateText(segment.source, context, {...glossaryOptions, ...discourseOptions(segment, [segment.source]), enableNativeBatch: false, signal: options.signal, pageContext,
-                                        serviceOverride: service, modelOverride: model, sourceLanguage, targetLanguage, maxRetries: options.maxRetries});
+                                    const received = invalidDocumentProtection(error) ? await translateSingle(segment, () => failed)
+                                        : await gateway.translateText(segment.source, context, {...glossaryOptions,
+                                            ...discourseOptions(segment, [segment.source]), enableNativeBatch: false, signal: options.signal, pageContext,
+                                            serviceOverride: service, modelOverride: model, sourceLanguage, targetLanguage, maxRetries: options.maxRetries});
                                     if (typeof received === 'string' && received.trim()) translation = received;
                                 } catch (single) {
                                     if (failed) return;
@@ -461,23 +514,7 @@ export function createDocumentSegmentTranslator(
                     if (!segment) return;
 
                     try {
-                        const translation = await withRetryBackoff(async () => {
-                            const received = await gateway.translateText(segment.source, context, {
-                                ...glossaryOptions,
-                                ...discourseOptions(segment, [segment.source]),
-                                enableNativeBatch: false,
-                                signal: options.signal,
-                                pageContext,
-                                serviceOverride: service,
-                                modelOverride: model,
-                                sourceLanguage,
-                                targetLanguage,
-                                maxRetries: options.maxRetries,
-                            });
-                            // 其他 worker 已经失败时不再为这一段重试。
-                            if (!stopped && (typeof received !== 'string' || !received.trim())) throw new Error('翻译服务返回空译文，请重试');
-                            return received;
-                        }, options, () => stopped);
+                        const translation = await translateSingle(segment, () => stopped);
                         // Promise.all 会在首个 worker 失败时立即 reject；其余在途请求仍会稍后结束。
                         // 步骤 1：失败后不再上报过期进度，也不继续认领新的文档片段。
                         if (stopped) return;

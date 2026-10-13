@@ -1,7 +1,7 @@
 /**
  * @file userscript/uiLanguageBundles.ts
  * 文件职责：按需加载并注册 userscript 的六种非中文界面语言。
- * 主要内容：英文内嵌 gzip；其他语言从静态 JSON 获取并缓存在 GM 私有存储中，注册时补齐缺少的错误恢复文案。
+ * 主要内容：English 随构建内嵌 gzip，同版本可读资源直接提供当前六语；普通产物按需取得固定已发布五语基线，读取 GM 私有缓存或远程 JSON 后应用本次构建的字符串与模板数组差异，再补齐错误恢复文案。补丁不写回固定基线缓存。
  * 模块边界：只注册核心 i18n 资源，不访问宿主网页存储；扩展继续使用自己的按需资源加载器。
  */
 import {
@@ -10,6 +10,7 @@ import {
     registerUiLanguageBundle,
     type RegisteredUiLanguage,
     type UiLanguageBundle,
+    type LegacyPatternEntry,
 } from '@/src/core/i18n';
 import type {EnsureUiLanguageBundle, renderWithUiLanguageBundle as RenderWithUiLanguageBundle} from '@/src/platform/i18n/uiLanguageBundles';
 import {inflateGzipBase64} from './compression';
@@ -17,6 +18,33 @@ import {userscriptFetch} from './http';
 import {getStoredValue, setStoredValue} from './storage';
 
 const pending = new Map<RegisteredUiLanguage, Promise<boolean>>();
+
+interface MessagePatch {set?: Record<string, string>; remove?: string[]}
+interface LanguagePatch {
+    messages?: MessagePatch;
+    legacyText?: MessagePatch;
+    legacyPatterns?: Partial<Record<'early' | 'late', Array<number | LegacyPatternEntry>>>;
+}
+let pendingPatches: Promise<Partial<Record<RegisteredUiLanguage, LanguagePatch>>> | undefined;
+
+function patchMessages(source: Readonly<Record<string, string>>, patch?: MessagePatch): Readonly<Record<string, string>> {
+    if (!patch) return source;
+    const result = {...source, ...patch.set};
+    for (const key of patch.remove ?? []) delete result[key];
+    return result;
+}
+
+async function applyLanguagePatch(language: RegisteredUiLanguage, bundle: UiLanguageBundle): Promise<UiLanguageBundle> {
+    const compressed = typeof __FLUENTREAD_USERSCRIPT_LANGUAGE_PATCHES__ === 'undefined' ? '' : __FLUENTREAD_USERSCRIPT_LANGUAGE_PATCHES__;
+    if (!compressed) return bundle;
+    pendingPatches ??= inflateGzipBase64(compressed).then(text => JSON.parse(text));
+    const patch = (await pendingPatches)[language];
+    if (!patch) return bundle;
+    const restore = (field: 'early' | 'late') => patch.legacyPatterns?.[field]?.map(entry =>
+        typeof entry === 'number' ? bundle.legacyPatterns[field][entry] : entry) ?? bundle.legacyPatterns[field];
+    return {messages: patchMessages(bundle.messages, patch.messages), legacyText: patchMessages(bundle.legacyText, patch.legacyText),
+        legacyPatterns: {early: restore('early'), late: restore('late')}};
+}
 
 type RecoveryMessages = Readonly<Record<'learning.panelLoadError' | 'learning.reloadPage', string>>;
 // 固定远程词典保持原发布内容；仅在注册时补齐缺少的恢复文案。
@@ -91,14 +119,17 @@ export const ensureUiLanguageBundle: EnsureUiLanguageBundle = (value) => {
     const language = normalizeUiLanguage(value);
     if (hasUiLanguageBundle(language)) return Promise.resolve(true);
     const registered = language as RegisteredUiLanguage;
-    const embedded = registered === 'en-US' ? globalThis.__FLUENTREAD_USERSCRIPT_DATA__?.english : undefined;
+    const data = globalThis.__FLUENTREAD_USERSCRIPT_DATA__;
+    const embedded = data?.languageBundles?.[registered] ?? (registered === 'en-US' ? data?.english : undefined);
     const compressed = __FLUENTREAD_USERSCRIPT_LANGUAGE_BUNDLES__[registered];
     const remoteFile = __FLUENTREAD_USERSCRIPT_REMOTE_LANGUAGES__[registered];
     if (!embedded && !compressed && !remoteFile) return Promise.resolve(false);
     const existing = pending.get(registered);
     if (existing) return existing;
     const request = (embedded ? Promise.resolve(embedded) : compressed ? inflateBundle(compressed) : fetchRemoteBundle(remoteFile))
-        .then((bundle) => {
+        .then(async (base) => {
+            if (!isBundle(base)) throw new TypeError('界面语言资源格式无效');
+            const bundle = !embedded && !compressed ? await applyLanguagePatch(registered, base) : base;
             if (!isBundle(bundle)) throw new TypeError('界面语言资源格式无效');
             const recovery = recoveryMessages[registered];
             registerUiLanguageBundle(registered, recovery

@@ -8,13 +8,13 @@ import type {UiLanguage} from '../types';
 
 /** 首启不等待完整资源包；独立维护现有品牌名，避免改变原中英文目录的展开顺序。 */
 export const onboardingProductNames = {
-    'zh-CN': '流畅阅读',
-    'en-US': 'FluentRead',
-    'ja-JP': 'FluentRead',
-    'ko-KR': 'FluentRead',
-    'fr-FR': 'FluentRead',
-    'ru-RU': 'FluentRead',
-    'es-ES': 'FluentRead',
+    'zh-CN': "万能说客（Wild Talker）",
+    'en-US': "万能说客（Wild Talker）",
+    'ja-JP': "万能说客（Wild Talker）",
+    'ko-KR': "万能说客（Wild Talker）",
+    'fr-FR': "万能说客（Wild Talker）",
+    'ru-RU': "万能说客（Wild Talker）",
+    'es-ES': "万能说客（Wild Talker）",
 } as const satisfies Readonly<Record<UiLanguage, string>>;
 
 export const onboardingChineseMessages = {

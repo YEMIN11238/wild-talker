@@ -1,7 +1,7 @@
 /**
  * @file tests/promptSyncLifecycle.test.ts
  * 文件职责：通过实际 ServiceConfiguration 模板控件与确认端口验证服务设置的操作归属。
- * 主要内容：覆盖原生合批开关的服务范围、默认状态、独立修改和失活事件；验证提示词同步的来源编辑或删除、配置和服务切换、页签和活跃生命周期、目标列表重算、重复确认及旧按钮。
+ * 主要内容：覆盖原生合批开关的服务范围、默认状态、独立修改和失活事件；验证提示词预设只在点击后替换当前服务、旧事件不覆盖后来编辑；验证提示词同步的来源编辑或删除、配置和服务切换、页签和活跃生命周期、目标列表重算、重复确认及旧按钮。
  * 模块边界：编译真实客户端 SFC setup 与缓存模板并实际挂载，Element Plus 和浏览器为受控端口；不访问 setup 私有函数、不证明真实浏览器或存储。
  */
 import {createRequire} from 'node:module'
@@ -15,6 +15,7 @@ import {createServer, type Plugin, type ViteDevServer} from 'vite'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {Config} from '@/src/core/config/model'
 import {defaultOption, options, services, servicesType} from '@/src/core/config/catalog'
+import {TRANSLATION_PROMPT_PRESETS} from '@/src/features/settings/ui/services/promptTemplatePresets'
 
 const runtime = createRequire(import.meta.url)('vue') as typeof import('vue')
 const fixtureKey = '__frPromptSyncLifecycle'
@@ -212,6 +213,41 @@ describe('原生合批设置的实际模板与服务归属', () => {
     await settle();const before = snapshot()
     old(false);await settle();expect(snapshot()).toBe(before)
     toggle().update(false);await settle();expect(props.config.nativeBatchTranslationEnabled.google).toBe(false)
+  })
+})
+
+describe('主动选择提示词预设的服务归属', () => {
+  function presetButton(id = 'natural') {return document.querySelector(`[data-prompt-preset="${id}"]`) as HTMLButtonElement}
+
+  it.each(TRANSLATION_PROMPT_PRESETS.map(preset => preset.id))('%s 只在明确点击后替换当前服务，保留其他配置和后续手工编辑', async id => {
+    await mount()
+    const before = snapshot(), expected = TRANSLATION_PROMPT_PRESETS.find(preset => preset.id === id)!
+    await settle();expect(snapshot()).toBe(before)
+    expect(presetButton(id).textContent).toContain(expected.labelKey)
+    presetButton(id).click();await settle()
+    const edited = JSON.parse(before)
+    edited.system_role[sourceId] = expected.system;edited.user_role[sourceId] = expected.user
+    expect(JSON.parse(snapshot())).toEqual(edited)
+    props.config.user_role[sourceId] = 'my handwritten prompt';await settle()
+    expect(props.config.user_role[sourceId]).toBe('my handwritten prompt')
+    expect(document.querySelector('[data-confirmation-port]')).toBeNull()
+    expect(feedback).not.toHaveBeenCalled()
+  })
+
+  it.each(['hidden', 'cached', 'unmount', 'config', 'service', 'tab', 'edit', 'confirmation'])('%s 后旧预设按钮不会覆盖当前草稿', async reason => {
+    await mount();const original = props.config, old = eventOf(presetButton())
+    if (reason === 'hidden') props.active = false
+    if (reason === 'cached') visible.value = false
+    if (reason === 'unmount') app!.unmount()
+    if (reason === 'config') props.config = runtime.reactive(configured())
+    if (reason === 'service') props.service = services.openai
+    if (reason === 'tab') fixture.tabs.at(-1).select('requests')
+    if (reason === 'edit') props.config.user_role[sourceId] = 'newer handwritten prompt'
+    if (reason === 'confirmation') await openSync()
+    await settle();const before = snapshot(), originalBefore = JSON.stringify(original)
+    old();await settle()
+    expect(snapshot()).toBe(before);expect(JSON.stringify(original)).toBe(originalBefore)
+    if (reason === 'confirmation') {expect(presetButton().disabled).toBe(true);confirmation().cancel();await settle()}
   })
 })
 

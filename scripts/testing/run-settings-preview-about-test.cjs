@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 回答风格与关于页专项：真实生产扩展、独立后台 Edge，只验证布局、品牌区和赞赏码放大，不调用模型或外部赞赏服务。
+// 回答风格与关于页专项：真实生产扩展、独立后台 Edge，验证布局、本地使用入口与完整 GPL 许可，不调用模型或外部来源站点。
 'use strict';
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -84,114 +84,47 @@ const report = {ok: false, extensionDir, cases: [], screenshots: [], layout: [],
       await page.goto(`${origin}/options.html#settings-about`);
       await page.locator('.about-hero').waitFor();
       await patch({uiLanguage: 'zh-CN', uiLanguageSetupCompleted: true, animations: false, theme: 'light'});
-      assert.equal(await page.locator('.about-experience, .about-features, .about-feature').count(), 0);
-      assert.equal(await page.locator('.about-links a').count(), 4);
-      assert.equal(await page.locator('.about-support-method').count(), 2);
+      const assertPersonalAbout = async () => {
+        assert.equal(await page.locator('.about-support-method, .about-support-panel, .about-wechat-contact, .about-qr-dialog, img[src*="approve"], img[src*="wechat-contact"], a[href*="ko-fi"]').count(), 0);
+        assert.equal(await page.locator('.about-experience, .about-features, .about-feature').count(), 0);
+        assert.equal(await page.locator('#settings-about a, .sidebar .brand[href]').count(), 0);
+        assert.deepEqual(await page.locator('.about-links button[data-about-section]').evaluateAll(items => items.map(button => button.dataset.aboutSection)), [
+          'settings-services', 'settings-general', 'settings-selection', 'settings-interface',
+        ]);
+        assert.equal(await page.locator('.about-personal-panel code').textContent(), 'https://github.com/FluentRead/FluentRead');
+        assert.equal(await page.locator('details.about-license-details summary').count(), 1);
+        assert.equal(await page.locator('.about-license-details pre').textContent(), fs.readFileSync(path.resolve(__dirname, '../../LICENSE'), 'utf8'));
+      };
       for (const theme of ['light', 'dark']) {
         await patch({theme});
         for (const width of [1440, 1024, 820, 390]) {
-          await page.setViewportSize({width, height: 1000});
+          await page.setViewportSize({width, height: 1000});await assertPersonalAbout();
           const layout = await page.locator('.about-hero').evaluate(hero => {
-            const intro = hero.querySelector('.about-intro');
-            const style = getComputedStyle(hero);
-            const contact = document.querySelector('.about-wechat-contact').getBoundingClientRect();
-            const project = document.querySelector('.about-links a:nth-of-type(3)').getBoundingClientRect();
-            const links = document.querySelector('.about-links').getBoundingClientRect();
-            const feedback = document.querySelector('.about-links a:nth-of-type(4)').getBoundingClientRect();
-            return {
-              contactWidth: contact.width, linksWidth: links.width, feedbackBottom: feedback.bottom, contactX: contact.x, projectX: project.x, contactY: contact.y, projectBottom: project.bottom,
-              heroWidth: hero.clientWidth,
-              introWidth: intro.clientWidth,
+            const intro = hero.querySelector('.about-intro'), style = getComputedStyle(hero);
+            return {heroWidth: hero.clientWidth, introWidth: intro.clientWidth,
               contentWidth: hero.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
               horizontalOverflow: document.documentElement.scrollWidth > innerWidth + 1,
-              pageOverflow: document.querySelector('.about-page').scrollWidth > document.querySelector('.about-page').clientWidth + 1,
-            };
+              pageOverflow: document.querySelector('.about-page').scrollWidth > document.querySelector('.about-page').clientWidth + 1};
           });
-          assert(Math.abs(layout.introWidth - layout.contentWidth) <= 1, 'brand intro fills the hero without an empty column');
-          assert.equal(layout.horizontalOverflow, false);
-          assert.equal(layout.pageOverflow, false);
-          assert(Math.abs(layout.contactWidth - layout.linksWidth) <= 1, 'contact button spans the entire link grid');
-          assert(Math.abs(layout.contactX - layout.projectX) <= 1, 'contact button aligns below the open-source card');
-          assert(layout.contactY > Math.max(layout.projectBottom, layout.feedbackBottom), 'contact button follows open source and feedback');
-          report.layout.push({section: 'about', theme, width, ...layout});
-          await shot(`about-${width}-${theme}`);
+          assert(Math.abs(layout.introWidth - layout.contentWidth) <= 1, 'brand intro fills the hero');
+          assert.equal(layout.horizontalOverflow, false);assert.equal(layout.pageOverflow, false);
+          report.layout.push({section: 'about', theme, width, ...layout});await shot(`about-${width}-${theme}`);
         }
       }
-      await patch({theme: 'light'});
       await page.setViewportSize({width: 1440, height: 1000});
-      report.cases.push('removed experience card, full-width brand intro, four project links, two support entries, responsive light/dark layouts');
-
-      const contactTrigger = page.locator('.about-wechat-contact');
-      const contactDialog = page.locator('.about-wechat-contact-dialog');
-      const openContact = async (keyboard = false) => {
-        const count = context.pages().length;
-        if (keyboard) { await contactTrigger.focus(); await page.keyboard.press('Enter'); }
-        else await contactTrigger.click();
-        await contactDialog.waitFor({state: 'visible'});
-        await page.waitForFunction(() => !document.querySelector('.dialog-fade-enter-active'));
-        const image = contactDialog.locator('img');
-        await image.evaluate(image => image.decode());
-        assert.deepEqual(await image.evaluate(image => [image.naturalWidth, image.naturalHeight]), [888, 1131]);
-        assert.equal(await image.getAttribute('alt'), '作者微信二维码');
-        assert.equal(context.pages().length, count);
-        assert.equal(page.url(), `${origin}/options.html#settings-about`);
-        const box = await image.boundingBox();
-        const viewport = page.viewportSize();
-        assert(box.x >= 0 && box.y >= 0 && box.x + box.width <= viewport.width + 1 && box.y + box.height <= viewport.height + 1);
-      };
-      const contactClosed = async () => {
-        await contactDialog.waitFor({state: 'hidden'});
-        await page.waitForFunction(() => document.activeElement === document.querySelector('.about-wechat-contact'));
-      };
-      await openContact(true); await shot('wechat-contact-desktop');
-      await page.keyboard.press('Tab');
-      assert(await contactDialog.evaluate(el => el.contains(document.activeElement)));
-      await page.keyboard.press('Escape'); await contactClosed();
-      await openContact(); await contactDialog.locator('.el-dialog__headerbtn').click(); await contactClosed();
-      await openContact(); await page.locator('.el-overlay-dialog').click({position: {x: 5, y: 5}}); await contactClosed();
-      for (const theme of ['light', 'dark']) {
-        await patch({theme}); await page.setViewportSize({width: 390, height: 844});
-        await openContact(); await shot(`wechat-contact-mobile-${theme}`);
-        await page.keyboard.press('Escape'); await contactClosed();
+      for (const locale of ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'ru-RU', 'es-ES']) {
+        await patch({uiLanguage: locale});await assertPersonalAbout();
       }
-      await patch({theme: 'light'}); await page.setViewportSize({width: 1440, height: 1000});
-      report.cases.push('two-column WeChat contact button below open source and feedback, exact supplied QR dimensions, keyboard and click opening, close/focus return, mobile light/dark');
-
-      const trigger = page.locator('.about-support-wechat');
-      const dialog = page.locator('.about-approve-dialog');
-      const open = async () => {
-        const pageCount = context.pages().length;
-        await trigger.click(); await dialog.waitFor({state: 'visible'});
-        await page.waitForFunction(() => !document.querySelector('.dialog-fade-enter-active'));
-        await dialog.locator('img').evaluate(image => image.decode());
-        assert.equal(page.url(), `${origin}/options.html#settings-about`);
-        assert.equal(context.pages().length, pageCount, 'opening the image does not create a tab');
-        const bounds = await dialog.boundingBox();
-        assert(bounds.x >= 0 && bounds.y >= 0 && bounds.x + bounds.width <= (await page.viewportSize()).width + 1 && bounds.y + bounds.height <= (await page.viewportSize()).height + 1, 'dialog stays in the viewport');
-        assert((await dialog.locator('img').boundingBox()).width > (await trigger.locator('img').boundingBox()).width, 'the preview enlarges the code');
-      };
-      const closed = async () => { await dialog.waitFor({state: 'hidden'}); await page.waitForFunction(() => document.activeElement === document.querySelector('.about-support-wechat')); };
-      await open(); await shot('wechat-preview-desktop');
-      await page.keyboard.press('Tab');
-      assert(await dialog.evaluate(el => el.contains(document.activeElement)), 'focus stays inside the dialog');
-      await page.keyboard.press('Escape'); await closed();
-      await open(); await dialog.locator('.el-dialog__headerbtn').click(); await closed();
-      await open(); await page.locator('.el-overlay-dialog').click({position: {x: 5, y: 5}}); await closed();
-      for (const theme of ['light', 'dark']) {
-        await patch({theme}); await page.setViewportSize({width: 390, height: 844});
-        await open(); await shot(`wechat-preview-mobile-${theme}`);
-        await page.keyboard.press('Escape'); await closed();
+      const license = page.locator('details.about-license-details');
+      await license.locator('summary').click();assert.equal(await license.getAttribute('open'), '');
+      assert.equal(await license.locator('pre').isVisible(), true);
+      await license.locator('summary').click();assert.equal(await license.getAttribute('open'), null);
+      for (const section of ['settings-services', 'settings-general', 'settings-selection', 'settings-interface']) {
+        await page.locator(`.about-links button[data-about-section="${section}"]`).click();
+        await page.waitForFunction(section => location.hash === `#${section}`, section);
+        await page.locator('button[data-about-brand]').click();await page.locator('#settings-about').waitFor({state: 'visible'});await assertPersonalAbout();
       }
-      await page.setViewportSize({width: 1440, height: 1000});
-      for (const [locale, expected] of [['zh-CN', '放大微信赞赏码'], ['en-US', 'Enlarge the WeChat support code'], ['ja-JP', 'WeChat 支援コードを拡大'], ['ko-KR', 'WeChat 후원 코드 확대'], ['fr-FR', 'Agrandir le code de soutien WeChat'], ['ru-RU', 'Увеличить код поддержки WeChat'], ['es-ES', 'Ampliar el código de apoyo de WeChat']]) {
-        await patch({uiLanguage: locale});
-        await page.waitForFunction(expected => document.querySelector('.about-support-wechat')?.getAttribute('aria-label') === expected, expected);
-        assert.equal(await page.locator('.about-experience, .about-features, .about-feature').count(), 0);
-        const label = await trigger.getAttribute('aria-label');
-        assert(label && (locale === 'zh-CN' || !/[\u4e00-\u9fff]/u.test(label) || locale === 'ja-JP'), `translated trigger ${locale}`);
-        await open(); await page.keyboard.press('Escape'); await closed();
-      }
-      report.cases.push('in-page enlarged image, no new tab, focus trap and return, Escape/button/mask close, mobile light/dark, seven UI languages');
+      report.cases.push('personal About with four local navigation guides, nonclickable upstream attribution and full expandable GPL text, responsive light/dark layouts, seven UI languages');
     }
     assert.equal(report.consoleErrors.length, 0, JSON.stringify(report.consoleErrors));
     report.ok = true;

@@ -72,7 +72,7 @@
     "settings.webdav.error.decrypt": "백업을 복호화할 수 없거나 손상되었습니다. 기기 설정은 변경되지 않았습니다.",
     "settings.webdav.error.failure": "작업이 완료되지 않았습니다. 네트워크와 로컬 저장소를 확인한 후 재시도하세요。",
     "settings.cloud.privacyEncryption": "설정을 기기에서 암호화한 뒤 업로드합니다. 앱 암호는 공개되어 있으므로 계정, 폴더 권한 및 기기 보안이 주된 보호 수단입니다.",
-    "settings.cloud.privacyWebDavStorage": "지정한 서버 폴더의 FluentRead 백업에만 접근합니다.",
+    "settings.cloud.privacyWebDavStorage": "지정한 서버 폴더의 万能说客（Wild Talker） 백업에만 접근합니다.",
     "settings.cloud.privacyWebDavConnection": "연결 비밀번호는 이 기기에만 저장되며 수동 작업 시에만 서버에 접근합니다.",
     "settings.cloud.currentAccount": "백업 계정: {email}",
     "settings.cloud.changed.credentials": "API 키, OAuth 토큰 및 인증 정보",

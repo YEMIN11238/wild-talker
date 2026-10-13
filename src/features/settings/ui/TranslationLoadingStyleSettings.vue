@@ -108,14 +108,14 @@ const selectedStyle = computed({
 }
 
 .loading-style-option:hover {
-  border-color: rgba(239, 71, 118, .38);
+  border-color: color-mix(in srgb, var(--brand) 38%, transparent);
   background: var(--surface-soft);
 }
 
 .loading-style-option.selected {
   border-color: var(--brand);
   background: var(--brand-soft);
-  box-shadow: 0 0 0 2px rgba(239, 71, 118, .08);
+  box-shadow: none;
 }
 
 .loading-style-option.is-none:not(.selected) {
@@ -147,7 +147,7 @@ const selectedStyle = computed({
 }
 
 .loading-style-radio:focus-visible ~ .loading-style-preview {
-  outline: 2px solid rgba(239, 71, 118, .34);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 

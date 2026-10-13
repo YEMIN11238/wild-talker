@@ -204,19 +204,21 @@ watch(() => [active.value, props.context], () => {closeDialog()}, {flush: 'sync'
 
 <style scoped>
 .custom-provider-form { display: grid; gap: 15px; }
-.custom-provider-form > label { display: grid; gap: 6px; color: #263044; }
+.custom-provider-form > label { display: grid; gap: 6px; color: var(--ink, #252a24); }
 .custom-provider-form > label > span { font-size: 12px; font-weight: 750; }
-.custom-provider-form > label > span small, .custom-provider-form > label > small { color: #8b93a4; font-size: 10px; font-weight: 400; }
+.custom-provider-form > label > span small, .custom-provider-form > label > small { color: var(--muted, #6f7869); font-size: 10px; font-weight: 400; }
 .custom-provider-form input {
-  width: 100%; min-height: 42px; padding: 0 12px; border: 1px solid #dfe3eb; border-radius: 11px; color: #172033; background: #f9fafc; outline: none; font-size: 13px;
+  width: 100%; min-height: 42px; padding: 0 12px; border: 1px solid var(--line, #dce3d2); border-radius: 11px; color: var(--ink, #252a24); background: var(--surface-soft, #f5f7f0); outline: none; font-size: 13px;
 }
-.custom-provider-form input:focus { border-color: #ef4776; background: #fff; box-shadow: 0 0 0 3px rgba(239, 71, 118, .1); }
+.custom-provider-form input:focus { border-color: var(--brand, #648433); background: var(--surface, #fff); box-shadow: 0 0 0 2px var(--brand-soft, #edf5dd); }
 .custom-provider-form input[aria-invalid='true'] { border-color: #d9345e; }
 .custom-provider-form .field-error { color: #c52f58; }
 .custom-provider-form footer { display: flex; justify-content: flex-end; gap: 9px; margin-top: 5px; }
 .custom-provider-form footer button { min-height: 38px; padding: 0 15px; border-radius: 10px; font-size: 12px; font-weight: 750; cursor: pointer; }
-.secondary-button { border: 1px solid #dfe3eb; color: #59657b; background: #fff; }
-.primary-button { border: 1px solid #ef4776; color: #fff; background: #ef4776; }
+.secondary-button { border: 1px solid var(--line, #dce3d2); color: var(--ink, #252a24); background: var(--surface, #fff); }
+.primary-button { border: 1px solid var(--brand, #648433); color: var(--brand-strong, #456021); background: var(--brand-soft, #edf5dd); }
+.primary-button:hover:not(:disabled) { background: color-mix(in srgb, var(--brand, #648433) 14%, var(--surface, #fff)); }
+.custom-provider-form footer button:focus-visible { outline: 2px solid var(--brand, #648433); outline-offset: 2px; }
 :global(:root.dark .custom-provider-form > label) { color: var(--ink); }
 :global(:root.dark .custom-provider-form input),
 :global(:root.dark .secondary-button) { border-color: var(--line); color: var(--ink); background: var(--surface-soft); }

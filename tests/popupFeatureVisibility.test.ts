@@ -117,19 +117,19 @@ describe('popup feature visibility', () => {
         const styles = source('src/app/popup/popup.css');
         const html = source('entrypoints/popup/index.html');
         const criticalStyles = html.slice(html.indexOf('<style>'), html.indexOf('</style>'));
-        expect(criticalStyles).toContain('html { width: var(--interface-popup-width, 320px);');
+        expect(criticalStyles).toContain('html { width: var(--interface-popup-width, 360px);');
         expect(criticalStyles).toContain('min-height: 460px;');
         expect(criticalStyles).toContain('display: flex;');
         expect(html.indexOf('</style>')).toBeLessThan(html.indexOf('src="/popup-startup.js"'));
-        expect(styles).toContain('html { width: var(--interface-popup-width, 320px); }');
+        expect(styles).toContain('html { width: var(--interface-popup-width, 360px); }');
         // Firefox 以内容固有宽度定 popup 尺寸，body 不能用百分比宽度。
-        const bodyWidth = 'body, #app { width: var(--fluentread-localized-popup-width, var(--interface-popup-width, 320px));';
+        const bodyWidth = 'body, #app { width: var(--fluentread-localized-popup-width, var(--interface-popup-width, 360px));';
         expect(criticalStyles).toContain(bodyWidth);
         expect(styles).toContain(bodyWidth);
         expect(styles).not.toContain('body, #app { width: 100%; }');
         expect(styles).not.toContain('width: min(var(--interface-popup-width, 360px), 100vw)');
-        expect(styles).toContain('.popup-shell { max-height: 560px; overflow-y: auto;');
-        expect(styles).toContain(':root[data-fluentread-embedded-popup] .popup-shell { max-height: min(560px, 100dvh); }');
+        expect(styles).toContain('.popup-shell { max-height: 600px; overflow-y: auto;');
+        expect(styles).toContain(':root[data-fluentread-embedded-popup] .popup-shell { max-height: min(600px, 100dvh); }');
     });
 
     it('keeps the real Popup under a first-open language mask until confirmation', () => {
@@ -171,8 +171,8 @@ describe('popup feature visibility', () => {
         expect(onboarding).not.toContain('.language-onboarding-card::before');
         expect(onboarding).toContain('class="onboarding-success"');
         expect(onboarding).toContain('setTimeout(() =>');
-        expect(styles).toContain('.popup-shell.language-onboarding-shell { overflow-x: hidden; }');
-        expect(styles).toContain('.popup-shell { max-height: 560px; overflow-y: auto;');
+        expect(styles).toContain('.popup-shell.language-onboarding-shell { overflow-x: hidden; padding: 0 !important; }');
+        expect(styles).toContain('.popup-shell { max-height: 600px; overflow-y: auto;');
         expect(onboarding).toContain('.language-onboarding {\n  position: relative;');
         expect(i18n).toContain('function isRelevantUiMutation');
         expect(i18n).toContain('setTimeout(() => {');
@@ -331,8 +331,11 @@ describe('popup feature visibility', () => {
         expect(popup).not.toContain('class="eyebrow features-eyebrow"');
         expect(popup).toContain('data-testid="popup-version"');
         expect(popup).toContain("browser.runtime.getManifest().version");
-        expect(popup).toContain("t('popup.donationButton')");
-        expect(source('src/app/popup/popup.css')).not.toContain('.opensource-link span { display: none; }');
+        expect(popup).not.toContain("t('popup.donationButton')");
+        expect(popup).not.toContain('misc/approve.jpg');
+        expect(popup).not.toContain('ko-fi.com');
+        expect(popup).not.toContain('class="opensource-link"');
+        expect(popup).not.toContain('在 GitHub 查看');
         expect(popup).not.toContain("activeDrawer === 'video'");
         expect(popup).not.toContain("activeDrawer === 'area'");
     });

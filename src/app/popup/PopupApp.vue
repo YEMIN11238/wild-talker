@@ -1,7 +1,7 @@
 <!--
  @file src/app/popup/PopupApp.vue
  文件职责：实现浏览器 Popup 的主交互界面，连接当前标签页状态、翻译配置、可插拔皮肤、功能抽屉和高频操作，让现场开关与显示操作保持简短，将长期偏好引导到对应设置页。
- 主要内容：在配置 hydration 后汇总翻译服务，直接展示网页默认服务与适用的配置模型；翻译与局部同排，主操作用短标题合并平台快捷键并保留加载状态，长组合在悬停提示中完整显示，站点开关保留独立按钮；赞赏码在当前弹窗内切换放大与还原，关闭后重置；悬停、划词与图片抽屉优先展示开关和操作示意，首次语言引导独占内容；页面操作、抽屉和导航绑定活跃会话，等待期间独占请求，关闭和配置切换使旧回复失效；网站规则写前复验标签页，等待后台确认并呈现保存忙碌、暂停与失败反馈。
+ 主要内容：用浅色留白、细描边主卡片与单列快捷入口建立语言、翻译操作、服务及工具层级；翻译与局部同排并保留快捷键与忙碌状态，服务直接展示默认供应商和适用模型，站点规则保留独立按钮；页脚仅保留统计与缓存操作，上游来源与许可证由关于页展示；悬停、划词与图片抽屉优先展示开关和操作示意，首次语言引导独占内容；页面操作、抽屉和导航绑定活跃会话，等待期间独占请求，关闭和配置切换使旧回复失效；网站规则写前复验标签页，等待后台确认并呈现保存忙碌、暂停与失败反馈。
  模块边界：组件编排 UI、浏览器导航事件与生命周期；页内面板通过授权来源固定发起网页，页面消息归属由 pageActions 管理，不实现翻译 provider、缓存存储或 content 挂载；公共配置由 services/store 管理。
 -->
 <!-- Popup 页面归 app 层所有；WXT 入口只负责调用挂载函数。 -->
@@ -31,58 +31,18 @@
       <div class="brand">
         <img src="/icon/128.png" alt="" />
         <div>
-          <strong>流畅阅读</strong>
+          <strong :title="t('common.brand')">{{ t('common.brand') }}</strong>
           <small class="brand-version" data-testid="popup-version">v{{ version }}</small>
           <small v-if="!config.on">{{ t('popup.heroDisabled') }}</small>
         </div>
       </div>
       <div class="header-actions">
-        <button ref="donationTrigger" class="donation-button" type="button" :title="t('popup.donationTitle')" :aria-label="t('popup.donationTitle')" :onClick="donationActions.open">
-          <Coffee />
-          <span>{{ t('popup.donationButton') }}</span>
-        </button>
         <button class="settings-button" type="button" title="完整设置" aria-label="打开完整设置" :onClick="popupActions.settings">
           <Setting />
           <span>设置</span>
         </button>
       </div>
     </header>
-
-    <Transition name="donation-fade">
-      <div
-        v-if="donationVisible"
-        class="donation-overlay"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="donation-title"
-        :onClick="donationActions.overlay"
-      >
-        <section ref="donationCard" class="donation-card" tabindex="-1">
-          <button class="donation-close" type="button" :aria-label="t('popup.donationClose')" :onClick="donationActions.close">×</button>
-          <h2 id="donation-title">{{ t('popup.donationTitle') }}</h2>
-          <p class="donation-description">{{ t('popup.donationDescription') }}</p>
-          <section class="donation-method donation-wechat">
-            <div class="donation-method-heading"><h3>{{ t('popup.donationWechat') }}</h3><span>WeChat Support</span></div>
-            <button
-              class="donation-qr-frame"
-              :class="{ 'is-enlarged': donationQrEnlarged }"
-              type="button"
-              :aria-pressed="donationQrEnlarged"
-              :aria-label="t(donationQrEnlarged ? 'popup.donationRestoreCode' : 'popup.donationEnlargeCode')"
-              @click="donationQrEnlarged = !donationQrEnlarged"
-            >
-              <!-- 绑定表达式让模板编译器保留 public 路径，避免再打包一份带 hash 的同图。 -->
-              <img :src="'/misc/approve.jpg'" :alt="t('popup.donationCodeAlt')" width="1152" height="1152" />
-            </button>
-            <p class="donation-method-note">{{ t(donationQrEnlarged ? 'popup.donationScanEnlarged' : 'popup.donationScan') }}</p>
-          </section>
-          <a class="donation-method donation-kofi" href="https://ko-fi.com/thinkstu" target="_blank" rel="noopener noreferrer">
-            <span class="donation-kofi-mark" aria-hidden="true"><Coffee /></span>
-            <span class="donation-kofi-copy"><strong>Ko-fi <span aria-hidden="true">↗</span></strong><span>{{ t('popup.donationKofi') }}</span><small>ko-fi.com/thinkstu</small></span>
-          </a>
-        </section>
-      </div>
-    </Transition>
 
     <template v-for="moduleId in visiblePopupModuleOrder" :key="moduleId">
     <section v-if="moduleId === 'translation'" class="hero-card" data-popup-module="translation">
@@ -124,6 +84,7 @@
           :aria-label="pageTranslationLabel" :title="pageTranslationTitle"
           :disabled="!config.on || currentSiteExtensionDisabled || translating || pageState.savingRule" :onClick="pageButtons.toggle">
           <span v-if="translating" class="spinner" aria-hidden="true" />
+          <svg v-if="!translating" class="translate-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h10M9 3v2M6 5c0 5 4 9 7 10M12 5c0 5-4 9-8 11M13 21l4-10 4 10M14.5 17h5" /></svg>
           <span class="translate-label">{{ pageTranslationButtonLabel }}</span>
         </button>
         <button v-if="!isThunderbird && !currentPdfSource" class="section-translate-button" type="button" data-testid="section-translation"
@@ -191,19 +152,6 @@
       :data-popup-module-last="lastVisiblePopupModule === 'footer'"
     >
       <span class="popup-translation-count" data-i18n-ignore>{{ t('popup.translationCount', {count: config.count}) }}</span>
-      <a
-        class="opensource-link"
-        href="https://github.com/Bistutu/FluentRead"
-        target="_blank"
-        rel="noreferrer"
-        aria-label="在 GitHub 查看流畅阅读开源项目"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 .3a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.26c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.74.08-.74 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.17 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.24 2.87.12 3.17.77.84 1.24 1.91 1.24 3.22 0 4.62-2.81 5.65-5.49 5.95.43.37.81 1.1.81 2.22v3.29c0 .32.22.69.83.57A12 12 0 0 0 12 .3" />
-        </svg>
-        <span>开源项目</span>
-        <span class="external-mark" aria-hidden="true">↗</span>
-      </a>
       <button type="button" :disabled="clearingCache" :onClick="popupActions.cache">{{ clearingCache ? '清理中…' : '清除缓存' }}</button>
     </footer>
     </template>
@@ -345,7 +293,7 @@
 <script lang="ts" setup>
 import PopupLanguageSelect from './PopupLanguageSelect.vue';
 
-import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, reactive, ref, shallowRef, toRefs, watch } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, reactive, ref, toRefs, watch } from 'vue';
 import browser from 'webextension-polyfill';
 import type {Tabs} from 'webextension-polyfill';
 import {
@@ -430,10 +378,6 @@ const {busy: translating, translated: pageTranslated, tabId: currentTabId, domai
 const currentPdfSource = computed(() => getPdfSourceUrl(pageState.url));
 const pageTranslationLabel = computed(() => t(currentPdfSource.value ? 'document.pdfReading.openReader' : pageTranslated.value ? 'popup.restoreCurrentPage' : 'popup.translateCurrentPage'));
 const clearingCache = ref(false);
-const donationVisible = ref(false);
-const donationQrEnlarged = ref(false);
-const donationCard = shallowRef<HTMLElement | null>(null);
-const donationTrigger = shallowRef<HTMLButtonElement | null>(null);
 const notice = ref('');
 const noticeType = ref<'success' | 'error'>('success');
 const hydrated = ref(false);
@@ -743,15 +687,6 @@ const pageButtons = computed(() => {
     always: (value: boolean) => {if (owns()) return setCurrentSiteAlwaysTranslated(value)},
     disabled: (value: boolean) => {if (owns()) return setCurrentSiteExtensionDisabled(value)}};
 });
-const donationRevision = ref(0);
-watch(donationVisible, () => {donationRevision.value += 1}, {flush: 'sync'});
-
-const donationActions = computed(() => {
-  const current = popupContext.capture(), sequence = donationRevision.value;
-  const close = () => {if (current() && sequence === donationRevision.value) closeDonation()};
-  return {open: () => {if (current() && sequence === donationRevision.value) return openDonation()},
-    close, overlay: (event: MouseEvent) => {if (event.target === event.currentTarget) close()}};
-});
 const popupActions = computed(() => {
   const current = popupContext.capture();
   const bind = (run: () => void | Promise<void>) => () => {if (current()) return run()};
@@ -781,7 +716,7 @@ const drawerDisplayModes = computed(() => {
   return options.display.map(item => ({...item, disabled: !config.value.on || (config.value.service === 'google' && item.value === 0),
     choose: () => {if (current() && config.value.on && (config.value.service !== 'google' || item.value !== 0)) config.value.display = item.value}}));
 });
-watch(popupContext.active, enabled => {if (!enabled) {drawerVisible.value = false;donationVisible.value = false;notice.value = '';if (noticeTimer) clearTimeout(noticeTimer)}}, {flush: 'sync'});
+watch(popupContext.active, enabled => {if (!enabled) {drawerVisible.value = false;notice.value = '';if (noticeTimer) clearTimeout(noticeTimer)}}, {flush: 'sync'});
 watch(() => config.value.on, enabled => {if (!enabled && activeDrawer.value !== 'services' && activeDrawer.value !== 'aiContext') drawerVisible.value = false}, {flush: 'sync'});
 watch(cacheContext.active, enabled => {if (!enabled) clearingCache.value = false}, {flush: 'sync'});
 
@@ -852,41 +787,6 @@ watch(() => config.value.interfaceFont, font => applyInterfaceFont(font));
 watch(popupUsesContentHeight, applyPopupHeightMode, {immediate: true});
 darkMode.onchange = () => { if (config.value.theme === 'auto') applyTheme('auto'); };
 
-async function openDonation() {
-  if (!popupContext.active.value || donationVisible.value) return;
-  const current = popupContext.capture(), before = document.activeElement;
-  donationQrEnlarged.value = false;
-  donationVisible.value = true;const sequence = donationRevision.value;
-  await nextTick();
-  if (current() && donationVisible.value && sequence === donationRevision.value
-    && (document.activeElement === before || document.activeElement === document.body)) {
-    donationCard.value?.querySelector<HTMLButtonElement>('.donation-close')?.focus({preventScroll: true});
-  }
-}
-function closeDonation() {
-  if (!popupContext.active.value || !donationVisible.value) return;
-  const before = document.activeElement, restore = donationCard.value?.contains(before) || before === document.body;
-  donationVisible.value = false;
-  donationQrEnlarged.value = false;
-  if (restore && donationTrigger.value?.isConnected) donationTrigger.value.focus({preventScroll: true});
-}
-function handleDonationKeydown(event: KeyboardEvent) {
-  if (!popupContext.active.value || !donationVisible.value) return;
-  if (event.key === 'Escape') {
-    event.preventDefault();
-    closeDonation();
-  } else if (event.key === 'Tab') {
-    const controls = donationCard.value?.querySelectorAll<HTMLElement>('button, a[href]');
-    if (!controls?.length) return;
-    const first = controls[0];
-    const last = controls[controls.length - 1];
-    const outside = !donationCard.value?.contains(document.activeElement);
-    if (outside || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
-      event.preventDefault();
-      (event.shiftKey ? last : first).focus();
-    }
-  }
-}
 function toggleAIContext() {
   if (aiContextPresentation.value.toggleDisabled) return;
   config.value.enableAIContext = !config.value.enableAIContext;
@@ -903,7 +803,6 @@ function handleTabRemoved(tabId: number) {
   if (popupContext.active.value && tabId === (tabSource.fixed ? tabSource.sourceTabId : currentTabId.value)) void hydrateCurrentSite();
 }
 onMounted(() => {
-  document.addEventListener('keydown', handleDonationKeydown);
   browser.tabs.onUpdated.addListener(handleTabUpdated);
   browser.tabs.onActivated.addListener(handleTabActivated);
   browser.tabs.onRemoved.addListener(handleTabRemoved);
@@ -913,7 +812,6 @@ onUnmounted(() => {
   pageExited.value = true;
   window.removeEventListener('pagehide', saveOnPageHide);
   unsubscribeConfig();
-  document.removeEventListener('keydown', handleDonationKeydown);
   browser.tabs.onUpdated.removeListener(handleTabUpdated);
   browser.tabs.onActivated.removeListener(handleTabActivated);
   browser.tabs.onRemoved.removeListener(handleTabRemoved);

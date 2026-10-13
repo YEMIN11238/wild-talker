@@ -16,6 +16,12 @@ afterEach(() => {
 });
 
 describe('document translation edge contracts', () => {
+    it('preserves translated prose without broken emphasis when the provider returns crossing or extra closing markers', () => {
+        const parsed = parseDocument('emphasis.md', '**Alpha** _Beta_', {markdownSentences: true});
+        expect(parsed.segments).toHaveLength(1);
+        expect(renderDocument(parsed, ['<g1><g2>AB</g1></g2>'], 'translated')).toBe('AB');
+        expect(renderDocument(parsed, ['</g1><g1>A</g1><g2>B</g2>'], 'translated')).toBe('AB');
+    });
     it.each(['', '   ', '\n\t'])('empty reviewed subtitle falls back to source for partial export (%j)', blank => {
         const source = '1\r\n00:00:01,000 --> 00:00:02,000\r\nHello\r\n\r\n2\r\n00:00:03,000 --> 00:00:04,000\r\nPending\r\n';
         const document = parseDocument('episode.srt', source);

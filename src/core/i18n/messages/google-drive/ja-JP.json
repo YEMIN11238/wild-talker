@@ -1,7 +1,7 @@
 {
   "messages": {
     "settings.drive.privacyBadge": "プライバシー保護",
-    "settings.drive.privacyTitle": "FluentRead がプライバシーを保護する方法",
+    "settings.drive.privacyTitle": "万能说客（Wild Talker） がプライバシーを保護する方法",
     "settings.drive.privacyEncryption": "設定は端末上で暗号化してからアップロードし、クラウドには暗号化ファイルを保存します。",
     "settings.drive.privacyStorage": "Google ドライブのアプリデータ領域だけにアクセスし、通常のファイルは読み取りません。",
     "settings.drive.privacyAuthorization": "同期の完了またはキャンセル後、一時的な認証キャッシュを削除します。",

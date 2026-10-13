@@ -12,9 +12,9 @@ import {createUserscriptCharacterDataCompressionPlugin} from './characterDataPlu
 import {createUserscriptFrancDataCompressionPlugin} from './francDataPlugin';
 import {createUserscriptTldtsDataCompressionPlugin} from './tldtsDataPlugin';
 import {createUserscriptInlineCssCompressionPlugin} from './inlineCssPlugin';
-import {createUserscriptAboutImagesCompressionPlugin} from './aboutImagesPlugin';
 import {createUserscriptServiceBrandIconsCompressionPlugin} from './serviceBrandIconsPlugin';
 import {UI_LANGUAGE_BUNDLES, zhCNMessages} from './languageBundles';
+import type {UiLanguageBundle} from '../src/core/i18n/types';
 
 const root = resolve(__dirname, '..');
 const packageJson = JSON.parse(fs.readFileSync(resolve(root, 'package.json'), 'utf8')) as {
@@ -53,8 +53,6 @@ function installedVersion(name: string): string {
 const userscriptResourceCommit = '184a3d74f61b9d2a8d47080787f7e0180b98414d';
 // 语言文件的内容哈希来自合并后的消息目录，固定到首次包含这些文件的提交。
 const userscriptLanguageResourceCommit = '240cbc42de9d1141c679fb595afea055397ac656';
-const pinnedIconUrl = `https://cdn.jsdelivr.net/gh/FluentRead/FluentRead@${userscriptResourceCommit}/public/icon/64.png`;
-const iconMetaUrl = greasyForkSource ? pinnedIconUrl : iconDataUrl;
 const uiRequires = [
     `https://cdn.jsdelivr.net/npm/vue@${installedVersion('vue')}/dist/vue.global.prod.js`,
     `https://cdn.jsdelivr.net/gh/FluentRead/FluentRead@${userscriptResourceCommit}/userscript/vueElementPlusBridge.v1.js`,
@@ -66,10 +64,9 @@ const userscriptRequires = bundleLibraries
     ? []
     : [...uiRequires, 'https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako_inflate.min.js',
         ...(greasyForkSource ? [vendorUrl!, dataUrl!] : [])];
-// 标准版安装时已缓存同源固定依赖，管理器列表图标复用同一提交的图片，避免重复嵌入 PNG。
-// 页面工具仍由 bootstrap 内嵌图片；无远程依赖的 standalone 连元数据图标也保持内嵌。
+// 元数据与页面图标都内嵌本次构建的真实 PNG；个人版图标不冒用未发布资源地址。
 const metadata = createUserscriptMetadata({version: packageJson.userscriptVersion,
-    iconDataUrl: bundleLibraries ? iconDataUrl : pinnedIconUrl, requires: userscriptRequires});
+    iconDataUrl, requires: userscriptRequires});
 // 界面词典只按 key 查询，稳定排序把相似 key 聚在一起，提高静态 JSON 压缩率；数组顺序保持原样。
 function serializeUiMessages(value: unknown): string {
     return JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
@@ -79,7 +76,7 @@ function serializeUiMessages(value: unknown): string {
 function userscriptPageMessages<T extends Record<string, string>>(messages: T): T {
     return Object.fromEntries(Object.entries(messages).filter(([key]) => !key.startsWith('document.'))) as T;
 }
-// 构建期复用已有 pako 编码中英界面词典，减少标准 gzip 数据；解压格式与运行时端口不变。
+// English 随脚本提供；五语复用固定已发布资源，当前差异随消费者内嵌，不制造未发布 URL。
 const gzipUiMessages = createRequire(import.meta.url)('pako').gzip as
     (data: Uint8Array, options: {level: number}) => Uint8Array;
 // 与中文内嵌目录一致，仅投影扩展文档页专用 key；固定远程与外部资源继续使用原 bundle。
@@ -90,18 +87,42 @@ const compressedUiLanguageBundles = greasyForkSource ? {} : Object.fromEntries(O
     Buffer.from(gzipUiMessages(Buffer.from(serializeUiMessages({...bundle,
         messages: userscriptPageMessages(bundle.messages)})), {level: 9})).toString('base64'),
 ]));
-const remoteUiLanguageBundles = Object.fromEntries(Object.entries(UI_LANGUAGE_BUNDLES)
-    .filter(([language]) => language !== 'en-US')
-    .map(([language, bundle]) => {
-        const contents = JSON.stringify(bundle);
-        const digest = createHash('sha256').update(contents).digest('hex').slice(0, 16);
-        const fileName = `${language}.${digest}.json`;
-        const filePath = resolve(root, 'userscript/languages', fileName);
-        if (!fs.existsSync(filePath) || fs.readFileSync(filePath, 'utf8').trimEnd() !== contents) {
-            throw new Error(`Userscript language data missing or stale: ${fileName}; run pnpm generate:userscript-languages`);
-        }
-        return [language, fileName];
-    }));
+// 这些文件均确实存在于 userscriptLanguageResourceCommit；原始字节和内容哈希由发布契约测试核验。
+const remoteUiLanguageBundles: Record<string, string> = greasyForkSource ? {} : {
+    'ja-JP': 'ja-JP.08c79340a9985ae3.json',
+    'ko-KR': 'ko-KR.b5beebbaecbf1262.json',
+    'fr-FR': 'fr-FR.c0b51f4e71dd4981.json',
+    'ru-RU': 'ru-RU.efcd39485c4ca062.json',
+    'es-ES': 'es-ES.0e137d2a17e5b5cb.json',
+};
+function buildUiLanguagePatch(base: UiLanguageBundle, target: UiLanguageBundle): Record<string, unknown> {
+    const patch: Record<string, unknown> = {};
+    for (const field of ['messages', 'legacyText'] as const) {
+        const set = Object.fromEntries(Object.entries(target[field]).filter(([key, value]) => base[field][key] !== value));
+        const remove = Object.keys(base[field]).filter(key => !Object.hasOwn(target[field], key));
+        if (Object.keys(set).length || remove.length) patch[field] = {set, remove};
+    }
+    const patterns: Record<string, unknown> = {};
+    for (const field of ['early', 'late'] as const) {
+        if (JSON.stringify(base.legacyPatterns[field]) === JSON.stringify(target.legacyPatterns[field])) continue;
+        const original = new Map(base.legacyPatterns[field].map((entry, index) => [JSON.stringify(entry), index]));
+        // 引用未变条目的旧位置，新增/更改条目保持完整数组数据；目标顺序也表达删除与重排。
+        patterns[field] = target.legacyPatterns[field].map(entry => original.get(JSON.stringify(entry)) ?? entry);
+    }
+    if (Object.keys(patterns).length) patch.legacyPatterns = patterns;
+    return patch;
+}
+const uiLanguagePatches = Object.fromEntries(Object.entries(remoteUiLanguageBundles).map(([language, fileName]) => {
+    const source = fs.readFileSync(resolve(root, 'userscript/languages', fileName), 'utf8').trimEnd();
+    const base = JSON.parse(source) as UiLanguageBundle;
+    const digest = createHash('sha256').update(source).digest('hex').slice(0, 16);
+    if (fileName !== `${language}.${digest}.json`) throw new Error(`Pinned userscript language data changed: ${fileName}`);
+    const current = UI_LANGUAGE_BUNDLES[language as keyof typeof UI_LANGUAGE_BUNDLES];
+    return [language, buildUiLanguagePatch(base, {...current, messages: userscriptPageMessages(current.messages)})];
+}));
+// 五语补丁共享大量原文 key；共同压缩只保存差异，不把五份完整目录重复内嵌。
+const compressedUiLanguagePatches = greasyForkSource ? '' : Buffer.from(gzipUiMessages(
+    Buffer.from(serializeUiMessages(uiLanguagePatches)), {level: 9})).toString('base64');
 const unicodeNotice = `/*\n${fs.readFileSync(resolve(root, 'public/third-party-notices/unicode-17.0.0.txt'), 'utf8')}\n*/`;
 const serviceIconsNotice = `/*\n${fs.readFileSync(resolve(root, 'public/third-party-notices/lobe-icons-MIT.txt'), 'utf8')}\n*/`;
 const tinycolorNotice = `/*\n@ctrl/tinycolor 3.6.1 — MIT\n${fs.readFileSync(resolve(root, 'public/third-party-notices/tinycolor-MIT.txt'), 'utf8')}\n*/`;
@@ -151,24 +172,39 @@ export function createUserscriptCatalogCompressionPlugin(): Plugin {
                 const name = basename(sourcePath, '.json');
                 const current = siteCatalogData[name];
                 const pinned = pinnedSiteCatalogs?.[name];
-                if (!Array.isArray(current) || !Array.isArray(pinned)) {
-                    return `export default globalThis.__FLUENTREAD_USERSCRIPT_DATA__.siteCatalogs.${name};`;
+                if (!Array.isArray(current)) {
+                    if (!current || typeof current !== 'object') throw new Error(`Invalid authoritative userscript site catalog: ${name}`);
+                    const pinnedRecord: Record<string, unknown> = pinned && typeof pinned === 'object' && !Array.isArray(pinned) ? pinned as Record<string, unknown> : {};
+                    const updates = Object.fromEntries(Object.entries(current).filter(([id, value]) => JSON.stringify(value) !== JSON.stringify(pinnedRecord[id])));
+                    const order = Object.keys(current);
+                    return [
+                        `const catalog = globalThis.__FLUENTREAD_USERSCRIPT_DATA__?.siteCatalogs?.${name};`,
+                        `if (!catalog || typeof catalog !== "object" || Array.isArray(catalog)) throw new Error("Invalid pinned userscript site catalog: ${name}");`,
+                        `const updates = new Map(Object.entries(${JSON.stringify(updates)}));`,
+                        `const order = ${JSON.stringify(order)};`,
+                        'const resolved = Object.fromEntries(order.map((id) => {',
+                        '  const rule = updates.get(id) ?? (Object.hasOwn(catalog, id) ? catalog[id] : undefined);',
+                        '  if (!rule) throw new Error("Missing pinned userscript site rule: " + id);',
+                        '  return [id, rule];',
+                        '}));',
+                        'export default Object.keys(catalog).length === order.length && order.every((id) => resolved[id] === catalog[id]) ? catalog : resolved;',
+                    ].join('\n');
                 }
-                const pinnedById = new Map(pinned.map((rule) => [rule.id, rule]));
+                const pinnedById = new Map((Array.isArray(pinned) ? pinned : []).map((rule) => [rule.id, rule]));
                 const updates = current.filter((rule) => JSON.stringify(rule) !== JSON.stringify(pinnedById.get(rule.id)));
                 const order = current.map((rule) => rule.id);
-                if (!updates.length && JSON.stringify(order) === JSON.stringify(pinned.map((rule) => rule.id))) {
-                    return `export default globalThis.__FLUENTREAD_USERSCRIPT_DATA__.siteCatalogs.${name};`;
-                }
                 return [
-                    `const catalog = globalThis.__FLUENTREAD_USERSCRIPT_DATA__.siteCatalogs.${name};`,
+                    `const catalog = globalThis.__FLUENTREAD_USERSCRIPT_DATA__?.siteCatalogs?.${name};`,
+                    `if (!Array.isArray(catalog)) throw new Error("Invalid pinned userscript site catalog: ${name}");`,
                     'const present = new Map(catalog.map((rule) => [rule.id, rule]));',
                     `const updates = new Map(${JSON.stringify(updates)}.map((rule) => [rule.id, rule]));`,
-                    `export default ${JSON.stringify(order)}.map((id) => {`,
+                    `const resolved = ${JSON.stringify(order)}.map((id) => {`,
                     '  const rule = updates.get(id) ?? present.get(id);',
                     '  if (!rule) throw new Error("Missing pinned userscript site rule: " + id);',
                     '  return rule;',
                     '});',
+                    // 无增量也必须读取运行时必需 ID；合法数据仍保持原数组与词条身份。
+                    'export default catalog.length === resolved.length && resolved.every((rule, index) => rule === catalog[index]) ? catalog : resolved;',
                 ].join('\n');
             }
             const contents = JSON.stringify(JSON.parse(fs.readFileSync(sourcePath, 'utf8')));
@@ -420,6 +456,7 @@ function bundleUserscriptCss(): Plugin {
                 // Greasy Fork 的源码文件保留产品逻辑，静态词条、站点规则和样式单独随固定版本缓存。
                 const data = {
                     english: UI_LANGUAGE_BUNDLES['en-US'],
+                    languageBundles: UI_LANGUAGE_BUNDLES,
                     zhCNMessages,
                     siteCatalogs: siteCatalogData,
                     css,
@@ -444,7 +481,7 @@ function bundleUserscriptCss(): Plugin {
             )).code;
             const bootstrap = [
                 `${compatibilityPreludeStart}\n${preludeCode}\n${compatibilityPreludeEnd}`,
-                `globalThis.__FLUENTREAD_ICON_DATA__=${JSON.stringify(iconMetaUrl)};`,
+                `globalThis.__FLUENTREAD_ICON_DATA__=${JSON.stringify(iconDataUrl)};`,
                 ...(greasyForkSource
                     ? ['globalThis.__fluentReadUserscriptCss=globalThis.__FLUENTREAD_USERSCRIPT_DATA__.css;']
                     : [`globalThis.__fluentReadUserscriptCssCompressed=${JSON.stringify(compressedCss)};`]),
@@ -533,7 +570,7 @@ export const userscriptAliases = [
 export default defineConfig({
     root,
     publicDir: false,
-    plugins: [unwrapWxtEntrypoints(), createUserscriptCatalogCompressionPlugin(), createUserscriptCharacterDataCompressionPlugin(root, !greasyForkSource), createUserscriptFrancDataCompressionPlugin(root, bundleLibraries && !greasyForkSource), createUserscriptTldtsDataCompressionPlugin(root, bundleLibraries && !greasyForkSource), createUserscriptAboutImagesCompressionPlugin(root, bundleLibraries && !greasyForkSource), createUserscriptServiceBrandIconsCompressionPlugin(root, bundleLibraries && !greasyForkSource), injectUserscriptBrowserShim(), vue(), bundleUserscriptCss(), createUserscriptInlineCssCompressionPlugin(root, !greasyForkSource)],
+    plugins: [unwrapWxtEntrypoints(), createUserscriptCatalogCompressionPlugin(), createUserscriptCharacterDataCompressionPlugin(root, !greasyForkSource), createUserscriptFrancDataCompressionPlugin(root, bundleLibraries && !greasyForkSource), createUserscriptTldtsDataCompressionPlugin(root, bundleLibraries && !greasyForkSource), createUserscriptServiceBrandIconsCompressionPlugin(root, bundleLibraries && !greasyForkSource), injectUserscriptBrowserShim(), vue(), bundleUserscriptCss(), createUserscriptInlineCssCompressionPlugin(root, !greasyForkSource)],
     resolve: {
         alias: userscriptAliases,
     },
@@ -545,6 +582,7 @@ export default defineConfig({
         'import.meta.env.MANIFEST_VERSION': '2',
         __FLUENTREAD_USERSCRIPT_LANGUAGE_BUNDLES__: JSON.stringify(compressedUiLanguageBundles),
         __FLUENTREAD_USERSCRIPT_REMOTE_LANGUAGES__: JSON.stringify(remoteUiLanguageBundles),
+        __FLUENTREAD_USERSCRIPT_LANGUAGE_PATCHES__: JSON.stringify(compressedUiLanguagePatches),
         __FLUENTREAD_USERSCRIPT_RESOURCE_COMMIT__: JSON.stringify(userscriptLanguageResourceCommit),
         __FLUENTREAD_FULL_OPTIONS__: JSON.stringify(bundleLibraries),
     },

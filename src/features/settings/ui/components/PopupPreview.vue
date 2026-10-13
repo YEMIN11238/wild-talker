@@ -1,7 +1,7 @@
 <!--
 @file src/features/settings/ui/components/PopupPreview.vue
 文件职责：用真实 DOM 按菜单栏的实际结构、尺寸和皮肤变量还原一份 Popup，供风格预览和菜单栏布局预览共用，保证两处看到的是同一个界面。
-主要内容：优先复用脚本构建注入的品牌图标并保留扩展资源回退，依次绘制品牌与版本、赞赏与设置、语言与服务、网页及局部翻译、站点开关、快捷入口卡片和底部信息栏；按构建与实际平台能力过滤专属入口，区域与快捷入口按传入顺序渲染，传入编辑层级和排序控制器时叠加拖动手柄与插入提示。
+主要内容：优先复用脚本构建注入的品牌图标并保留扩展资源回退，依次绘制品牌与版本、设置入口、语言与服务、网页及局部翻译、站点开关、快捷入口卡片和底部信息栏；按构建与实际平台能力过滤专属入口，区域与快捷入口按传入顺序渲染，传入编辑层级和排序控制器时叠加拖动手柄与插入提示。
 模块边界：只负责展示与把排序手势交给外部控制器，不读取用户配置、不连接浏览器状态，也不执行菜单栏业务；范例里的服务、快捷键和开关状态是固定示意，不代表用户当前设置。
 -->
 <template>
@@ -18,7 +18,6 @@
         <span><strong>{{ t('common.brand') }}</strong><small>v{{ version }}</small></span>
       </span>
       <span class="preview-header-actions">
-        <span><Coffee />{{ t('popup.donationButton') }}</span>
         <span><Setting />{{ translateLegacy('设置') }}</span>
       </span>
     </header>
@@ -108,7 +107,7 @@
               :item="feature"
               :editable="editScope === 'quickFeature'"
               :controller="featureDrag"
-              axis="x"
+              :axis="skin.value === 'default' ? 'y' : 'x'"
               class="preview-feature"
               :data-preview-quick-feature="feature.id"
             >
@@ -133,10 +132,6 @@
           data-preview-popup-module="footer"
         >
           <span aria-hidden="true">{{ t('popup.translationCount', {count: 0}) }}</span>
-          <span class="preview-open-source" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.26c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.74.08-.74 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.17 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.24 2.87.12 3.17.77.84 1.24 1.91 1.24 3.22 0 4.62-2.81 5.65-5.49 5.95.43.37.81 1.1.81 2.22v3.29c0 .32.22.69.83.57A12 12 0 0 0 12 .3" /></svg>
-            {{ t('popup.openSourceProject') }} ↗
-          </span>
           <span class="preview-clear-cache" aria-hidden="true">{{ t('popup.clearCache') }}</span>
         </PopupLayoutPreviewItem>
       </template>
@@ -146,7 +141,7 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import {Coffee, Setting} from '@element-plus/icons-vue'
+import {Setting} from '@element-plus/icons-vue'
 import {version} from '@/package.json'
 import ServiceIcon from '@/src/ui/components/ServiceIcon.vue'
 import {
@@ -182,7 +177,7 @@ const iconUrl = globalThis.__FLUENTREAD_ICON_DATA__ || '/icon/128.png'
 
 // 固定范例用于比较外观，不表示这些服务、快捷键或开关已在用户配置中启用。
 const previewProviders = ['localTranslation', 'freeTranslation', 'microsoft', 'deepseek']
-const sampleQuickFeatureIds: PopupQuickFeatureId[] = ['hover', 'selection', 'image', 'document']
+const sampleQuickFeatureIds: PopupQuickFeatureId[] = ['hover', 'selection', 'appearance', 'image', 'document']
 const sampleSummaries: Record<PopupQuickFeatureId, string> = {
   hover: 'Ctrl',
   selection: '已关闭',
@@ -282,8 +277,8 @@ const featureStatus = (id: string) => isQuickFeatureId(id) ? sampleStatus[id] : 
 .preview-action-row { display: flex; align-items: stretch; gap: 7px; }
 .preview-action {
   display: flex; min-width: 0; min-height: 40px; flex: 1 1 auto; align-items: center; justify-content: center; gap: 6px; padding: 8px;
-  border-radius: 14px; color: #fff; background: linear-gradient(135deg, #f35482, #e93267);
-  box-shadow: 0 6px 16px rgba(233, 50, 103, .16);
+  border-radius: 14px; color: #fff; background: var(--brand);
+  box-shadow: none;
 }
 .preview-action > b { flex: none; font-size: 9px; font-weight: 850; }
 .preview-popup .preview-action > strong { min-width: 0; font-size: 12px; font-weight: 750; text-align: center; overflow-wrap: anywhere; }
@@ -336,15 +331,10 @@ const featureStatus = (id: string) => isQuickFeatureId(id) ? sampleStatus[id] : 
 .preview-feature-status.active { background: #24b47e; box-shadow: 0 0 0 4px rgba(36, 180, 126, .12); }
 
 .preview-footer {
-  display: grid; min-height: 30px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 6px;
+  display: grid; min-height: 30px; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px;
   padding: 6px 3px 1px; border-top: 1px solid var(--line); color: var(--muted); font-size: 9.5px;
 }
 .preview-footer.framed { padding: 6px 8px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-soft); }
-.preview-open-source {
-  display: inline-flex; min-height: 22px; align-items: center; gap: 4px; padding: 2px 6px; border: 1px solid transparent;
-  border-radius: 999px; background: var(--surface-soft); font-weight: 650; white-space: nowrap;
-}
-.preview-open-source svg { width: 12px; height: 12px; flex: none; }
 .preview-clear-cache { justify-self: end; font-size: 10px; font-weight: 500; }
 
 /* 布局编辑：在真实界面上叠加排序手柄与入口切换，不改变各区域自身的样子。 */
@@ -387,7 +377,7 @@ const featureStatus = (id: string) => isQuickFeatureId(id) ? sampleStatus[id] : 
 /* 紧凑：对应 compact.css——压缩间距与控件高度，文字不缩到难以辨认。 */
 .preview-popup[data-preview-kind="compact"] {
   padding: 8px 12px 4px;
-  background: radial-gradient(circle at 92% 0, rgba(239, 71, 118, .12), transparent 30%), linear-gradient(180deg, var(--surface) 0, var(--surface-soft) 165px);
+  background: var(--surface);
 }
 .preview-popup[data-preview-kind="compact"] .preview-header { margin-bottom: 5px; }
 .preview-popup[data-preview-kind="compact"] .preview-brand { gap: 7px; }
@@ -466,4 +456,28 @@ const featureStatus = (id: string) => isQuickFeatureId(id) ? sampleStatus[id] : 
 }
 .preview-popup[data-preview-kind="palette"] .preview-footer { border-color: var(--skin-footer-line, var(--line)); color: var(--muted); }
 .preview-popup[data-preview-kind="palette"] .preview-open-source { background: var(--skin-chip-background, var(--surface-soft)); }
+</style>
+
+<style scoped>
+/* 自用默认样式的预览与真实弹窗一致：奶白、细墨线、青绿主操作和杏黄色局部操作。 */
+.preview-popup[data-preview-kind="default"] {
+  --brand: #2aaab3; --brand-strong: #157d86; --brand-soft: #e0f1ee;
+  --ink: #202623; --muted: #70766e; --line: #d8dcd2;
+  --surface: #fffefb; --surface-soft: #f2f4ed;
+  padding: 14px 16px 10px; border-radius: 18px; background: var(--surface);
+}
+.preview-popup[data-preview-kind="default"] .preview-header { margin-bottom: 14px; }
+.preview-popup[data-preview-kind="default"] .preview-hero { padding: 14px; border-color: var(--ink); border-radius: 16px; box-shadow: 2px 3px 0 #dcece5; }
+.preview-popup[data-preview-kind="default"] .preview-action { min-height: 44px; border: 1px solid var(--ink); background: var(--brand); color: #123b3f; box-shadow: 0 2px 0 var(--ink); }
+.preview-popup[data-preview-kind="default"] .preview-section-action { border-color: var(--ink); background: #f6c47f; color: var(--ink); font-size: 11px; }
+.preview-popup[data-preview-kind="default"] .preview-features { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+.preview-popup[data-preview-kind="default"] .preview-feature { grid-template-columns: 28px minmax(0, 1fr) 10px; min-height: 41px; padding: 6px 10px; border-radius: 11px; }
+.preview-popup[data-preview-kind="default"] .preview-feature-copy { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
+.preview-popup[data-preview-kind="default"] .preview-feature-icon { color: var(--ink); background: #e0f1ee; }
+.preview-popup[data-preview-kind="default"] .preview-feature-icon.amber { background: #fbe5c7; }
+.preview-popup[data-preview-kind="default"] .preview-footer { justify-content: space-between; gap: 12px; padding-top: 8px; }
+:root.dark .preview-popup[data-preview-kind="default"] { --ink: #edf1e7; --muted: #a8b7aa; --line: #45564a; --surface: #202923; --surface-soft: #29352e; }
+:root.dark .preview-popup[data-preview-kind="default"] .preview-hero { box-shadow: 2px 3px 0 #425444; }
+:root.dark .preview-popup[data-preview-kind="default"] .preview-feature-icon { color: #edf1e7; background: #304c43; }
+:root.dark .preview-popup[data-preview-kind="default"] .preview-feature-icon.amber { background: #56452f; }
 </style>

@@ -1,7 +1,7 @@
 {
   "messages": {
     "settings.drive.privacyBadge": "개인정보 보호",
-    "settings.drive.privacyTitle": "FluentRead의 개인정보 보호 방법",
+    "settings.drive.privacyTitle": "万能说客（Wild Talker）의 개인정보 보호 방법",
     "settings.drive.privacyEncryption": "설정은 기기에서 암호화한 후 업로드하며, 클라우드에는 암호화된 파일을 저장합니다.",
     "settings.drive.privacyStorage": "Google 드라이브의 앱 데이터 영역만 이용하며 일반 파일은 읽지 않습니다.",
     "settings.drive.privacyAuthorization": "동기화가 완료되거나 취소되면 임시 인증 캐시를 삭제합니다.",

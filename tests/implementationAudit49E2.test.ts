@@ -110,7 +110,16 @@ beforeEach(async () => {
     vi.stubGlobal('Worker', ControlledInferenceWorker);
     vi.stubGlobal('createImageBitmap', vi.fn(async () => ({width: 32, height: 32, close: vi.fn()})));
     vi.stubGlobal('chrome', {runtime: {getURL: (path: string) => 'chrome-extension://fixture/' + path.replace(/^\/+/, '')}});
-    vi.stubGlobal('document', {createElement: () => ({width: 0, height: 0, getContext: () => ({drawImage() {}, getImageData: () => ({data: new Uint8ClampedArray(32 * 32 * 4)})})})});
+    // 控制 Canvas 外部端口而非识别流程；真实预处理会把透明像素合成为不透明背景并写回。
+    // 保留零 alpha 的输入，让 GPU 取消与模型清理用例仍经过这条生产分支。
+    vi.stubGlobal('document', {createElement: () => {
+        let data = new Uint8ClampedArray(32 * 32 * 4);
+        return {width: 0, height: 0, getContext: () => ({
+            drawImage() {},
+            getImageData: () => ({data}),
+            putImageData: (image: {data: Uint8ClampedArray}) => {data = new Uint8ClampedArray(image.data);},
+        })};
+    }});
     modelFetch.mockReset().mockRejectedValue(new Error('unexpected controlled model request'));
     vi.stubGlobal('fetch', vi.fn((url: RequestInfo | URL, options?: RequestInit) => String(url) === 'controlled-image'
         ? Promise.resolve(new Response(new Uint8Array([0]), {headers: {'content-type': 'image/png'}}))

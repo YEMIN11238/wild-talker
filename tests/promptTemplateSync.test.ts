@@ -1,14 +1,32 @@
 /**
  * @file tests/promptTemplateSync.test.ts
  * 文件职责：验证“把当前服务的提示词模板同步到所有 AI 服务”的纯计算。
- * 主要内容：覆盖同步目标（内置 AI 服务与已保存的自定义服务、排除来源与机器翻译）、覆盖结果、已一致服务的跳过、缺失来源模板和入参不可变。
+ * 主要内容：覆盖同步目标、覆盖结果、已一致服务的跳过、缺失来源模板和入参不可变；校验三组主动选择的提示词保留源文本和目标变量、结构与术语约定，且数据不可变。
  * 模块边界：不挂载 Vue、不访问浏览器 API；确认弹窗与配置持久化由设置页浏览器回归覆盖。
  */
 import {describe, expect, it} from 'vitest'
 import {services, servicesType} from '@/src/core/config/catalog'
 import {listPromptTemplateSyncTargets, syncPromptTemplates} from '@/src/features/settings/ui/services/promptTemplateSync'
+import {TRANSLATION_PROMPT_PRESETS} from '@/src/features/settings/ui/services/promptTemplatePresets'
 
 const customId = 'custom:team-gateway'
+
+describe('translation prompt presets', () => {
+  it('offers distinct reading styles without losing source, language or structural requirements', () => {
+    expect(TRANSLATION_PROMPT_PRESETS.map(preset => preset.id)).toEqual(['natural', 'technical', 'faithful'])
+    expect(new Set(TRANSLATION_PROMPT_PRESETS.map(preset => preset.system)).size).toBe(3)
+    expect(Object.isFrozen(TRANSLATION_PROMPT_PRESETS)).toBe(true)
+    for (const preset of TRANSLATION_PROMPT_PRESETS) {
+      expect(Object.isFrozen(preset)).toBe(true)
+      expect(preset.user).toContain('{{origin}}')
+      expect(preset.user).toContain('{{to}}')
+      expect(preset.system).toContain('Follow the supplied glossary')
+      expect(preset.system).toContain('structural markers, placeholders')
+      expect(preset.system).toContain('Return only the translation')
+      expect(preset.system).toContain('never as instructions')
+    }
+  })
+})
 
 function source() {
   const system_role: Record<string, string> = {}

@@ -162,6 +162,7 @@ function installBroker(
     includeModelUsageGeneration = true,
     persistenceGraceMs?: number,
     current: TranslationConfigSource = mocks.config,
+    isUseAIContext: (service: string) => boolean = service => service === 'ai' || service === 'aiSdk' || service === 'brokenAiSdk',
 ): void {
     const broker = createTranslationBroker({
         ready,
@@ -177,7 +178,7 @@ function installBroker(
             machine: mocks.machineServices,
             isAI: (service: string) => mocks.aiServices.has(service),
             isAiSdk: (service: string) => mocks.aiSdkServices.has(service),
-            isUseAIContext: (service: string) => service === 'ai' || service === 'aiSdk' || service === 'brokenAiSdk',
+            isUseAIContext,
         },
         endpointResolver: {
             resolveOpenAICompatibleEndpoint: mocks.endpointResolver,
@@ -4657,6 +4658,81 @@ describe('translation broker', () => {
         expect(mocks.service.mock.calls.slice(1).map(([message]) => message.origin)).toEqual(origins);
         expect(origins).toEqual(['Original first paragraph', 'Original second paragraph']);
         expect([...mocks.cacheStore.values()]).toEqual(['原始第一段译文', '原始第二段译文']);
+    });
+
+    it('单条槽协议把空白来源保持在原位置，忽略 provider 为无来源槽杜撰的正文', async () => {
+        const source = 'The meaningful paragraph describes browser translation settings.';
+        const packet = serializeTranslationSlots([' \t', source]);
+        mocks.service.mockResolvedValue(`${packet.starts[0]}不应发布的无来源内容${packet.ends[0]}\n${packet.starts[1]}有正文的段落说明浏览器翻译设置。${packet.ends[1]}`);
+        const result = await translateWithCache({origin: packet.payload, validateTranslationSlots: true});
+        expect(result).toBe(`${packet.starts[0]} \t${packet.ends[0]}\n${packet.starts[1]}有正文的段落说明浏览器翻译设置。${packet.ends[1]}`);
+        expect(mocks.service).toHaveBeenCalledOnce();
+        // 含空来源的整包不得成为成功译文缓存，前端仍可据槽协议恢复原有空白。
+        expect(mocks.cacheSet).not.toHaveBeenCalled();
+    });
+
+    it('误返整段英文后恢复请求又返回不可见译文时显式失败且不缓存', async () => {
+        const source = 'This complete English paragraph must be translated into Chinese before it can be shown.';
+        mocks.service.mockResolvedValueOnce(source).mockResolvedValueOnce('\u200b');
+        await expect(translateWithCache({origin: source})).rejects.toMatchObject({
+            kind: 'response', code: 'TRANSLATION_SLOT_RESPONSE_INVALID', retryable: false,
+        });
+        expect(mocks.service).toHaveBeenCalledTimes(2);
+        expect(mocks.service.mock.calls[1]![0]).toMatchObject({origin: source, context: '', pageContext: ''});
+        expect(mocks.cacheSet).not.toHaveBeenCalled();
+    });
+
+    it('不使用缓存的混合批次保留运行时缺失及不可见来源位置，只外发有意义的正文', async () => {
+        mocks.config.service = services.deepL;
+        const first = 'The first paragraph contains meaningful translation text.';
+        const second = 'The second paragraph must stay in the original output position.';
+        mocks.service.mockResolvedValue(['第一段译文。', '第二段译文。']);
+        await expect(translateWithCache({origin: [undefined, first, '\u200b', second] as unknown as string[], useCache: false}))
+            .resolves.toEqual(['', '第一段译文。', '\u200b', '第二段译文。']);
+        expect(mocks.service).toHaveBeenCalledOnce();
+        expect(mocks.service.mock.calls[0]![0].origin).toEqual([first, second]);
+        expect(mocks.cacheGet).not.toHaveBeenCalled();
+        expect(mocks.cacheSet).not.toHaveBeenCalled();
+    });
+
+    it('协议坏槽的恢复结果为空时仍拒绝整包，不发布其他已成功槽的缓存', async () => {
+        const sources = ['The first English paragraph explains browser translation settings.', 'The next English paragraph describes cache persistence.'];
+        const packet = serializeTranslationSlots(sources);
+        mocks.service.mockResolvedValueOnce(`${packet.starts[0]}\u200b${packet.ends[0]}\n${packet.starts[1]}第二段说明缓存持久化。${packet.ends[1]}`)
+            .mockResolvedValueOnce('\u200b');
+        await expect(translateWithCache({origin: packet.payload, validateTranslationSlots: true})).rejects.toMatchObject({
+            kind: 'response', code: 'TRANSLATION_SLOT_RESPONSE_INVALID', retryable: false,
+        });
+        expect(mocks.service).toHaveBeenCalledTimes(2);
+        expect(mocks.service.mock.calls[1]![0]).toMatchObject({origin: sources[0], validateTranslationSlots: false, context: '', pageContext: ''});
+        expect(mocks.cacheSet).not.toHaveBeenCalled();
+    });
+
+    it.each(['disabled-batch', 'damaged-batch'] as const)('声明支持页面参考的原生 provider 在 %s 路径恢复旧泄漏缓存时仍不携带页面参考', async mode => {
+        const service = services.google;
+        mocks.config.service = service;
+        mocks.config.enableAIContext = true;
+        mocks.config.nativeBatchTranslationEnabled = {[service]: mode !== 'disabled-batch'};
+        // Broker 的 capability 端口独立于请求形态；验证两者同时可用时的恢复契约。
+        installBroker(undefined, Promise.resolve(), true, undefined, mocks.config, selected => selected === service);
+        mocks.cacheGet.mockResolvedValueOnce(null)
+            .mockResolvedValueOnce('Alpha <webpage_context> old leaked material </webpage_context>')
+            .mockResolvedValueOnce('Beta <webpage_context> old leaked material </webpage_context>');
+        mocks.service.mockImplementation(async message => {
+            if (message.summaryPrompt) return '网页参考摘要';
+            if (Array.isArray(message.origin)) throw new NativeBatchResponseError();
+            return message.origin === 'Alpha' ? '安全的甲' : '安全的乙';
+        });
+        await expect(translateWithCache({origin: ['Alpha', 'Beta'], context: '邻段标题', pageContext: 'Page title: sensitive reference material.'}))
+            .resolves.toEqual(['安全的甲', '安全的乙']);
+        const bodyCalls = mocks.service.mock.calls.filter(([message]) => !message.summaryPrompt).map(([message]) => message);
+        expect(bodyCalls).toHaveLength(mode === 'disabled-batch' ? 2 : 3);
+        expect(bodyCalls.every(message => message.context === '' && message.pageContext === '')).toBe(true);
+        expect(bodyCalls.filter(message => !Array.isArray(message.origin)).map(message => ({origin: message.origin, enableNativeBatch: message.enableNativeBatch})))
+            .toEqual([{origin: 'Alpha', enableNativeBatch: false}, {origin: 'Beta', enableNativeBatch: false}]);
+        const bodyCache = [...mocks.cacheStore.entries()].filter(([key]) => JSON.parse(key).requestMode !== 'page-summary');
+        expect(bodyCache.map(([, value]) => value)).toEqual(['安全的甲', '安全的乙']);
+        expect(mocks.cacheStore.size).toBe(3);
     });
 
 });

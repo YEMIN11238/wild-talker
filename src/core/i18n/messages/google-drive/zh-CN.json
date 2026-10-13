@@ -1,7 +1,7 @@
 {
   "messages": {
     "settings.drive.privacyBadge": "隐私保护",
-    "settings.drive.privacyTitle": "流畅阅读如何保护隐私",
+    "settings.drive.privacyTitle": "万能说客（Wild Talker）如何保护隐私",
     "settings.drive.privacyEncryption": "配置在本机加密后上传，云端保存的是加密文件",
     "settings.drive.privacyStorage": "只访问你 Google 云盘中的应用数据区，不读取普通云盘文件",
     "settings.drive.privacyAuthorization": "同步完成或取消后，清除本次同步的临时授权缓存",

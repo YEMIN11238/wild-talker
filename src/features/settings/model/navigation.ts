@@ -175,14 +175,14 @@ export const navigationGroups = [
       },
       {
         id: 'settings-data', icon: '⇅', label: '备份与恢复', description: '导出备份、恢复数据', group: '系统与数据',
-        heading: '备份与恢复 FluentRead', summary: '一次备份设置、单词本和模型用量，也可找回之前的设置',
+        heading: '备份与恢复 万能说客（Wild Talker）', summary: '一次备份设置、单词本和模型用量，也可找回之前的设置',
         kicker: '系统与数据', title: '备份与恢复', detail: '导出或恢复设置、单词本和模型用量，并查看自动保存的设置历史',
         searchDescription: '备份、恢复、最近修改、自动设置快照、六小时、差异、迁移、单词本、模型用量、导出与导入',
       },
       {
-        id: 'settings-about', icon: 'i', label: '关于流畅阅读', description: '版本与项目', group: '系统与数据',
-        heading: '关于流畅阅读', summary: '查看插件版本、项目主页和反馈渠道',
-        kicker: '关于项目', title: '关于流畅阅读', detail: brandTaglines['zh-CN'],
+        id: 'settings-about', icon: 'i', label: '关于万能说客（Wild Talker）', description: '版本与项目', group: '系统与数据',
+        heading: '关于万能说客（Wild Talker）', summary: '查看插件版本、项目主页和反馈渠道',
+        kicker: '关于项目', title: '关于万能说客（Wild Talker）', detail: brandTaglines['zh-CN'],
         searchDescription: '版本、开源项目、使用文档与问题反馈',
       },
     ],

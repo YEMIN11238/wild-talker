@@ -38,11 +38,11 @@ const percent = computed(() => props.progress ? downloadProgressPercent(props.pr
   background: var(--download-progress-track, var(--surface-soft, rgba(127, 127, 127, .22)));
 }
 .download-progress progress::-webkit-progress-bar { background: transparent; }
-.download-progress progress::-webkit-progress-value { border-radius: 3px; background: var(--download-progress-fill, var(--brand, #3b82f6)); transition: width 200ms linear; }
-.download-progress progress::-moz-progress-bar { border-radius: 3px; background: var(--download-progress-fill, var(--brand, #3b82f6)); }
+.download-progress progress::-webkit-progress-value { border-radius: 3px; background: var(--download-progress-fill, var(--brand, #648433)); transition: width 200ms linear; }
+.download-progress progress::-moz-progress-bar { border-radius: 3px; background: var(--download-progress-fill, var(--brand, #648433)); }
 /* 没有总量时不伪造百分比：只用一段滑动色块表示仍在接收数据。 */
 .download-progress progress:indeterminate {
-  background-image: linear-gradient(90deg, transparent, var(--download-progress-fill, var(--brand, #3b82f6)), transparent);
+  background-image: linear-gradient(90deg, transparent, var(--download-progress-fill, var(--brand, #648433)), transparent);
   background-repeat: no-repeat;
   background-size: 40% 100%;
   animation: download-progress-slide 1.2s linear infinite;

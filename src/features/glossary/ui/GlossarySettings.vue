@@ -100,7 +100,7 @@
           <button type="button" @click="showBuiltins()">{{ t('glossary.builtin.title') }}</button>
         </div>
         <div v-else>
-          <label>{{ t('glossary.previewText') }}<textarea v-model="previewText" rows="2" placeholder="FluentRead uses a large language model." /></label>
+          <label>{{ t('glossary.previewText') }}<textarea v-model="previewText" rows="2" placeholder="Wild Talker uses a large language model." /></label>
           <section v-if="preview.terms.length" class="glossary-match-result" data-testid="glossary-matches" :aria-label="t('glossary.matchCount', {count: preview.terms.length})">
             <header class="glossary-match-heading">
               <strong role="status" aria-live="polite">{{ t('glossary.matchCount', {count: preview.terms.length}) }}</strong>

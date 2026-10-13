@@ -146,8 +146,8 @@ onBeforeUnmount(() => {disposed = true; closeScopeHelp(); stopConfig(); media.re
 </script>
 <style scoped>
 /* 沿用写作面板的中性底面、字号与留白；阅读面板的轻操作页签只强调当前视图。 */
-.correction-ui{--accent:#ef4776;--text:#28323f;--muted:#7c8799;--surface:#fff;--soft:#f7f8fb;--line:#e9edf3;--danger:#b1435e;color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:normal;direction:ltr;color-scheme:light}
-.dark{--text:#edf0f5;--muted:#a1a8b5;--surface:#24262e;--soft:#2c2e38;--line:#393c48;--danger:#f1a7bc;color-scheme:dark}
+.correction-ui{--accent:#648433;--text:#252a24;--muted:#737970;--surface:#fff;--soft:#f5f7f0;--line:#e7eae1;--danger:#b1435e;color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:normal;direction:ltr;color-scheme:light}
+.dark{--text:#edf0e8;--muted:#afb6a9;--surface:#262d25;--soft:#2b3328;--line:#394035;--danger:#f1a7bc;color-scheme:dark}
 button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer;border:1px solid var(--line);border-radius:7px;background:var(--surface);padding:5px 10px;min-height:32px;font-size:12px;line-height:1.5}
 button:hover{background:var(--soft)}button:disabled{cursor:default;opacity:.45}

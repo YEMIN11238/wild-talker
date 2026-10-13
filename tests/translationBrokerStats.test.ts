@@ -117,8 +117,18 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
 });
+
+/** 模拟会响应传输取消的慢线路；timeout 不提前释放租约，取消结算才允许下一条取得容量。 */
+function abortableSlowRoute(signal: AbortSignal): Promise<never> {
+    return new Promise((_resolve, reject) => {
+        const cancel = () => reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
+        if (signal.aborted) cancel();
+        else signal.addEventListener('abort', cancel, {once: true});
+    });
+}
 
 describe('翻译 broker 请求统计', () => {
     it('免费池总预算在尚未尝试线路时耗尽，broker 仍记录为 timeout', async () => {
@@ -136,35 +146,56 @@ describe('翻译 broker 请求统计', () => {
     });
 
     it('线路超时后换线成功，只记录线路 timeout 和请求 success', async () => {
+        vi.useFakeTimers();
         const run = createFreeFallbackRunner(1);
+        const slow = vi.fn(abortableSlowRoute);
+        const healthy = vi.fn(async () => '有效译文');
         harness.provider.mockImplementationOnce(message => run([
-            {identity: 'slow', label: '慢线路', translate: () => new Promise(() => {})},
-            {identity: 'healthy', label: '健康线路', translate: async () => '有效译文'},
+            {identity: 'slow', label: '慢线路', translate: slow},
+            {identity: 'healthy', label: '健康线路', translate: healthy},
         ], {
             timeoutMs: 5, cooldownMs: 1000,
             onAttempt: attempt => reportTranslationRoute(message, {...attempt, route: attempt.identity, chars: 5}),
         }));
 
-        await expect(harness.translate({origin: 'fallback recovery', useCache: false})).resolves.toBe('有效译文');
+        const request = harness.translate({origin: 'fallback recovery', useCache: false});
+        const outcome = expect(request).resolves.toBe('有效译文');
+        await vi.advanceTimersByTimeAsync(0);
+        expect(slow).toHaveBeenCalledOnce();
+        expect(healthy).not.toHaveBeenCalled();
+        await vi.advanceTimersByTimeAsync(5);
+        await outcome;
+        expect(slow.mock.calls[0]![0].aborted).toBe(true);
+        expect(healthy).toHaveBeenCalledOnce();
         const [event] = harness.events();
         expect(event).toMatchObject({outcome: 'success'});
         expect(event).not.toHaveProperty('errorKind');
         expect(event.routeAttempts?.map(attempt => attempt.outcome)).toEqual(['timeout', 'success']);
+        expect(event.routeAttempts?.map(attempt => attempt.durationMs)).toEqual([5, 0]);
     });
 
     it('线路耗尽汇总中的 timeout 不冒充总截止时间，统计和全文提示保留 provider 失败', async () => {
+        vi.useFakeTimers();
         const run = createFreeFallbackRunner(1);
+        const slow = vi.fn(abortableSlowRoute);
+        const empty = vi.fn(async () => '');
         harness.provider.mockImplementationOnce(message => run([
-            {identity: 'slow', label: '慢线路', translate: () => new Promise(() => {})},
-            {identity: 'echo', label: '空结果线路', translate: async () => ''},
+            {identity: 'slow', label: '慢线路', translate: slow},
+            {identity: 'echo', label: '空结果线路', translate: empty},
         ], {
             timeoutMs: 5, cooldownMs: 1000,
             onAttempt: attempt => reportTranslationRoute(message, {...attempt, route: attempt.identity, chars: 5}),
         }));
 
-        let failure!: Error;
-        try { await harness.translate({origin: 'pool exhausted', useCache: false}); }
-        catch (error) { failure = error as Error; }
+        const request = harness.translate({origin: 'pool exhausted', useCache: false})
+            .then(() => {throw new Error('Exhausted pool must reject');}, error => error as Error);
+        await vi.advanceTimersByTimeAsync(0);
+        expect(slow).toHaveBeenCalledOnce();
+        expect(empty).not.toHaveBeenCalled();
+        await vi.advanceTimersByTimeAsync(5);
+        const failure = await request;
+        expect(slow.mock.calls[0]![0].aborted).toBe(true);
+        expect(empty).toHaveBeenCalledOnce();
         expect(failure).toMatchObject({kind: 'provider', retryable: false});
         expect(failure.message).toContain('慢线路: 请求超时');
         expect(getTranslationErrorMessage(failure.message, '免费翻译')).toBe(failure.message);

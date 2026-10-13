@@ -226,11 +226,19 @@ describe('实际 Popup 缓存模板与页面操作',()=>{
   it('缓存失败与暂停均有确定结束状态，失败只显示当前会话通知',async()=>{
     await mount();const error=vi.spyOn(console,'error').mockImplementation(()=>{});runtimeSend.mockResolvedValueOnce({success:false,error:'fixture'});await eventOf(document.querySelector('footer button')!)();expect(state.notice).toBe('缓存清除失败');expect(state.clearingCache).toBe(false);const reply=deferred();runtimeSend.mockReturnValueOnce(reply.promise);const pending=eventOf(document.querySelector('footer button')!)();state.config.on=false;reply.resolve({success:true});await pending;expect(state.clearingCache).toBe(false);expect(state.notice).toBe('全部翻译缓存已清除');error.mockRestore()
   })
-  it('赞赏打开不抢新焦点，旧遮罩不能关闭新弹窗；Tab/Escape 保持焦点归属',async()=>{
-    await mount();const outsider=document.createElement('button');document.body.appendChild(outsider);const pending=eventOf(document.querySelector('.donation-button')!)();focused=outsider;await pending;expect(focused).toBe(outsider);const oldOverlay=eventOf(document.querySelector('.donation-overlay')!),oldClose=eventOf(document.querySelector('.donation-close')!);oldClose();expect(focused).toBe(outsider);await drain();await eventOf(document.querySelector('.donation-button')!)();await drain();const overlay=document.querySelector('.donation-overlay')!;oldOverlay({target:overlay,currentTarget:overlay});expect(state.donationVisible).toBe(true);focused=outsider;const tab=new win.Event('keydown',{cancelable:true});Object.assign(tab,{key:'Tab',shiftKey:false});document.dispatchEvent(tab);expect(focused).toBe(document.querySelector('.donation-close'));const reverse=new win.Event('keydown',{cancelable:true});Object.assign(reverse,{key:'Tab',shiftKey:true});document.dispatchEvent(reverse);expect(focused).toBe(document.querySelector('.donation-kofi'));const escape=new win.Event('keydown',{cancelable:true});Object.assign(escape,{key:'Escape'});document.dispatchEvent(escape);expect(state.donationVisible).toBe(false);expect(focused).toBe(document.querySelector('.donation-button'))
+  it('自用弹窗移除赞赏支付图及底部开源标志，保留设置',async()=>{
+    await mount();
+    expect(document.querySelector('.donation-button,.donation-overlay,[src*="approve"],a[href*="ko-fi"]')).toBeNull();
+    expect(document.querySelector('.header-actions')!.querySelectorAll('button')).toHaveLength(1);
+    expect(document.querySelector('.settings-button')).not.toBeNull();
+    expect(document.querySelector('.opensource-link')).toBeNull();
+    expect(document.querySelector('footer a[href*="github.com"]')).toBeNull();
   })
-  it('赞赏的未完成焦点任务在关闭/失活后失效，缓存按钮不能重新打开',async()=>{
-    await mount();const cached=eventOf(document.querySelector('.donation-button')!),pending=cached();state.donationVisible=false;await pending;expect(focused).toBe(document.body);await drain();await eventOf(document.querySelector('.donation-button')!)();const before=focused;shown.value=false;await drain();shown.value=true;await drain();cached();await drain();expect(state.donationVisible).toBe(false);expect(focused).toBe(before)
+  it('暂停与恢复不会重新显示支付界面，也不再接管宿主Tab或Escape焦点',async()=>{
+    await mount();const outsider=document.createElement('button');document.body.appendChild(outsider);focused=outsider;
+    shown.value=false;await drain();shown.value=true;await drain();
+    for(const key of ['Tab','Escape']){const event=new win.Event('keydown',{cancelable:true});Object.assign(event,{key,shiftKey:false});document.dispatchEvent(event);expect(event.defaultPrevented).toBe(false);expect(focused).toBe(outsider)}
+    expect(document.querySelector('.donation-button,.donation-overlay,[src*="approve"],a[href*="ko-fi"]')).toBeNull();
   })
   it.each(['settings','document'])('%s 的 API 失败可恢复，关闭后旧成功不关闭新会话',async target=>{
     await mount();const selector=target==='settings'?'.settings-button':'[data-feature="document-translation"]',api=target==='settings'?openOptions:createTab;api.mockRejectedValueOnce(new Error('fixture'));await eventOf(document.querySelector(selector)!)();expect(state.noticeType).toBe('error');expect(close).not.toHaveBeenCalled();const reply=deferred();api.mockReturnValueOnce(reply.promise);const cached=eventOf(document.querySelector(selector)!),pending=cached();await drain();expect(api).toHaveBeenCalledTimes(2);shown.value=false;await drain();shown.value=true;await drain();reply.resolve(undefined);await pending;cached();expect(api).toHaveBeenCalledTimes(2);expect(close).not.toHaveBeenCalled();await eventOf(document.querySelector(selector)!)();expect(close).toHaveBeenCalledOnce()

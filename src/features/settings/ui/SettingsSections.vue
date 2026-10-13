@@ -374,7 +374,7 @@
           <template #copy>
             <strong data-i18n-ignore>{{ t('settings.general.language') }}<span v-if="language !== 'en-US'" lang="en"> / App language</span></strong>
             <small data-i18n-ignore>{{ t('language.settingsDescription') }}</small>
-            <small v-if="language !== 'en-US'" lang="en" data-i18n-ignore>Choose the language used across FluentRead.</small>
+            <small v-if="language !== 'en-US'" lang="en" data-i18n-ignore>Choose the language used across 万能说客（Wild Talker）.</small>
           </template>
           <UiLanguageSelector compact :active="viewActive && props.activeSection === 'settings-general'" />
         </SettingsItem>

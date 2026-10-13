@@ -25,6 +25,7 @@ function pattern(
 }
 
 export const runtimeFeedbackPatterns: readonly LocalizedLegacyPattern[] = [
+    {"pattern": "^当前网页有 (\\d+) 处相同原句。出现不同的已保存译法时，不会自动采用。$", "localizedCaptures": [], "messages": {"en-US": "This page contains {1} occurrences of the same source sentence. If different saved translations exist, none will be applied automatically.", "ja-JP": "現在のページには同じ原文の文が{1}か所あります。異なる訳が保存されている場合、自動では採用されません。", "ko-KR": "현재 웹페이지에 같은 원문 문장이 {1}곳 있습니다. 저장된 번역이 서로 다르면 자동으로 적용하지 않습니다.", "fr-FR": "Cette page contient {1} occurrences de la même phrase source. Si plusieurs traductions différentes sont enregistrées, aucune ne sera appliquée automatiquement.", "ru-RU": "На текущей странице одно и то же исходное предложение встречается {1} раз. Если сохранены разные переводы, ни один из них не будет применён автоматически.", "es-ES": "Esta página contiene {1} apariciones de la misma frase original. Si hay distintas traducciones guardadas, no se aplicará ninguna automáticamente."}},
     // 翻译链路与服务商。
     pattern("^豆包网页翻译访客初始化失败: (\\d+)$", [],
         'Doubao Web Translation could not initialize an anonymous guest: {1}', 'Doubao ウェブ翻訳の匿名ゲストを初期化できませんでした：{1}', 'Doubao 웹 번역의 익명 방문자를 초기화하지 못했습니다: {1}', 'La traduction web Doubao n’a pas pu initialiser un visiteur anonyme : {1}', 'Веб-перевод Doubao не смог инициализировать анонимного гостя: {1}', 'La traducción web de Doubao no pudo inicializar un visitante anónimo: {1}'),

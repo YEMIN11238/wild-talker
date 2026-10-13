@@ -31,7 +31,7 @@
       <label for="webdav-url">{{ t('settings.webdav.url') }}</label><el-input id="webdav-url" v-model="draft.url" placeholder="https://cloud.example.com/dav/" :disabled="settingsBusy" :maxlength="4096" autocomplete="off" />
       <label for="webdav-username">{{ t('settings.webdav.username') }}</label><el-input id="webdav-username" v-model="draft.username" :disabled="settingsBusy" :maxlength="512" autocomplete="off" />
       <label for="webdav-password">{{ t('settings.webdav.password') }}</label><el-input id="webdav-password" v-model="draft.password" type="password" show-password :placeholder="canKeepPassword ? t('settings.webdav.passwordSaved') : t('settings.webdav.passwordHint')" :disabled="settingsBusy" :maxlength="4096" autocomplete="new-password" />
-      <p class="webdav-hint">{{ t('settings.webdav.connectionHint') }} <a :href="guideUrl" target="_blank" rel="noopener noreferrer">{{ t('settings.webdav.openGuide') }}</a></p>
+      <p class="webdav-hint">{{ t('settings.webdav.connectionHint') }}</p>
       <template v-if="insecure"><el-alert :title="t('settings.webdav.httpWarning')" type="warning" :closable="false" show-icon /><label class="webdav-http-consent"><input v-model="draft.allowInsecure" type="checkbox" :disabled="settingsBusy" /><span>{{ t('settings.webdav.httpConsent') }}</span></label></template>
       <el-alert v-if="error" :title="error" type="error" :closable="false" show-icon />
       <el-alert v-if="tested" :title="t('settings.webdav.testSuccess')" type="success" :closable="false" show-icon />
@@ -50,7 +50,7 @@ import {CloudBackupRequestError} from '@/src/services/config/cloudBackupClient';
 import type {WebDavConnectionSummary} from '@/src/platform/webdav/connection';
 import RemoteConfigSync from './RemoteConfigSync.vue';
 const emit = defineEmits<{busy: [value: boolean]}>();
-const {t, translateLegacy, language} = useUiI18n();
+const {t, translateLegacy} = useUiI18n();
 const connection = ref<WebDavConnectionSummary | null>(null);
 const settingsVisible = ref(false);
 const settingsBusy = ref(false);
@@ -101,7 +101,6 @@ const draft = reactive({url: '', username: '', password: '', allowInsecure: fals
 const insecure = computed(() => /^http:\/\//iu.test(draft.url.trim()));
 const canKeepPassword = computed(() => Boolean(connection.value?.hasPassword && draft.url.trim().replace(/\/+$/u, '') === connection.value.url.replace(/\/+$/u, '') && draft.username.trim() === connection.value.username));
 const ready = computed(() => Boolean(draft.url.trim() && draft.username.trim() && (draft.password || canKeepPassword.value) && (!insecure.value || draft.allowInsecure)));
-const guideUrl = computed(() => `https://read.thinkstu.com/${language.value === 'zh-CN' ? '' : 'en/'}guide/webdav`);
 watch(draft, () => {tested.value = false;});
 function setSyncBusy(value: boolean) {syncBusy.value = value;}
 async function perform(nextAction: string, operation: () => Promise<void>) {

@@ -134,8 +134,8 @@ function handleKeydown(event: KeyboardEvent, currentIndex: number) {
 .segmented-control button.active {
   color: var(--brand-strong);
   background: var(--surface);
-  box-shadow: 0 2px 7px rgba(31, 40, 61, .09);
+  box-shadow: none;
 }
 .segmented-control button:disabled { cursor: not-allowed; opacity: .55; }
-.segmented-control button:focus-visible { outline: 2px solid rgba(239, 71, 118, .28); outline-offset: 1px; }
+.segmented-control button:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
 </style>

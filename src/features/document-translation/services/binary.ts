@@ -975,7 +975,7 @@ async function renderPdf(
     const {PDFDocument, PDFHexString, degrees, rgb} = await import('pdf-lib');
     options.signal?.throwIfAborted();
     const outputPdf = await PDFDocument.create();
-    outputPdf.setTitle(`${document.fileName} - FluentRead`);
+    outputPdf.setTitle(`${document.fileName} - Wild Talker`);
     outputPdf.setProducer('FluentRead document translation');
 
     const totalPages = binary.pages.length;

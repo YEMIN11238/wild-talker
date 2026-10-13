@@ -20,7 +20,7 @@ describe('卡片排版边界', () => {
         const result = await renderShareCard({original: 'A sentence worth keeping.', translation: '一句值得珍藏的话。', source: 'example.com'}, normalizeShareCardPreferences({theme}));
         expect(result.width).toBe(960); expect(result.height).toBeGreaterThanOrEqual(450);
         const text = painted.map(item => item.text).join(' ');
-        for (const expected of ['A sentence worth keeping.', '一句值得珍藏的话。', 'example.com', '流畅阅读']) expect(text).toContain(expected);
+        for (const expected of ['A sentence worth keeping.', '一句值得珍藏的话。', 'example.com', '万能说客（Wild Talker）']) expect(text).toContain(expected);
         expect(painted.every(item => item.y >= 0 && item.y < result.height / 1.5 - 24)).toBe(true);
     });
     it('没有 roundRect 的浏览器仍能生成月白图片', async () => {
@@ -64,7 +64,7 @@ describe('卡片排版边界', () => {
         const first = [...painted]; painted = [];
         const foreign = await renderShareCard(excerpt, preferences, undefined, 'FluentRead');
         expect(painted.slice(0, -1)).toEqual(first.slice(0, -1));
-        expect(first.at(-1)!.text).toBe('流畅阅读'); expect(painted.at(-1)!.text).toBe('FluentRead');
+        expect(first.at(-1)!.text).toBe('万能说客（Wild Talker）'); expect(painted.at(-1)!.text).toBe('FluentRead');
         expect(painted.at(-1)!.x).toBe(first.at(-1)!.x); expect(painted.at(-1)!.y).toBe(first.at(-1)!.y);
         expect({width: foreign.width, height: foreign.height}).toEqual({width: chinese.width, height: chinese.height});
         painted = [];

@@ -354,7 +354,8 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  box-shadow: 0 8px 18px rgba(239, 71, 118, .2);
+  border: 1px solid var(--line);
+  box-shadow: none;
 }
 
 .onboarding-brand strong {
@@ -369,12 +370,9 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
   position: relative;
   height: 244px;
   margin: 0 -4px 12px;
-  border: 1px solid rgba(239, 71, 118, .12);
+  border: 1px solid var(--line);
   border-radius: 22px;
-  background:
-    radial-gradient(circle at 18% 30%, rgba(239, 71, 118, .18), transparent 24%),
-    radial-gradient(circle at 82% 70%, rgba(95, 155, 243, .16), transparent 28%),
-    linear-gradient(135deg, var(--brand-soft), var(--surface-soft));
+  background: var(--surface-soft);
   overflow: hidden;
 }
 
@@ -391,7 +389,7 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
   right: 18px;
   width: 88px;
   height: 88px;
-  border: 1px solid rgba(243, 191, 69, .48);
+  border: 1px solid var(--line);
 }
 
 .welcome-art::after {
@@ -399,7 +397,7 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
   left: 42px;
   width: 104px;
   height: 104px;
-  border: 1px solid rgba(106, 199, 185, .42);
+  border: 1px solid var(--line);
 }
 
 .welcome-word {
@@ -410,11 +408,11 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
   align-items: center;
   min-height: 28px;
   padding: 5px 10px;
-  border: 1px solid rgba(255, 255, 255, .7);
+  border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--ink);
-  background: rgba(255, 255, 255, .7);
-  box-shadow: 0 7px 16px rgba(31, 40, 61, .08);
+  background: var(--surface);
+  box-shadow: none;
   font-size: 11px;
   font-weight: 760;
   white-space: nowrap;
@@ -422,16 +420,16 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
   animation: onboarding-word-float 3.8s ease-in-out infinite;
 }
 
-.welcome-word:nth-child(1) { --word-x: 16%; --word-y: 13%; --word-tilt: -6deg; color: #db3865; font-size: 12.5px; }
+.welcome-word:nth-child(1) { --word-x: 16%; --word-y: 13%; --word-tilt: -6deg; color: var(--brand-strong, #456021); font-size: 12.5px; }
 .welcome-word:nth-child(2) { --word-x: 50%; --word-y: 20%; --word-tilt: 3deg; animation-delay: -.7s; }
 .welcome-word:nth-child(3) { --word-x: 30%; --word-y: 37%; --word-tilt: 2deg; animation-delay: -1.4s; }
-.welcome-word:nth-child(4) { --word-x: 50%; --word-y: 61%; --word-tilt: -3deg; color: #567ed2; animation-delay: -2.1s; }
-.welcome-word:nth-child(5) { --word-x: 28%; --word-y: 86%; --word-tilt: -5deg; color: #a37b0e; animation-delay: -.3s; }
-.welcome-word:nth-child(6) { --word-x: 75%; --word-y: 44%; --word-tilt: -4deg; color: #657080; animation-delay: -1.8s; }
-.welcome-word:nth-child(7) { --word-x: 14%; --word-y: 63%; --word-tilt: 7deg; color: #d63868; animation-delay: -2.7s; }
-.welcome-word:nth-child(8) { --word-x: 67%; --word-y: 83%; --word-tilt: 4deg; color: #4a9d91; animation-delay: -1.1s; }
-.welcome-word:nth-child(9) { --word-x: 86%; --word-y: 15%; --word-tilt: 8deg; color: #597fcc; animation-delay: -2.4s; }
-.welcome-word:nth-child(10) { --word-x: 87%; --word-y: 66%; --word-tilt: 5deg; color: #bb6f45; animation-delay: -.9s; }
+.welcome-word:nth-child(4) { --word-x: 50%; --word-y: 61%; --word-tilt: -3deg; color: var(--brand-strong); animation-delay: -2.1s; }
+.welcome-word:nth-child(5) { --word-x: 28%; --word-y: 86%; --word-tilt: -5deg; color: var(--muted); animation-delay: -.3s; }
+.welcome-word:nth-child(6) { --word-x: 75%; --word-y: 44%; --word-tilt: -4deg; color: var(--muted); animation-delay: -1.8s; }
+.welcome-word:nth-child(7) { --word-x: 14%; --word-y: 63%; --word-tilt: 7deg; color: var(--brand-strong, #456021); animation-delay: -2.7s; }
+.welcome-word:nth-child(8) { --word-x: 67%; --word-y: 83%; --word-tilt: 4deg; color: var(--brand-strong); animation-delay: -1.1s; }
+.welcome-word:nth-child(9) { --word-x: 86%; --word-y: 15%; --word-tilt: 8deg; color: var(--brand-strong); animation-delay: -2.4s; }
+.welcome-word:nth-child(10) { --word-x: 87%; --word-y: 66%; --word-tilt: 5deg; color: var(--muted); animation-delay: -.9s; }
 
 .onboarding-copy h1 {
   margin: 0;
@@ -473,10 +471,10 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
   width: 100%;
   min-height: 46px;
   margin-top: 0;
-  border: 0;
+  border: 1px solid var(--brand);
   border-radius: 12px;
-  color: #fff;
-  background: var(--brand);
+  color: var(--brand-strong);
+  background: var(--brand-soft);
   font-size: 12px;
   font-weight: 760;
   cursor: pointer;
@@ -484,7 +482,8 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
 }
 
 .onboarding-confirm:hover:not(:disabled) {
-  background: var(--brand-strong);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--brand) 14%, var(--surface));
   transform: translateY(-1px);
 }
 
@@ -590,7 +589,7 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
 }
 
 .onboarding-language-option:hover {
-  border-color: rgba(239, 71, 118, .42);
+  border-color: color-mix(in srgb, var(--brand, #648433) 42%, transparent);
   transform: translateY(-1px);
 }
 
@@ -601,7 +600,7 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
 .onboarding-language-option.selected {
   border-color: var(--brand);
   background: var(--brand-soft);
-  box-shadow: 0 0 0 3px rgba(239, 71, 118, .1);
+  box-shadow: none;
 }
 
 .onboarding-language-name {
@@ -639,8 +638,8 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
 
 .onboarding-language-option.selected .onboarding-language-check {
   border-color: var(--brand);
-  color: #fff;
-  background: var(--brand);
+  color: var(--brand-strong);
+  background: var(--brand-soft);
 }
 
 .onboarding-confirm-guide {
@@ -694,16 +693,16 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
 .onboarding-success::before {
   top: 26px;
   left: 12px;
-  background: #ef4776;
-  box-shadow: 30px -10px #f3bf45, 70px 4px #5f9bf3, 238px -8px #6ac7b9, 280px 18px #ef4776;
+  background: var(--brand, #648433);
+  box-shadow: 30px -10px var(--line), 70px 4px var(--brand-soft), 238px -8px var(--muted), 280px 18px var(--brand);
   transform: rotate(-22deg);
 }
 
 .onboarding-success::after {
   right: 18px;
   bottom: 54px;
-  background: #6ac7b9;
-  box-shadow: -35px 14px #ef4776, -78px -8px #f3bf45, -125px 16px #5f9bf3;
+  background: var(--muted);
+  box-shadow: -35px 14px var(--brand), -78px -8px var(--line), -125px 16px var(--brand-soft);
   transform: rotate(24deg);
 }
 
@@ -723,9 +722,10 @@ watch(context.active, active => {if (active) focusCurrentStep();}, {immediate: t
   margin: 0 auto;
   place-items: center;
   border-radius: 50%;
-  color: #fff;
-  background: linear-gradient(145deg, #ef4776, #dc315f);
-  box-shadow: 0 12px 24px rgba(239, 71, 118, .28), 0 0 0 10px rgba(239, 71, 118, .1);
+  border: 1px solid var(--brand);
+  color: var(--brand-strong);
+  background: var(--brand-soft);
+  box-shadow: none;
   animation: onboarding-success-pop 600ms cubic-bezier(.2, .8, .2, 1) both;
 }
 

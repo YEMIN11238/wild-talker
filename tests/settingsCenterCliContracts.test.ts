@@ -169,38 +169,20 @@ describe('settings center CLI remaining current UI contracts', () => {
             [{color: 'invalid', image: 'none'}],
         ]) expect(resolveSolidBackground(layers)).toBeNull();
     });
-    it('checks the About QR against available card width and square presentation', () => {
-        const {matchesAboutSupportQrBounds} = bindings(['matchesAboutSupportQrBounds']);
-        const css = cssDeclarations('src/features/settings/ui/settings-page.css', '.about-support-qr');
-        expect(css.width).toBe('100%');
-        expect(css.height).toBe('auto');
-        expect(css['aspect-ratio']).toBe('1');
-        expect(css['object-fit']).toBe('contain');
-        for (const availableWidth of [148, 200, 320]) {
-            expect(matchesAboutSupportQrBounds({width: availableWidth, height: availableWidth}, availableWidth)).toBe(true);
-            expect(matchesAboutSupportQrBounds({width: availableWidth + .4, height: availableWidth - .4}, availableWidth)).toBe(true);
-        }
-
+    it('keeps local About guides, source attribution and bundled license without external destinations or QR contracts', () => {
         const about = productionSource('src/app/options/OptionsApp.vue');
-        const image = about.match(/<img\b[^>]*class="about-support-qr"[^>]*>/)?.[0];
-        const button = about.match(/<button\b[^>]*class="about-support-method about-support-wechat"[^>]*>/)?.[0];
-        expect(image).toBeDefined();
-        expect(button).toBeDefined();
-        const {document} = parseHTML(`<html><body>${button}${image}</button></body></html>`);
-        const trigger = document.querySelector('button')!;
-        expect(trigger.getAttribute('href')).toBeNull();
-        expect(trigger.getAttribute('@click')).toBe("openQrPreview('support')");
-        expect(trigger.querySelector('img')?.getAttribute('width')).toBe('1152');
-        expect(trigger.querySelector('img')?.getAttribute('height')).toBe('1152');
-    });
-
-    it.each([
-        null, {width: 0, height: 0}, {width: 258, height: 260}, {width: 260, height: 258},
-        {width: 148, height: 148}, {width: 280, height: 280},
-        {width: 259, height: 261}, {width: NaN, height: 260}, {width: 260, height: Infinity},
-    ])('rejects a missing, undersized, overflowing or distorted About QR (%j)', bounds => {
-        const {matchesAboutSupportQrBounds} = bindings(['matchesAboutSupportQrBounds']);
-        expect(matchesAboutSupportQrBounds(bounds, 260)).toBe(false);
+        expect(about).not.toMatch(/about-support-(?:qr|wechat|panel)|about-wechat-contact|about-qr-dialog|ko-fi\.com|approve\.jpg|wechat-contact\.jpg/u);
+        expect(about).not.toMatch(/https:\/\/read\.thinkstu\.com|https:\/\/fluent\.thinkstu\.com|https:\/\/github\.com\/Bistutu\/FluentRead/u);
+        expect(about).toContain('data-about-section');
+        expect(about).toContain('data-about-brand');
+        expect(about).toContain("t('options.aboutLocalSource')");
+        expect(about).toContain("t('options.aboutLocalSourceDescription')");
+        expect(about).toContain('about-personal-panel');
+        expect(about).toContain('https://github.com/FluentRead/FluentRead');
+        expect(about).toContain('about-license-details');
+        expect(about).not.toContain('about-license-link');
+        expect(source).not.toContain('matchesAboutSupportQrBounds');
+        expect(source).toContain('aboutPersonalBuild');
     });
 
     it('keeps all five current quick features in the matrix after explicitly adding appearance', () => {

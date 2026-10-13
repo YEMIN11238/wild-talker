@@ -223,7 +223,7 @@ function removeDomain(domain: string) {
   width: min(100%, 1080px);
   margin: 0 auto 16px;
   padding: 20px;
-  border: 1px solid var(--line, #e5e8ef);
+  border: 1px solid var(--line, #dce3d2);
   border-radius: 10px;
   background: var(--surface, #fff);
 }
@@ -241,13 +241,13 @@ function removeDomain(domain: string) {
 
 .site-rules-heading h3 {
   margin: 0 0 6px;
-  color: var(--ink, #172033);
+  color: var(--ink, #252a24);
   font-size: 15px;
 }
 
 .site-rules-heading p {
   margin: 0;
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   font-size: 11px;
   line-height: 1.55;
 }
@@ -258,10 +258,10 @@ function removeDomain(domain: string) {
   align-items: center;
   min-height: 28px;
   padding: 0 10px;
-  border: 1px solid rgba(239, 71, 118, .2);
+  border: 1px solid color-mix(in srgb, var(--brand, #648433) 20%, transparent);
   border-radius: 999px;
-  color: var(--brand-strong, #dc315f);
-  background: var(--brand-soft, #fff0f4);
+  color: var(--brand-strong, #456021);
+  background: var(--brand-soft, #edf5dd);
   font-size: 10px;
   font-weight: 750;
 }
@@ -281,22 +281,22 @@ function removeDomain(domain: string) {
   width: 100%;
   min-height: 44px;
   padding: 0 14px;
-  border: 1px solid #dfe4ed;
+  border: 1px solid var(--line, #dce3d2);
   border-radius: 13px;
   outline: 0;
-  color: var(--ink, #172033);
+  color: var(--ink, #252a24);
   background: var(--surface, #fff);
   font-size: 13px;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .site-rules-input-wrap input:hover {
-  border-color: #ef9ab1;
+  border-color: color-mix(in srgb, var(--brand, #648433) 42%, var(--line, #dce3d2));
 }
 
 .site-rules-input-wrap input:focus {
-  border-color: var(--brand, #ef4776);
-  box-shadow: 0 0 0 4px rgba(239, 71, 118, .1);
+  border-color: var(--brand, #648433);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand, #648433) 10%, transparent);
 }
 
 .site-rules-input-wrap input[aria-invalid="true"] {
@@ -304,7 +304,7 @@ function removeDomain(domain: string) {
 }
 
 .site-rules-input-wrap input::placeholder {
-  color: #9299a8;
+  color: var(--muted, #6f7869);
 }
 
 .site-rules-add,
@@ -318,26 +318,26 @@ function removeDomain(domain: string) {
   min-width: 92px;
   min-height: 44px;
   padding: 0 15px;
-  border: 0;
-  color: #fff;
-  background: var(--brand, #ef4776);
+  border: 1px solid var(--brand, #648433);
+  color: var(--brand-strong, #456021);
+  background: var(--brand-soft, #edf5dd);
   box-shadow: none;
 }
 
 .site-rules-add:hover {
-  background: var(--brand-strong, #dc315f);
+  background: color-mix(in srgb, var(--brand, #648433) 14%, var(--surface, #fff));
 }
 
 .site-rules-feedback {
   min-height: 18px;
   margin: 7px 2px 0;
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   font-size: 10px;
   line-height: 1.5;
 }
 
 .site-rules-feedback strong {
-  color: var(--ink, #172033);
+  color: var(--ink, #252a24);
 }
 
 .site-rules-feedback.error {
@@ -361,7 +361,7 @@ function removeDomain(domain: string) {
   gap: 11px;
   min-height: 62px;
   padding: 10px 11px;
-  border: 1px solid var(--line, #e5e8ef);
+  border: 1px solid var(--line, #dce3d2);
   border-radius: 15px;
   background: var(--surface, #fff);
 }
@@ -372,8 +372,8 @@ function removeDomain(domain: string) {
   width: 36px;
   height: 36px;
   border-radius: 11px;
-  color: var(--brand-strong, #dc315f);
-  background: var(--brand-soft, #fff0f4);
+  color: var(--brand-strong, #456021);
+  background: var(--brand-soft, #edf5dd);
   font-size: 13px;
   font-weight: 800;
 }
@@ -387,29 +387,29 @@ function removeDomain(domain: string) {
 
 .site-rule-copy strong {
   overflow: hidden;
-  color: var(--ink, #172033);
+  color: var(--ink, #252a24);
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .site-rule-copy small {
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   font-size: 10px;
 }
 
 .site-rule-remove {
   min-height: 32px;
   padding: 0 11px;
-  border: 1px solid var(--line, #e5e8ef);
-  color: var(--brand-strong, #dc315f);
+  border: 1px solid var(--line, #dce3d2);
+  color: var(--fr-danger, #b1435e);
   background: transparent;
   font-size: 10px;
 }
 
 .site-rule-remove:hover {
-  border-color: rgba(239, 71, 118, .35);
-  background: var(--brand-soft, #fff0f4);
+  border-color: color-mix(in srgb, var(--fr-danger, #b1435e) 35%, var(--line, #dce3d2));
+  background: var(--fr-danger-soft, #fff0f3);
 }
 
 .site-rules-empty {
@@ -421,7 +421,7 @@ function removeDomain(domain: string) {
   padding: 14px 16px;
   border: 0;
   border-radius: 8px;
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   background: var(--surface, #fff);
   column-gap: 11px;
   text-align: left;
@@ -429,12 +429,12 @@ function removeDomain(domain: string) {
 
 .site-rules-empty > span {
   grid-row: 1 / span 2;
-  color: var(--brand-strong, #dc315f);
+  color: var(--brand-strong, #456021);
   font-size: 21px;
 }
 
 .site-rules-empty strong {
-  color: var(--ink, #172033);
+  color: var(--ink, #252a24);
   font-size: 13px;
 }
 
@@ -460,23 +460,13 @@ function removeDomain(domain: string) {
 :root.dark .site-rule-item,
 :root.dark .site-rules-empty,
 :root.dark .site-rules-input-wrap input {
-  border-color: #30333c;
-  background: #252830;
-}
-
-:root.dark .site-rules-editor {
-  --brand-strong: #ff7aa2;
-  --brand-soft: rgba(239, 71, 118, .16);
-  --ink: #f4f5f8;
-  --muted: #b7bdc9;
-  --line: #3b3f49;
-  --surface: #252830;
-  --surface-soft: #20232a;
+  border-color: var(--line, #dce3d2);
+  background: var(--surface, #fff);
 }
 
 :root.dark .site-rules-input-wrap input:focus {
-  border-color: #ef4776;
-  background: #1d2027;
+  border-color: var(--brand, #648433);
+  background: var(--surface-soft, #f5f7f0);
 }
 
 @media (max-width: 600px) {

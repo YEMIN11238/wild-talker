@@ -87,7 +87,7 @@ describe('界面语言注册表', () => {
             const locale = relativeDest.split('/')[1] as keyof typeof languageByLocale;
             const message = JSON.parse(contents);
             expect(message).toEqual({extensionName: {message: i18n.translate('common.brand', languageByLocale[locale])}});
-            expect(message.extensionName.message).toBe(locale === 'zh_CN' ? '流畅阅读' : 'FluentRead');
+            expect(message.extensionName.message).toBe('万能说客（Wild Talker）');
             expect(contents).not.toContain('\n');
         }
         expect(files.filter(({relativeDest}) => relativeDest.startsWith('i18n/'))).toEqual([]);

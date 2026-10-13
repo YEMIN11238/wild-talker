@@ -1,7 +1,7 @@
 /**
  * @file src/features/image-translation/content/mangaEntry.ts
  * 文件职责：将安静的独立漫画按钮和按需资源确认挂载到隔离 Shadow UI，并桥接真实会话、资源检查与持久偏好。
- * 主要内容：用地址识别阅读页，按悬浮球和站点显隐显示备用按钮，不自动弹出阅读面板；订阅会话和配置，跨路由同步网站名称；订阅建立后立即登记清理，等待 UI 创建时卸载也即时退订；清理幂等且只清除自己的槽位，挂载所有权防止迟到实例回到页面或影响新入口。
+ * 主要内容：用地址识别阅读页，按悬浮球和站点显隐显示备用按钮，不自动弹出阅读面板；订阅会话和配置，同步插件主题与跨路由网站名称；订阅建立后立即登记清理，等待 UI 创建时卸载也即时退订；清理幂等且只清除自己的槽位，挂载所有权防止迟到实例回到页面或影响新入口。
  * 模块边界：仅编排 feature 内部 UI 与公共配置、浏览器消息端口，不下载模型、不实现翻译，宿主脚本不能通过合成 DOM 事件发起动作。
  */
 import {reactive} from 'vue';
@@ -30,10 +30,10 @@ export function mountMangaEntry(ctx: ContentScriptContext, ports: {startAreaTran
     const status = reactive<MangaTranslationStatus>({available: false, active: false, pending: false, errors: 0});
     const sourceLanguage = () => resolveMangaSourceLanguage(location.href, config.from, config.imageTranslationMangaSites);
     const settings = reactive({sourceLanguage: sourceLanguage(), promptEnabled: config.imageTranslationMangaPromptEnabled, floatingBallVisible: !config.disableFloatingBall && !isFloatingBallDisabledOnSite(location.href, config.floatingBallDisabledDomains), to: config.to,
-        service: config.imageTranslationService, downloadConfirmed: config.imageTranslationMangaDownloadConfirmed, animations: config.animations, toolsDisplay: config.floatingBallToolsDisplay ?? 'always', prefetchPages: config.imageTranslationMangaPrefetchPages});
+        service: config.imageTranslationService, downloadConfirmed: config.imageTranslationMangaDownloadConfirmed, animations: config.animations, theme: config.theme, toolsDisplay: config.floatingBallToolsDisplay ?? 'always', prefetchPages: config.imageTranslationMangaPrefetchPages});
     const page = reactive({site: resolveMangaSite(location.href, config.imageTranslationMangaSites)?.name ?? '', route: location.href});
     const sync = () => {Object.assign(settings, {sourceLanguage: sourceLanguage(), promptEnabled: config.imageTranslationMangaPromptEnabled, floatingBallVisible: !config.disableFloatingBall && !isFloatingBallDisabledOnSite(location.href, config.floatingBallDisabledDomains), to: config.to,
-        service: config.imageTranslationService, downloadConfirmed: config.imageTranslationMangaDownloadConfirmed, animations: config.animations, toolsDisplay: config.floatingBallToolsDisplay ?? 'always', prefetchPages: config.imageTranslationMangaPrefetchPages});
+        service: config.imageTranslationService, downloadConfirmed: config.imageTranslationMangaDownloadConfirmed, animations: config.animations, theme: config.theme, toolsDisplay: config.floatingBallToolsDisplay ?? 'always', prefetchPages: config.imageTranslationMangaPrefetchPages});
         Object.assign(page, {site: resolveMangaSite(location.href, config.imageTranslationMangaSites)?.name ?? '', route: location.href});};
     const stopStatus = subscribeMangaTranslation(value => Object.assign(status, value));
     const stopConfig = subscribeConfig(sync);

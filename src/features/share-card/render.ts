@@ -16,7 +16,7 @@ const WIDTH = 640;
 const SCALE = 1.5;
 export interface RenderedShareCard {canvas: HTMLCanvasElement; blob: Blob; width: number; height: number}
 
-export async function renderShareCard(excerpt: ShareCardExcerpt, preferences: ShareCardPreferences, signal?: AbortSignal, brandName = '流畅阅读'): Promise<RenderedShareCard> {
+export async function renderShareCard(excerpt: ShareCardExcerpt, preferences: ShareCardPreferences, signal?: AbortSignal, brandName = '万能说客（Wild Talker）'): Promise<RenderedShareCard> {
     signal?.throwIfAborted();
     const invalid = validateCardExcerpt(excerpt);
     if (invalid) throw new ShareCardRenderError(invalid);

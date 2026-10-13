@@ -1,11 +1,21 @@
 /**
  * @file src/features/section-translation/content/picker.css
  * 文件职责：定义局部翻译选择模式在封闭 Shadow Root 内的视觉，包括稳定区域高亮框、自然语言范围标签和固定确认操作条。
- * 主要内容：高亮框按“翻译/恢复原文/无可翻译内容”三种语气着色，选区几何立即贴合且只过渡颜色，标签显示动作、段落数和范围类型，操作条提供原文预览、扩大缩小、重新选择与显式确认，适配窄屏和键盘焦点；确认选择时播放短暂收束动画，触屏隐藏键盘提示，减少动态效果时关闭过渡。
+ * 主要内容：用扩展命名空间的纸面、墨色与青柠语义变量呈现选择框、标签和操作条，并为恢复动作保留独立信息色；变量未继承时提供系统深浅色回退。选区几何立即贴合且只过渡颜色，标签显示动作、段落数和范围类型，操作条提供原文预览、扩大缩小、重新选择与显式确认，适配窄屏和键盘焦点；确认选择时播放短暂收束动画，触屏隐藏键盘提示，减少动态效果时关闭过渡。
  * 模块边界：该样式只注入 picker.ts 创建的 Shadow Root，不影响宿主页面，也不决定区域判定或翻译行为；宿主元素的抗覆盖布局由 TypeScript 以内联 important 设置。
  */
 :host {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --fr-section-brand: var(--fr-color-brand, #648433);
+    --fr-section-brand-strong: var(--fr-color-brand-strong, #456021);
+    --fr-section-brand-soft: var(--fr-color-brand-soft, #edf5dd);
+    --fr-section-ink: var(--fr-color-ink, #252a24);
+    --fr-section-muted: var(--fr-color-muted, #737970);
+    --fr-section-line: var(--fr-color-line, #e7eae1);
+    --fr-section-surface: var(--fr-color-surface, #fff);
+    --fr-section-surface-soft: var(--fr-color-surface-soft, #f5f7f0);
+    --fr-section-restore: var(--fr-info, #306ba3);
+    --fr-section-restore-soft: var(--fr-info-soft, #eaf3ff);
 }
 
 *,
@@ -19,10 +29,10 @@
     top: 0;
     left: 0;
     display: none;
-    border: 2px solid #ef4776;
+    border: 2px solid var(--fr-section-brand);
     border-radius: 6px;
-    background: rgba(239, 71, 118, .09);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, .72), 0 8px 26px rgba(239, 71, 118, .16);
+    background: color-mix(in srgb, var(--fr-section-brand) 9%, transparent);
+    box-shadow: 0 0 0 1px var(--fr-section-surface);
     pointer-events: none;
 }
 
@@ -36,16 +46,16 @@
 }
 
 .fr-section-box.tone-restore {
-    border-color: #3f6ad8;
-    background: rgba(63, 106, 216, .08);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, .72), 0 8px 26px rgba(63, 106, 216, .16);
+    border-color: var(--fr-section-restore);
+    background: color-mix(in srgb, var(--fr-section-restore) 8%, transparent);
+    box-shadow: 0 0 0 1px var(--fr-section-surface);
 }
 
 .fr-section-box.tone-muted {
     border-style: dashed;
-    border-color: #8b93a3;
-    background: rgba(139, 147, 163, .08);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, .6);
+    border-color: var(--fr-section-muted);
+    background: color-mix(in srgb, var(--fr-section-muted) 8%, transparent);
+    box-shadow: 0 0 0 1px var(--fr-section-surface);
 }
 
 .fr-section-box.is-confirmed {
@@ -53,8 +63,8 @@
 }
 
 @keyframes fr-section-confirm {
-    0% { opacity: 1; background-color: rgba(239, 71, 118, .22); }
-    100% { opacity: 0; background-color: rgba(239, 71, 118, .04); }
+    0% { opacity: 1; background-color: color-mix(in srgb, var(--fr-section-brand) 22%, transparent); }
+    100% { opacity: 0; background-color: color-mix(in srgb, var(--fr-section-brand) 4%, transparent); }
 }
 
 .fr-section-label {
@@ -68,9 +78,9 @@
     padding: 4px 9px;
     overflow: hidden;
     border-radius: 7px;
-    color: #fff;
-    background: #e93267;
-    box-shadow: 0 6px 18px rgba(24, 27, 38, .22);
+    color: var(--fr-section-brand-strong);
+    background: var(--fr-section-brand-soft);
+    box-shadow: none;
     font-size: 12px;
     font-weight: 750;
     line-height: 1.35;
@@ -83,11 +93,13 @@
 }
 
 .fr-section-label.tone-restore {
-    background: #3f6ad8;
+    background: var(--fr-section-restore-soft);
+    color: var(--fr-section-restore);
 }
 
 .fr-section-label.tone-muted {
-    background: #5f6776;
+    background: var(--fr-section-surface-soft);
+    color: var(--fr-section-muted);
 }
 
 .fr-section-label-action {
@@ -117,17 +129,17 @@
     flex-direction: column;
     gap: 10px;
     padding: 14px;
-    border: 1px solid rgba(255, 255, 255, .14);
+    border: 1px solid var(--fr-section-line);
     border-radius: 16px;
-    color: #f4f5f9;
-    background: rgba(24, 27, 38, .96);
-    box-shadow: 0 14px 34px rgba(12, 14, 22, .28);
+    color: var(--fr-section-ink);
+    background: var(--fr-section-surface);
+    box-shadow: 0 10px 28px rgba(37, 42, 36, .12);
     font-size: 12.5px;
     line-height: 1.4;
     pointer-events: auto;
     transform: translateX(-50%);
     transition: opacity 140ms ease;
-    color-scheme: dark;
+    color-scheme: light dark;
 }
 
 .fr-section-bar-heading,
@@ -139,15 +151,15 @@
 
 .fr-section-bar-heading .fr-section-bar-instruction {
     flex: 1;
-    color: #c8cdd8;
+    color: var(--fr-section-muted);
 }
 
 .fr-section-bar-preview {
     overflow: hidden;
     padding: 8px 10px;
     border-radius: 8px;
-    color: #e2e5ed;
-    background: rgba(255, 255, 255, .06);
+    color: var(--fr-section-ink);
+    background: var(--fr-section-surface-soft);
     text-overflow: ellipsis;
     white-space: nowrap;
     unicode-bidi: plaintext;
@@ -156,17 +168,17 @@
 .fr-section-button {
     min-height: 34px;
     padding: 7px 10px;
-    border: 1px solid rgba(255, 255, 255, .15);
+    border: 1px solid var(--fr-section-line);
     border-radius: 8px;
     color: inherit;
-    background: rgba(255, 255, 255, .07);
+    background: var(--fr-section-surface-soft);
     font: inherit;
     white-space: nowrap;
     cursor: pointer;
 }
 
 .fr-section-button:hover:not(:disabled) {
-    background: rgba(255, 255, 255, .14);
+    background: var(--fr-section-brand-soft);
 }
 
 .fr-section-button:disabled {
@@ -176,23 +188,24 @@
 
 .fr-section-confirm {
     margin-left: auto;
-    border-color: #ef4776;
-    color: #fff;
-    background: #d92c60;
+    border-color: var(--fr-section-brand);
+    color: var(--fr-section-brand-strong);
+    background: var(--fr-section-brand-soft);
     font-weight: 700;
 }
 
 .fr-section-confirm:hover:not(:disabled) {
-    background: #ef4776;
+    background: color-mix(in srgb, var(--fr-section-brand) 16%, var(--fr-section-surface));
 }
 
 .fr-section-confirm.tone-restore {
-    border-color: #507ce6;
-    background: #3f6ad8;
+    border-color: var(--fr-section-restore);
+    background: var(--fr-section-restore-soft);
+    color: var(--fr-section-restore);
 }
 
 .fr-section-button:focus-visible {
-    outline: 2px solid #ff8fb0;
+    outline: 2px solid var(--fr-section-brand);
     outline-offset: 2px;
 }
 
@@ -203,7 +216,7 @@
 
 .fr-section-bar-title {
     flex: none;
-    color: #ff8fb0;
+    color: var(--fr-section-brand);
     font-weight: 800;
 }
 
@@ -216,7 +229,7 @@
 
 .fr-section-bar-keys {
     flex: none;
-    color: #aeb4c2;
+    color: var(--fr-section-muted);
     white-space: nowrap;
 }
 
@@ -230,8 +243,8 @@
     padding: 0;
     border: 0;
     border-radius: 8px;
-    color: #f4f5f9;
-    background: rgba(255, 255, 255, .1);
+    color: var(--fr-section-ink);
+    background: var(--fr-section-surface-soft);
     font: inherit;
     font-size: 16px;
     line-height: 1;
@@ -239,11 +252,11 @@
 }
 
 .fr-section-bar-close:hover {
-    background: rgba(255, 255, 255, .2);
+    background: var(--fr-section-brand-soft);
 }
 
 .fr-section-bar-close:focus-visible {
-    outline: 2px solid #ff8fb0;
+    outline: 2px solid var(--fr-section-brand);
     outline-offset: 2px;
 }
 
@@ -264,10 +277,15 @@
     .fr-section-confirm {
         grid-column: 1 / -1;
         margin-left: 0;
+        border-color: var(--fr-section-brand);
+        color: var(--fr-section-brand-strong);
+        background: var(--fr-section-brand-soft);
     }
     .fr-section-button {
         padding-inline: 5px;
         white-space: normal;
+        border: 1px solid var(--fr-section-line);
+        background: var(--fr-section-surface-soft);
     }
     .fr-section-bar-instruction {
         white-space: normal;
@@ -283,5 +301,20 @@
     .fr-section-box.is-confirmed {
         animation: none;
         opacity: 0;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :host {
+        --fr-section-brand: var(--fr-color-brand, #bedf7b);
+        --fr-section-brand-strong: var(--fr-color-brand-strong, #d0e8a5);
+        --fr-section-brand-soft: var(--fr-color-brand-soft, #303b25);
+        --fr-section-ink: var(--fr-color-ink, #edf0e8);
+        --fr-section-muted: var(--fr-color-muted, #afb6a9);
+        --fr-section-line: var(--fr-color-line, #394035);
+        --fr-section-surface: var(--fr-color-surface, #262d25);
+        --fr-section-surface-soft: var(--fr-color-surface-soft, #2b3328);
+        --fr-section-restore: var(--fr-info, #a6c9ee);
+        --fr-section-restore-soft: var(--fr-info-soft, #243346);
     }
 }

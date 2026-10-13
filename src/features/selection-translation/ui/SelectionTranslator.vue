@@ -1,5 +1,6 @@
 <!--
  * @file src/features/selection-translation/ui/SelectionTranslator.vue
+ * 上下文边界：普通划词在用户已开启 AI 上下文且模型支持时，仅附选区本段的 500 字符净化证据；文档来源适配器优先，段落改写、隐藏、断开或选区更换后，对成功和失败使用同一当前性判断，拒绝旧译文与旧错误。
  * 文件职责：实现划词翻译的主要页面组件，覆盖选区捕获、图标/小点/悬停/快捷键/仅右键菜单/直接弹出、原生菜单可信选区恢复与重复请求复用、翻译与词卡展示、免费 AI 讲解的显式启用、朗读、收藏选中的单词/表达/句子、双语分享卡片、鉴权服务配置入口、重试和关闭。
  * 主要内容：相同译文保留原文且不重复展示；组件管理可信手势、已关闭选区与选择丢失宽限、继续阅读或复制原文时自动收起、请求 token、按既有错误种类显示有限提示并仅为当前鉴权失败提供通用设置入口、行内代码保护与纯文本安全渲染、按标签页页面缩放补偿的弹窗定位、空白拖动、边角缩放、主题及可换行的多语言标题；普通译文先于完整原文，单行可横向滚动的导航与右侧固定分享、收藏、关闭及更多操作把高度留给正文，次级菜单按可见窗口覆盖显示；指针移动按帧合并并在结束时提交最后位置，已定位卡片不重复读取选区几何；富文本 UTF-16 跟读偏移一次计算并复用；默认过滤同语言选区，按配置开放中英反向入口，翻译方向始终按现有语言配置判断；统一卡片默认显示翻译并以同一导航进入学习；首次定位后保持弹窗锚点，手动尺寸下内容与播放状态变化只影响内部布局；闲置语音栏不占空间，自动卡生成与播放期间用独立临时高度保持外框，停止恢复自然尺寸；学习短回答自然收拢、长回答受高度上限约束，完整原文和译文按需对照并允许翻译继续完成；单词先展示原文与可用词卡，再补充辅助释义，以紧凑状态提示等待、未命中与网络失败；关闭或更换选区取消等待并阻止旧响应覆盖新结果；区分语音生成和播放，按实际音频时钟或浏览器词边界显示完整词高亮，并提供真实音频时间与前后 5 秒跳转。
  * 模块边界：组件只通过公共客户端和 runtime 消息触达后台及现有设置入口，不直接持有 provider、IndexedDB 或 Offscreen 资源；纯选区算法在 core，活动 Range 通过回调交给 content/runtime 管理 modal 挂载所有权；扩展 PDF 文档页通过可选来源适配器复用同一卡片、标题和阅读上下文，来源失效时取消当前请求，词书协议独立维护；阅读依据的 DOM 锚点只属于当前选区，关闭、换区或卸载释放临时绘制和监听。
@@ -199,7 +200,8 @@ import { VOCABULARY_BOOK_CHANGED_MESSAGE, VOCABULARY_BOOK_MESSAGE, type Vocabula
 import {ReadingPanel} from '@/src/features/reading-assistant/ui/panel/public';
 import {captureReadingSelection, createReadingEvidenceAnchor, type ReadingEvidenceAnchor, type ReadingSelection} from '@/src/features/reading-assistant/public';
 import {HARNESS_ACTIONS, getHarnessModelCacheKey, isReadingActionSupported, isReadingService, normalizeHarnessPreferences, type HarnessActionId} from '@/src/core/config/harness';
-import {services} from '@/src/core/config/catalog';
+import {services, servicesType, resolveConfiguredModel} from '@/src/core/config/catalog';
+import {createDiscourseContext, discourseContextLimits} from '@/src/services/translation/context/discourse';
 import {useUiI18n} from '@/src/ui/i18n';
 
 const props = defineProps<{
@@ -1253,9 +1255,42 @@ function openLocalTtsSettings(): void {
   noticeAction.value = null;
 }
 
+/** 只在已有 AI 上下文授权下捕获本段，不扫描整页或建立跨选区的篇章记忆。 */
+function captureSelectionTranslationDiscourse(range: Range, text: string, service: string, signal: AbortSignal) {
+  const model = resolveConfiguredModel(config.model[service], config.customModel[service]);
+  if (!config.enableAIContext || !servicesType.isUseAIContext(service, model)) return undefined;
+  // 沿用选区局部上下文的 500 字符预算及阅读捕获的净化、原文位置和连接性校验。
+  const captured = captureReadingSelection(range, text, 500);
+  if (!captured.context || captured.context === captured.text) return undefined;
+  const discourse = createDiscourseContext();
+  const section = 'selected paragraph';
+  discourse.replace('selection request', '', [
+    {id: 'paragraph', section, source: captured.context, position: 'same paragraph as selection'},
+    {id: 'selection', section, source: text, position: 'current selection'},
+  ], 'selection');
+  // 通用篇章检索每条证据只保留前 480 字符；选区可能恰好位于段尾。
+  // 复用它生成的协议及政策，只把本段 nearby 证据恢复为已净化的完整 500 字符快照，
+  // 不附定义推断或额外正文；编码超预算时省略证据，不能再裁掉选中句。
+  const reference = JSON.parse(discourse.prepare('selection', [text], signal).context);
+  reference.evidence = reference.evidence
+    .filter((entry: {kind: string; blockId: string}) => entry.kind === 'nearby' && entry.blockId === 'paragraph')
+    .map((entry: {source: string}) => ({...entry, source: captured.context}));
+  if (!reference.evidence.length) return undefined;
+  const context = JSON.stringify(reference).replace(/</gu, '\\u003c').replace(/>/gu, '\\u003e');
+  if (context.length > discourseContextLimits.referenceCharacters) return undefined;
+  return {
+    context,
+    isCurrent: () => {
+      const current = captureReadingSelection(range, text, 500);
+      return current.text === captured.text && current.context === captured.context;
+    },
+  };
+}
+
 async function requestTranslation(request: SelectionContentRequest): Promise<void> {
   const text = request.text;
-  const parts = snapshot.value!.parts;
+  const selection = snapshot.value!;
+  const parts = selection.parts;
   translationAbortController?.abort();
   const controller = new AbortController();
   translationAbortController = controller;
@@ -1265,23 +1300,30 @@ async function requestTranslation(request: SelectionContentRequest): Promise<voi
   authenticationError.value = null;
   openingAuthenticationSettings.value = null;
   let requestedService: string | undefined;
+  let discourse: ReturnType<typeof captureSelectionTranslationDiscourse>;
+  const isCurrent = () => requestId === translationRequestId && snapshot.value === selection
+    && isContentRequestCurrent(request) && !controller.signal.aborted && (!discourse || discourse.isCurrent());
   try {
     const context = props.selectionAdapter?.context && snapshot.value
       ? props.selectionAdapter.context(snapshot.value.range, text, 4000) : undefined;
+    // 文档来源适配器拥有其上下文；普通网页仅补本段证据，全页上下文仍由客户端按原流程提取。
+    discourse = context ? undefined
+      : captureSelectionTranslationDiscourse(selection.range, text, selectionSettings.value.service, controller.signal);
     const options = {signal: controller.signal, sourceLanguage: request.sourceLanguage, targetLanguage: request.targetLanguage, serviceOverride: selectionSettings.value.service,
-      ...(context ? {pageContext: context.text || text} : {})};
+      ...(context ? {pageContext: context.text || text} : {}),
+      ...(discourse ? {discourseContext: discourse.context} : {})};
     requestedService = options.serviceOverride;
     const title = context?.title || document.title;
     const translated = parts.some(part => part.kind === 'code')
       ? await translateSelectionParts(parts, texts => translateTextBatch(texts, title, options))
       : [{kind: 'text' as const, text: await translateText(text, title, options)}];
     const result = translated.map(part => part.text).join('');
-    if (requestId !== translationRequestId || !isContentRequestCurrent(request)) return;
+    if (!isCurrent()) return;
     translationParts.value = translated;
     translationResult.value = result;
     translationAnswer.value = {...request, answer: result};
   } catch (cause) {
-    if (requestId !== translationRequestId || !isContentRequestCurrent(request)) return;
+    if (!isCurrent()) return;
     if (cause instanceof Error && cause.name === 'AbortError') return;
     console.error('Selection translation error:', cause);
     const kind = serializeTranslationError(cause).kind;
@@ -2272,12 +2314,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.fr-selection-translator-root { position: fixed; inset: 0; z-index: 2147483647; width: 100vw; height: 100vh; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #25252a; }
+.fr-selection-translator-root { position: fixed; inset: 0; z-index: 2147483647; width: 100vw; height: 100vh; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #252a24; }
 .fr-selection-indicator, .fr-translation-tooltip, .fr-copy-success-toast, .fr-action-toast { pointer-events: auto; }
-.fr-selection-indicator { position: fixed; width: 22px; height: 22px; padding: 0; border: 1px solid #f3c3d2; border-radius: 7px; transform: translate(-50%, -50%); background: #fff; color: #d83160; box-shadow: 0 2px 8px rgba(40, 35, 43, .2); cursor: pointer; transition: transform .14s ease, box-shadow .14s ease; }
-.fr-selection-indicator--dot { width: 8px; height: 8px; border:0; border-radius:50%; background:#ef4b86; }
+.fr-selection-indicator { position: fixed; width: 22px; height: 22px; padding: 0; border: 1px solid #e7eae1; border-radius: 7px; transform: translate(-50%, -50%); background: #fff; color: #456021; box-shadow: 0 2px 8px rgba(40, 35, 43, .2); cursor: pointer; transition: transform .14s ease, box-shadow .14s ease; }
+.fr-selection-indicator--dot { width: 8px; height: 8px; border:0; border-radius:50%; background:#648433; }
 .fr-selection-indicator--dot .fr-selection-indicator-glyph { display: none; }
-.fr-selection-indicator:hover, .fr-selection-indicator:focus-visible { transform: translate(-50%, -50%) scale(1.1); color:#b8416b; border-color:#d889a5; box-shadow:0 2px 7px rgba(40, 35, 43, .18); outline:2px solid #f0cede; outline-offset:2px; }
+.fr-selection-indicator:hover, .fr-selection-indicator:focus-visible { transform: translate(-50%, -50%) scale(1.1); color:#456021; border-color:#92a76e; box-shadow:0 2px 7px rgba(40, 35, 43, .18); outline:2px solid #e3ebd6; outline-offset:2px; }
 .fr-selection-indicator-glyph { font-size: 12px; font-weight: 700; line-height: 1; }
 .fr-translation-tooltip, .fr-translation-tooltip * { box-sizing: border-box; }
 .fr-translation-tooltip { position: fixed; display: flex; flex-direction: column; width: min(388px, calc(100vw - 24px)); max-height: min(520px, calc(100vh - 20px)); overflow: hidden; border: 1px solid rgba(35, 35, 43, .12); border-radius: 11px; background: #fff; box-shadow: 0 5px 20px rgba(35, 33, 43, .12); -webkit-user-select: none; user-select: none; }
@@ -2299,25 +2341,25 @@ onBeforeUnmount(() => {
 /* 自动卡用内在高度收拢；达到外框上限后将收缩量传给真正的阅读滚动区。 */
 .fr-reading-content > :deep(.fr-reading) { flex: 1; height: auto; }
 .fr-pos-label { display:flex; gap:6px; align-items:center; }
-.fr-study-navigation { flex: none; display: flex; align-items: center; gap: 3px; padding: 4px 8px; border-bottom: 1px solid var(--fr-border, #eeedf0); }
+.fr-study-navigation { flex: none; display: flex; align-items: center; gap: 3px; padding: 4px 8px; border-bottom: 1px solid var(--fr-border, #e7eae1); }
 .fr-tooltip-brand-icon { display:block; flex:none; width:18px; height:18px; border-radius:4px; object-fit:contain; opacity:1; pointer-events:none; }
 .fr-study-toolbar { flex: 1; min-width: 0; display: flex; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior: contain; scrollbar-width: thin; gap: 3px; }
 .fr-study-reading-tools { flex: none; }
 .fr-study-toolbar button { flex:none; white-space:nowrap; font:inherit; font-size:11px; border:0; background:transparent; color:#62616c; border-radius:5px; padding:5px 8px; cursor:pointer; }
-.fr-study-toolbar button[aria-pressed=true], .fr-study-toolbar button:hover, .fr-study-toolbar button:focus-visible { background:#f4f0f3; color:#8e4867; outline:1px solid #dcc3d0; }
-.fr-dark-theme .fr-study-navigation { border-color:#4d404a; }
+.fr-study-toolbar button[aria-pressed=true], .fr-study-toolbar button:hover, .fr-study-toolbar button:focus-visible { background:#f5f7f0; color:#456021; outline:1px solid #d5dec8; }
+.fr-dark-theme .fr-study-navigation { border-color:#394035; }
 .fr-dark-theme .fr-study-toolbar button { background:transparent; color:#cbc2c9; }
-.fr-dark-theme .fr-study-toolbar button[aria-pressed=true], .fr-dark-theme .fr-study-toolbar button:hover { background:#443541; color:#efbdd2; }
+.fr-dark-theme .fr-study-toolbar button[aria-pressed=true], .fr-dark-theme .fr-study-toolbar button:hover { background:#303b25; color:#d0e8a5; }
 .fr-tooltip-actions { flex: none; display: flex; align-items: center; gap: 2px; }
 .fr-action-btn, .fr-close-btn, .fr-text-audio-btn, .fr-playing-status button { border: 0; background: transparent; color: #777780; cursor: pointer; }
 .fr-action-btn { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 6px; }
 .fr-action-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.fr-action-btn:hover, .fr-action-btn:focus-visible { background: #f7eaf0; color: #d63f76; outline: none; }
+.fr-action-btn:hover, .fr-action-btn:focus-visible { background: #edf5dd; color: #648433; outline: none; }
 .fr-action-btn:disabled { cursor: not-allowed; opacity: .38; }
-.fr-vocabulary-btn.fr-saved { color: #ef4b86; }
+.fr-vocabulary-btn.fr-saved { color: #648433; }
 .fr-vocabulary-btn.fr-saved svg { fill: currentColor; stroke: currentColor; }
 .fr-close-btn { width: 26px; height: 26px; font-size: 19px; line-height: 1; border-radius: 6px; }
-.fr-close-btn:hover, .fr-close-btn:focus-visible { background: #f1f1f5; color: #303038; outline: none; }
+.fr-close-btn:hover, .fr-close-btn:focus-visible { background: #f5f7f0; color: #303038; outline: none; }
 .fr-tooltip-content { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 12px 14px; scrollbar-color: rgba(108, 105, 112, .4) transparent; scrollbar-width: thin; }
 .fr-translation-container { display: grid; gap: 9px; }
 .fr-loading-state, .fr-error-state { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 80px; color: #777780; font-size: 13px; }
@@ -2327,7 +2369,7 @@ onBeforeUnmount(() => {
 .fr-error-actions button { max-width: 100%; }
 .fr-error-actions button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .fr-error-actions button:disabled { opacity: .55; cursor: default; }
-.fr-loading-spinner { width: 18px; height: 18px; border: 2px solid #f5bfd3; border-top-color: #ef4b86; border-radius: 50%; animation: fr-spin .7s linear infinite; }
+.fr-loading-spinner { width: 18px; height: 18px; border: 2px solid #f5bfd3; border-top-color: #648433; border-radius: 50%; animation: fr-spin .7s linear infinite; }
 .fr-loading-spinner.fr-static { animation: none; }
 @keyframes fr-spin { to { transform: rotate(360deg); } }
 .fr-word-learning-card { padding: 1px 1px 0; color: #39363d; }
@@ -2340,36 +2382,36 @@ onBeforeUnmount(() => {
 .fr-word-normalized { display: block; margin-top: 5px; color: #aaa1a6; font-size: 10px; }
 .fr-word-heading-actions { display: flex; flex: none; align-items: center; gap: 4px; }
 .fr-word-heading-audio { background: #f8f5f6; color: #9b8d94; }
-.fr-word-pronunciations { display: flex; flex-wrap:wrap; gap: 4px 14px; margin-top: 7px; padding-bottom: 8px; border-bottom: 1px solid #eeecee; }
+.fr-word-pronunciations { display: flex; flex-wrap:wrap; gap: 4px 14px; margin-top: 7px; padding-bottom: 8px; border-bottom: 1px solid #e7eae1; }
 .fr-word-pronunciation { display: flex; align-items: center; gap: 5px; min-height: 26px; padding: 0; }
 .fr-word-pronunciation:last-child { border-bottom: 0; }
 .fr-word-pronunciation-label { color: #8d7a83; font-size: 10px; font-weight: 500; }
 .fr-word-ipa { color: #4a454c; font-family: Georgia, "Times New Roman", serif; font-size: 14px; }
 .fr-word-pronunciation .fr-text-audio-btn { width:24px; height:24px; }
-.fr-word-translation { display:flow-root; margin-top: 9px; padding: 0 0 10px; border-bottom: 1px solid #eeecee; color: #3a363d; }
+.fr-word-translation { display:flow-root; margin-top: 9px; padding: 0 0 10px; border-bottom: 1px solid #e7eae1; color: #3a363d; }
 .fr-word-translation-header { float:inline-end; margin-inline-start:8px; }
 .fr-word-translation .fr-text-label { margin: 0; }
 .fr-word-translation pre { overflow-wrap: anywhere; margin: 0; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 16px; font-weight: 600; line-height: 1.6; user-select: text; }
 .fr-word-translation-loading, .fr-word-empty { margin-top: 12px; color: #9a9298; font-size: 12px; }
 .fr-word-meaning-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; color: #9a9298; font-size: 11px; font-weight: 700; }
-.fr-word-meaning-toolbar button { border: 0; padding: 3px 0; background: transparent; color: #9e5d71; cursor: pointer; font: inherit; font-weight: 600; }
+.fr-word-meaning-toolbar button { border: 0; padding: 3px 0; background: transparent; color: #648433; cursor: pointer; font: inherit; font-weight: 600; }
 .fr-word-meaning-toolbar button:hover, .fr-word-meaning-toolbar button:focus-visible { color: #7f4156; text-decoration: underline; outline: none; }
 .fr-word-meanings { display: grid; gap: 16px; margin-top: 14px; }
 .fr-word-meaning-toolbar + .fr-word-meanings { margin-top: 8px; }
 .fr-word-meaning { color: #454149; font-size: 12.5px; line-height: 1.52; }
-.fr-word-meaning > strong { display: inline-flex; padding: 3px 7px; border: 1px solid #ead8de; border-radius: 6px; background: #fbf5f6; color: #9e5d71; font-size: 10px; font-weight: 700; }
+.fr-word-meaning > strong { display: inline-flex; padding: 3px 7px; border: 1px solid #e7eae1; border-radius: 6px; background: #f5f7f0; color: #648433; font-size: 10px; font-weight: 700; }
 .fr-word-meaning ol { margin: 7px 0 0; padding: 0; list-style: none; counter-reset: definition; }
 .fr-word-meaning li { position: relative; padding-left: 21px; }
 .fr-word-meaning li::before { position: absolute; top: 0; left: 0; width: 14px; color: #b5adb2; content: counter(definition); counter-increment: definition; font-size: 11px; text-align: right; }
 .fr-word-meaning li + li { margin-top: 9px; }
 .fr-word-definition-en, .fr-word-example-en { display: block; }
 .fr-word-definition-zh, .fr-word-example-zh { display: block; margin-top: 3px; color: #9a7f89; font-size: 11.5px; }
-.fr-word-meaning em { display: block; margin-top: 4px; padding-left: 8px; border-left: 2px solid #ead8de; color: #74676d; font-size: 11px; font-style: normal; line-height: 1.45; }
-.fr-word-card-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 8px; margin-top: 16px; padding-top: 10px; border-top: 1px solid #eeecee; color: #aaa1a6; font-size: 10px; }
-.fr-word-card-footer a { color: #9e5d71; text-decoration: none; }
+.fr-word-meaning em { display: block; margin-top: 4px; padding-left: 8px; border-left: 2px solid #e7eae1; color: #74676d; font-size: 11px; font-style: normal; line-height: 1.45; }
+.fr-word-card-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 8px; margin-top: 16px; padding-top: 10px; border-top: 1px solid #e7eae1; color: #aaa1a6; font-size: 10px; }
+.fr-word-card-footer a { color: #648433; text-decoration: none; }
 .fr-word-card-footer a:hover, .fr-word-card-footer a:focus-visible { text-decoration: underline; }
 .fr-word-fallback-note, .fr-inline-error { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; color: #a56578; font-size: 11px; }
-.fr-word-fallback-note { padding: 6px 8px; border-radius: 7px; background: #fff8fa; }
+.fr-word-fallback-note { padding: 6px 8px; border-radius: 7px; background: #f5f7f0; }
 .fr-inline-error button, .fr-word-fallback-note button { border: 1px solid currentColor; border-radius: 6px; padding: 2px 7px; background: transparent; color: inherit; cursor: pointer; font-size: 11px; }
 .fr-inline-error { flex-wrap: wrap; }
 .fr-inline-error .fr-error-actions { margin-left: auto; justify-content: flex-end; }
@@ -2385,17 +2427,17 @@ onBeforeUnmount(() => {
 .fr-text-copy-btn { display: inline-flex; align-items: center; justify-content: center; width:26px; height:26px; padding:0; border:1px solid transparent; border-radius:5px; background:transparent; color:#85858e; cursor:pointer; font:inherit; line-height:1; }
 .fr-text-copy-btn span, .fr-text-block-header > .fr-text-label, .fr-word-translation-header > .fr-text-label { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .fr-text-copy-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.fr-text-copy-btn:hover, .fr-text-copy-btn:focus-visible { border-color: rgba(214, 63, 118, .35); background: #fff; color: #d63f76; outline: none; transform: translateY(-1px); }
-.fr-text-copy-btn.fr-copied { border-color: rgba(214, 63, 118, .2); background: rgba(255, 255, 255, .72); color: #b85c7b; }
+.fr-text-copy-btn:hover, .fr-text-copy-btn:focus-visible { border-color: rgba(100, 132, 51, .35); background: #fff; color: #648433; outline: none; transform: translateY(-1px); }
+.fr-text-copy-btn.fr-copied { border-color: rgba(100, 132, 51, .2); background: rgba(255, 255, 255, .72); color: #456021; }
 .fr-text-copy-btn:disabled { cursor: not-allowed; opacity: .42; transform: none; }
 .fr-text-audio-btn { position: static; display: grid; flex: none; width:26px; height:26px; padding:0; place-items:center; border:1px solid transparent; border-radius:5px; background:transparent; color:#85858e; }
 .fr-text-audio-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.fr-text-audio-btn:hover, .fr-text-audio-btn:focus-visible { border-color: rgba(214, 63, 118, .25); background: rgba(255, 255, 255, .72); color: #d63f76; outline: none; transform: translateY(-1px); }
+.fr-text-audio-btn:hover, .fr-text-audio-btn:focus-visible { border-color: rgba(100, 132, 51, .25); background: rgba(255, 255, 255, .72); color: #648433; outline: none; transform: translateY(-1px); }
 .fr-text-block pre { overflow-wrap:anywhere; margin:0; white-space:pre-wrap; word-break:break-word; font:inherit; font-size:14px; line-height:1.7; user-select:text; }
 .fr-original-text pre { font-size:12.5px; line-height:1.65; }
 .fr-playing-status { flex: none; box-sizing: border-box; height: 36px; padding: 4px 14px; display: flex; align-items: center; justify-content: space-between; gap:8px; color: #777780; font-size: 12px; }
 .fr-playing-status.is-idle { display: none; }
-.fr-playing-status button { border: 1px solid #e8a4bc; border-radius: 7px; padding: 3px 8px; color: #d83e70; }
+.fr-playing-status button { border: 1px solid #92a76e; border-radius: 7px; padding: 3px 8px; color: #456021; }
 .fr-playing-label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .fr-playback-controls { display:flex; flex:none; align-items:center; gap:5px; }
 .fr-playback-time { font-size:10px; font-variant-numeric:tabular-nums; white-space:nowrap; }
@@ -2407,30 +2449,30 @@ onBeforeUnmount(() => {
 .fr-playing-status .fr-seek-btn:disabled { opacity:.35; cursor:default; }
 .fr-copy-success-toast { position: fixed; right: 18px; bottom: 18px; padding: 9px 13px; border-radius: 9px; background: #2c2c35; color: #fff; font-size: 12px; box-shadow: 0 6px 18px rgba(0, 0, 0, .18); }
 .fr-action-toast { position: fixed; right: 18px; bottom: 18px; display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-radius: 9px; background: #2c2c35; color: #fff; font-size: 12px; box-shadow: 0 6px 18px rgba(0, 0, 0, .18); }
-.fr-action-toast button { padding: 0; border: 0; color: #ffc2d5; background: transparent; cursor: pointer; font: inherit; font-weight: 700; }
+.fr-action-toast button { padding: 0; border: 0; color: #d0e8a5; background: transparent; cursor: pointer; font: inherit; font-weight: 700; }
 .fr-dark-theme { border-color: #44444e; background: rgba(40, 40, 48, .98); color: #f1f1f4; }
 .fr-reading-tooltip.fr-dark-theme { background: #282830; }
 .fr-dark-theme .fr-action-btn:hover, .fr-dark-theme .fr-close-btn:hover { background: #50505b; color: #fff; }
 .fr-dark-theme .fr-text-copy-btn { border-color:transparent; background:transparent; color:#b4aab3; }
-.fr-dark-theme .fr-text-copy-btn:hover, .fr-dark-theme .fr-text-copy-btn:focus-visible { border-color: #c96a8b; background: #553846; color: #ffd9e7; }
-.fr-dark-theme .fr-text-copy-btn.fr-copied { border-color: #98617a; background: rgba(93, 52, 71, .62); color: #f2bdcd; }
+.fr-dark-theme .fr-text-copy-btn:hover, .fr-dark-theme .fr-text-copy-btn:focus-visible { border-color: #648433; background: #303b25; color: #d0e8a5; }
+.fr-dark-theme .fr-text-copy-btn.fr-copied { border-color: #92a76e; background: rgba(48, 59, 37, .62); color: #d0e8a5; }
 .fr-dark-theme .fr-text-audio-btn { border-color:transparent; background:transparent; color:#b4aab3; }
-.fr-dark-theme .fr-text-audio-btn:hover, .fr-dark-theme .fr-text-audio-btn:focus-visible { border-color: #c96a8b; background: #553846; color: #ffd9e7; }
+.fr-dark-theme .fr-text-audio-btn:hover, .fr-dark-theme .fr-text-audio-btn:focus-visible { border-color: #648433; background: #303b25; color: #d0e8a5; }
 .fr-dark-theme .fr-original-text { color: #d0d0d7; }
 .fr-dark-theme .fr-translation-result { color: #f1ecef; }
 .fr-dark-theme .fr-word-learning-card { background: transparent; }
-.fr-dark-theme .fr-word-heading, .fr-dark-theme .fr-word-pronunciations, .fr-dark-theme .fr-word-translation, .fr-dark-theme .fr-word-card-footer { border-color: #4b4148; }
-.fr-dark-theme .fr-word-heading h3, .fr-dark-theme .fr-word-meaning, .fr-dark-theme .fr-word-translation { color: #f2e8ed; }
-.fr-dark-theme .fr-word-meaning-toolbar { color: #c8aab5; }
-.fr-dark-theme .fr-word-meaning-toolbar button { color: #f0b9cb; }
-.fr-dark-theme .fr-word-heading-audio { background: #4a454b; color: #d5c4cb; }
-.fr-dark-theme .fr-word-pronunciation { border-color: #443a42; }
-.fr-dark-theme .fr-word-pronunciation-label { color: #e0a7b9; }
-.fr-dark-theme .fr-word-ipa { color: #f0dce4; }
-.fr-dark-theme .fr-word-meaning > strong { border-color: #684b58; background: #493842; color: #ffd9e7; }
-.fr-dark-theme .fr-word-meaning em { border-color: #684b58; }
-.fr-dark-theme .fr-word-meaning em, .fr-dark-theme .fr-word-definition-zh, .fr-dark-theme .fr-word-example-zh, .fr-dark-theme .fr-word-translation-loading, .fr-dark-theme .fr-word-empty { color: #c8aab5; }
-.fr-dark-theme .fr-word-fallback-note { background: #4a303b; }
+.fr-dark-theme .fr-word-heading, .fr-dark-theme .fr-word-pronunciations, .fr-dark-theme .fr-word-translation, .fr-dark-theme .fr-word-card-footer { border-color: #394035; }
+.fr-dark-theme .fr-word-heading h3, .fr-dark-theme .fr-word-meaning, .fr-dark-theme .fr-word-translation { color: #edf0e8; }
+.fr-dark-theme .fr-word-meaning-toolbar { color: #afb6a9; }
+.fr-dark-theme .fr-word-meaning-toolbar button { color: #d0e8a5; }
+.fr-dark-theme .fr-word-heading-audio { background: #2b3328; color: #d7dece; }
+.fr-dark-theme .fr-word-pronunciation { border-color: #394035; }
+.fr-dark-theme .fr-word-pronunciation-label { color: #d0e8a5; }
+.fr-dark-theme .fr-word-ipa { color: #edf0e8; }
+.fr-dark-theme .fr-word-meaning > strong { border-color: #4d6034; background: #303b25; color: #d0e8a5; }
+.fr-dark-theme .fr-word-meaning em { border-color: #4d6034; }
+.fr-dark-theme .fr-word-meaning em, .fr-dark-theme .fr-word-definition-zh, .fr-dark-theme .fr-word-example-zh, .fr-dark-theme .fr-word-translation-loading, .fr-dark-theme .fr-word-empty { color: #afb6a9; }
+.fr-dark-theme .fr-word-fallback-note { background: #303b25; }
 @media (prefers-reduced-motion: reduce) { .fr-selection-indicator, .fr-loading-spinner { transition: none; animation: none; } }
 
 </style>

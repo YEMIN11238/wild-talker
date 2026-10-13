@@ -1,7 +1,7 @@
 {
   "messages": {
     "settings.drive.privacyBadge": "Защита конфиденциальности",
-    "settings.drive.privacyTitle": "Как FluentRead защищает конфиденциальность",
+    "settings.drive.privacyTitle": "Как 万能说客（Wild Talker） защищает конфиденциальность",
     "settings.drive.privacyEncryption": "Настройки шифруются на устройстве перед отправкой; в облаке хранится зашифрованный файл.",
     "settings.drive.privacyStorage": "Доступ предоставляется только к данным приложения в вашем Google Диске, а не к обычным файлам.",
     "settings.drive.privacyAuthorization": "Временный кеш авторизации очищается после завершения или отмены синхронизации.",

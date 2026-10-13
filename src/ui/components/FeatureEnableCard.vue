@@ -20,19 +20,19 @@ defineProps<{modelValue: boolean; title: string; description?: string; disabled?
 const emit = defineEmits<{'update:modelValue': [value: boolean]}>();
 </script>
 <style scoped>
-.feature-enable-card { margin: 0 0 20px; border: 1px solid var(--line, #d7dce5); border-radius: 10px; background: var(--surface, #fff); overflow: hidden; }
-.feature-enable-card.enabled { border-color: color-mix(in srgb, var(--brand, #ef4776) 35%, var(--line, #d7dce5)); background: color-mix(in srgb, var(--brand, #ef4776) 4%, var(--surface, #fff)); }
-.feature-enable-card button { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; min-height: 76px; padding: 18px 20px; border: 0; color: var(--ink, #172033); background: transparent; font: inherit; text-align: start; cursor: pointer; }
-.feature-enable-card button:hover:not(:disabled) { background: color-mix(in srgb, var(--brand, #ef4776) 5%, transparent); }
-.feature-enable-card button:focus-visible { outline: 2px solid var(--brand, #ef4776); outline-offset: -3px; }
+.feature-enable-card { margin: 0 0 20px; border: 1px solid var(--line, #dce3d2); border-radius: 14px; background: var(--surface, #fff); overflow: hidden; }
+.feature-enable-card.enabled { border-color: color-mix(in srgb, var(--brand, #648433) 35%, var(--line, #dce3d2)); background: color-mix(in srgb, var(--brand, #648433) 4%, var(--surface, #fff)); }
+.feature-enable-card button { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; min-height: 76px; padding: 18px 20px; border: 0; color: var(--ink, #252a24); background: transparent; font: inherit; text-align: start; cursor: pointer; }
+.feature-enable-card button:hover:not(:disabled) { background: color-mix(in srgb, var(--brand, #648433) 5%, transparent); }
+.feature-enable-card button:focus-visible { outline: 2px solid var(--brand, #648433); outline-offset: -3px; }
 .feature-enable-copy { display: block; min-width: 0; flex: 1; }
 .feature-enable-control { display: flex; align-items: center; gap: 10px; flex: none; }
 .feature-enable-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; min-height: 28px; }
 .feature-enable-heading strong { font-size: 14px; font-weight: 650; }
-.feature-enable-description { display: block; margin-top: 4px; color: var(--muted, #667085); font-size: 12px; line-height: 1.6; }
-.feature-enable-card i { display: flex; box-sizing: border-box; flex: none; align-items: center; width: 50px; height: 28px; padding: 3px; border: 1px solid color-mix(in srgb, var(--muted, #667085) 65%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--muted, #667085) 46%, var(--surface, #fff)); }
+.feature-enable-description { display: block; margin-top: 4px; color: var(--muted, #6f7869); font-size: 12px; line-height: 1.6; }
+.feature-enable-card i { display: flex; box-sizing: border-box; flex: none; align-items: center; width: 50px; height: 28px; padding: 3px; border: 1px solid color-mix(in srgb, var(--muted, #6f7869) 65%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--muted, #6f7869) 46%, var(--surface, #fff)); }
 .feature-enable-card b { width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.16); transition: transform 150ms ease; }
-.enabled i { background: var(--brand, #ef4776); border-color: var(--brand, #ef4776); }
+.enabled i { background: var(--brand, #648433); border-color: var(--brand, #648433); }
 .enabled b { transform: translateX(22px); }
 .feature-enable-card button:disabled { opacity: .55; cursor: not-allowed; }
 @media (max-width: 600px) { .feature-enable-card button { gap: 12px; padding: 15px 14px; } }

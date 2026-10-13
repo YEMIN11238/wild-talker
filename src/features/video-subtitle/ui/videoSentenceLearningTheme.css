@@ -1,0 +1,45 @@
+/**
+ * @file src/features/video-subtitle/ui/videoSentenceLearningTheme.css
+ * 文件职责：统一实际完整句学习面板与设置预览的亮暗表面、文字、边线和青柠操作色。
+ * 主要内容：只在专属 surface class 上提供主题变量，白色与深灰表面复用同一个背景不透明度变量；亮暗主题由所属组件根据当前配置及系统偏好显式传入，避免读取宿主网页主题。
+ * 模块边界：仅声明学习面板的局部视觉变量，不修改 document 根节点、不参与播放或翻译、不更改外观配置与保存格式。
+ */
+.fr-video-learning-surface {
+  --fr-learning-accent: #456021;
+  --fr-learning-brand: #648433;
+  --fr-learning-text: #252a24;
+  --fr-learning-muted: #737970;
+  --fr-learning-surface: #ffffff;
+  --fr-learning-surface-rgb: 255, 255, 255;
+  --fr-learning-border: #e7eae1;
+  --fr-learning-control: #f5f7f0;
+  --fr-learning-control-hover: #edf5dd;
+  --fr-learning-brand-soft: #edf5dd;
+  --fr-learning-primary: #d5f28b;
+  --fr-learning-primary-hover: #c7e879;
+  --fr-learning-primary-ink: #273512;
+  --fr-learning-success: #456021;
+  --fr-learning-danger: #a24640;
+  --fr-learning-radius: 16px;
+  --fr-learning-shadow: 0 8px 24px rgb(37 42 36 / 14%);
+  --fr-learning-background: rgba(var(--fr-learning-surface-rgb), var(--fr-learning-opacity, .94));
+  color-scheme: light;
+}
+.fr-video-learning-surface[data-learning-theme="dark"] {
+  --fr-learning-accent: #d0e8a5;
+  --fr-learning-brand: #a9c971;
+  --fr-learning-text: #edf0e8;
+  --fr-learning-muted: #afb6a9;
+  --fr-learning-surface: #262d25;
+  --fr-learning-surface-rgb: 38, 45, 37;
+  --fr-learning-border: #394035;
+  --fr-learning-control: #2b3328;
+  --fr-learning-control-hover: #37452a;
+  --fr-learning-brand-soft: #303b25;
+  --fr-learning-primary: #bedf7b;
+  --fr-learning-primary-hover: #cfe995;
+  --fr-learning-success: #c3df9c;
+  --fr-learning-danger: #f1b3ab;
+  --fr-learning-shadow: 0 8px 24px rgb(0 0 0 / 25%);
+  color-scheme: dark;
+}

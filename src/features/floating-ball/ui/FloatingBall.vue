@@ -701,7 +701,7 @@ watch(() => presentation.value.settingsEntryVisible, () => {
   opacity: 1;
   overflow: visible;
   order: 1;
-  color: #ec4d7d;
+  color: #648433;
 }
 
 .floating-ball-translate {order:0;}
@@ -774,9 +774,9 @@ watch(() => presentation.value.settingsEntryVisible, () => {
 .fr-floating-ball.manga-reader:not(.floating-ball-expanded):not(.dragging)[data-position="left"] :is(.floating-ball-manga,.floating-ball-main) {transform:translateX(calc(-50% - var(--fr-ball-edge-gap) + var(--fr-ball-reader-inset)));clip-path:inset(-6px -6px -6px 50%);opacity:var(--fr-ball-collapsed-opacity,.52);}
 .fr-floating-ball .floating-ball-manga.manga-active,
 .fr-floating-ball .floating-ball-manga:hover,
-.fr-floating-ball .floating-ball-manga:focus-visible { opacity: 1; color: #ec4d7d; }
+.fr-floating-ball .floating-ball-manga:focus-visible { opacity: 1; color: #648433; }
 .fr-floating-ball .floating-ball-manga.manga-active {
-  border-color:#ec4d7d;background:#fff7fa;
+  border-color:#648433;background:#f5f7f0;
 }
 .manga-check {
   position: absolute; right: -4px; bottom: -4px; width: 19px; height: 19px;
@@ -787,7 +787,7 @@ watch(() => presentation.value.settingsEntryVisible, () => {
 .manga-check.manga-error { background: #b45309; }
 .manga-progress {
   position: absolute; inset: 1px; border: 2px solid rgba(236,77,125,.18); pointer-events: none;
-  border-top-color: #ec4d7d; border-right-color: #ec4d7d; border-radius: 50%; animation: fr-manga-spin 1.2s linear infinite;
+  border-top-color: #648433; border-right-color: #648433; border-radius: 50%; animation: fr-manga-spin 1.2s linear infinite;
 }
 .manga-icon {width:18px;height:18px;}
 @keyframes fr-manga-spin { to { transform: rotate(360deg); } }
@@ -800,9 +800,9 @@ watch(() => presentation.value.settingsEntryVisible, () => {
 .floating-ball-tool:hover,
 .floating-ball-tool:focus-visible {
   outline: none;
-  border-color: #f06a92;
-  background: #fff7fa;
-  color: #ec4d7d;
+  border-color: #648433;
+  background: #f5f7f0;
+  color: #648433;
   box-shadow: 0 8px 22px rgba(240, 106, 146, 0.2);
 }
 
@@ -866,7 +866,7 @@ watch(() => presentation.value.settingsEntryVisible, () => {
   transform: none !important;
   opacity: 1;
   cursor: grabbing;
-  border-color: #f06a92;
+  border-color: #648433;
   box-shadow: 0 8px 25px rgba(240, 106, 146, 0.28);
 }
 

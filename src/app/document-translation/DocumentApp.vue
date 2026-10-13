@@ -1,7 +1,7 @@
 <!--
  @file src/app/document-translation/DocumentApp.vue
  文件职责：实现独立文档翻译页面的完整 Vue 应用，承载文件导入、格式化预览、分段翻译、人工校订、保存原文件和双语文件导出的用户流程。
- 主要内容：相同译文保留原文且不重复展示；文档打开后按窗口宽度用一行或多行工具栏承载文件、阅读方式、页码缩放、翻译服务与目标语言、翻译与下载，窄窗口用翻译设置弹窗，矮小窗口用覆盖式侧栏保留正文高度；各种格式支持只缩放正文的触控板捏合与键盘操作，复用富文本预览并保持阅读位置；左侧可折叠的侧栏放文件列表与目录，其余空间留给正文；首页列出保存在本机的最近翻译，重新打开同一份文件时接着上次的译文继续；PDF 默认按原版排版左右对照，各种格式都从正在阅读的位置开始翻译；没有文字层的扫描版 PDF 在开始翻译时先逐页识别文字并显示进度；HTML、Markdown、纯文本与 ePub 的隔离预览只载入一次，译文逐段到达后原位更新并保留滚动位置，整篇译文几乎都与原文相同时状态里提示可换目标语言，带标题的文档（含 Word）在侧栏提供可按原文或译文显示的目录，Word 里的表格在阅读视图中仍按表格排版、只有一个部分时不显示部分切换，ePub 的全部章节列在侧栏目录里（按译文显示时用章内标题的译文）、当前章节下接着它其余的各级标题，正文上方不再占一行章节按钮，Word 与文本类预览在宽窗口左右对照；组织文档阅读与翻译、增量统计和人工校订，人工译法确认只在当前文件阅读会话中参与篇章参考，按原文件身份和冻结语言隔离，重译时清空；导入与在线下载绑定独立取消所有权；PDF 清晰阅读流式显示完整段落和原图区域，源页文字层与译文更新分离，下载按原版布局左右配对，长译文以完整批注保留；切换、删除、重置及卸载释放 PDF 任务和 URL；PDF/ePub/DOCX/ZIP 导出显示进度、支持取消重试，迟到结果不得回写。
+ 主要内容：以中性纯色画布、白色圆角导入卡与浅青柠操作统一文档入口和阅读器视觉，按已保存的亮色、暗色或跟随系统主题同步页面和隔离预览；上游来源统一由关于页展示，文档页不提供泛称项目外链；相同译文保留原文且不重复展示；文档打开后按窗口宽度用一行或多行工具栏承载文件、阅读方式、页码缩放、翻译服务与目标语言、翻译与下载，窄窗口用翻译设置弹窗，矮小窗口用覆盖式侧栏保留正文高度；各种格式支持只缩放正文的触控板捏合与键盘操作，复用富文本预览并保持阅读位置；左侧可折叠的侧栏放文件列表与目录，其余空间留给正文；首页列出保存在本机的最近翻译，重新打开同一份文件时接着上次的译文继续；PDF 默认按原版排版左右对照，各种格式都从正在阅读的位置开始翻译；没有文字层的扫描版 PDF 在开始翻译时先逐页识别文字并显示进度；HTML、Markdown、纯文本与 ePub 的隔离预览只载入一次，译文逐段到达后原位更新并保留滚动位置，整篇译文几乎都与原文相同时状态里提示可换目标语言，带标题的文档（含 Word）在侧栏提供可按原文或译文显示的目录，Word 里的表格在阅读视图中仍按表格排版、只有一个部分时不显示部分切换，ePub 的全部章节列在侧栏目录里（按译文显示时用章内标题的译文）、当前章节下接着它其余的各级标题，正文上方不再占一行章节按钮，Word 与文本类预览在宽窗口左右对照；组织文档阅读与翻译、增量统计和人工校订，人工译法确认只在当前文件阅读会话中参与篇章参考，按原文件身份和冻结语言隔离，重译时清空；导入与在线下载绑定独立取消所有权；PDF 清晰阅读流式显示完整段落和原图区域，源页文字层与译文更新分离，下载按原版布局左右配对，长译文以完整批注保留；切换、删除、重置及卸载释放 PDF 任务和 URL；PDF/ePub/DOCX/ZIP 导出显示进度、支持取消重试，迟到结果不得回写。
  模块边界：组件负责页面交互与响应式状态，不自行解析二进制格式、不实现片段翻译队列、配置存储协议或导出编码；解析渲染来自 document-translation feature，配置协调来自 services/config，运行时适配由本目录 runtime 注入。
 -->
 <!-- 文档页面归 app 层所有；WXT 入口只负责启动。 -->
@@ -10,10 +10,10 @@
     <!-- 专注阅读：隐藏工具栏与侧栏，只留下文档；指针移到顶部边缘或按 Esc 退出。 -->
     <button v-if="parsedDocument && focusMode" class="focus-exit" type="button" @click="setFocusMode(false)">{{ translateLegacy('退出专注阅读') }}<kbd>Esc</kbd></button>
     <header v-if="!parsedDocument && !restoring" class="document-header">
-      <div class="document-brand" aria-label="流畅阅读文档翻译">
+      <div class="document-brand" :aria-label="`${t('common.brand')} · 文档翻译`">
         <img src="/icon/128.png" alt="" />
         <span>
-          <strong>流畅阅读</strong>
+          <strong>{{ t('common.brand') }}</strong>
           <small>文档翻译</small>
         </span>
       </div>
@@ -422,7 +422,6 @@
     </dialog>
     <footer v-if="!parsedDocument && !restoring" class="document-footer">
       <span>让语言更近，让世界更大。</span>
-      <a href="https://github.com/Bistutu/FluentRead" target="_blank" rel="noreferrer">开源项目 ↗</a>
     </footer>
   </div>
 </template>
@@ -616,7 +615,7 @@ const epubChapterIndex = ref(0);
 const docxPartIndex = ref(0);
 const hydrated = ref(false);
 const colorSchemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
-const isDark = ref(colorSchemeMedia.matches);
+const isDark = ref(config.theme === 'dark' || ((!config.theme || config.theme === 'auto') && colorSchemeMedia.matches));
 let abortController: AbortController | null = null;
 const documentFileLoads = createDocumentFileLoadGuard();
 let translationRequestId = 0;
@@ -881,7 +880,7 @@ async function downloadBatch(): Promise<void> {
     const blob = new Blob([bytes], {type: 'application/zip'});
     controller.signal.throwIfAborted();
     if (generation !== batchGeneration) return;
-    saveDownloadBlob(blob, 'FluentRead-documents.zip');
+    saveDownloadBlob(blob, 'Wild-Talker-documents.zip');
     for (const item of items) item.downloaded = item.revision;
     const active = items.find(item => item.id === activeDocumentId.value);
     if (active) downloadedRevision.value = active.revision;
@@ -1069,12 +1068,12 @@ function buildRichPreview(): string {
   );
   // 只为当前隔离阅读页补充固定主题规则，不改变原文件或导出内容。
   return isDark.value ? html.replace('</head>', `<style>
-    :root { color-scheme: dark; color: #e8edf7; background: #202632; }
-    h1,h2,h3,h4,h5,h6,.reader-source,.reader-translation,.fluentread-translation,[data-fluent-read-document-translation="true"] { color: #e8edf7; }
-    blockquote { color: #aab2c3; } a,.reader-link { color: #ff8bad; }
-    pre,code,.document-security-note { color: #e8edf7; background: #29303d; border-color: #434b5d; }
-    td,th { border-color: #434b5d; }
-    body[data-translating] article[data-reader-mode="bilingual"] .reader-unit:has(> .reader-source:only-child)::after { background-image: linear-gradient(90deg, #2c3442 25%, #384153 50%, #2c3442 75%); }
+    :root { color-scheme: dark; color: #edf0e8; background: #262d25; }
+    h1,h2,h3,h4,h5,h6,.reader-source,.reader-translation,.fluentread-translation,[data-fluent-read-document-translation="true"] { color: #edf0e8; }
+    blockquote { color: #a9b5a3; } a,.reader-link { color: #d5f28b; }
+    pre,code,.document-security-note { color: #edf0e8; background: #30392e; border-color: #485343; }
+    td,th { border-color: #485343; }
+    body[data-translating] article[data-reader-mode="bilingual"] .reader-unit:has(> .reader-source:only-child)::after { background-image: none; background-color: #30392e; }
   </style></head>`) : html;
 }
 const richFrame = ref<HTMLIFrameElement | null>(null);
@@ -1367,8 +1366,10 @@ function readerSourceClass(value: string): string {
 }
 
 function applyTheme(): void {
-  isDark.value = colorSchemeMedia.matches;
+  isDark.value = config.theme === 'dark' || ((!config.theme || config.theme === 'auto') && colorSchemeMedia.matches);
 }
+// 文档页使用与 Popup/设置页同一份主题偏好，外部配置更新和系统变化均沿用此派生。
+watch(() => config.theme, applyTheme, {immediate: true});
 
 async function hydrateConfig(): Promise<void> {
   await configReady;

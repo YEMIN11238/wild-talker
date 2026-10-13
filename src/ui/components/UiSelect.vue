@@ -103,36 +103,36 @@ defineExpose({
 .fluentread-select {
   min-width: 0;
   width: 100%;
-  --el-color-primary: var(--brand, #ef4776);
-  --el-text-color-regular: var(--ink, #172033);
-  --el-text-color-placeholder: var(--muted, #737c8f);
+  --el-color-primary: var(--brand, #648433);
+  --el-text-color-regular: var(--ink, #252a24);
+  --el-text-color-placeholder: var(--muted, #6f7869);
   --el-fill-color-blank: var(--surface, #fff);
 }
 .fluentread-select .el-select__wrapper {
   min-height: 38px;
   padding: 6px 12px;
-  border: 1px solid var(--line, #e5e8ef);
+  border: 1px solid var(--line, #dce3d2);
   border-radius: 12px;
-  background: var(--surface-soft, #f7f8fb);
+  background: var(--surface-soft, #f5f7f0);
   box-shadow: none;
   transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 .fluentread-select .el-select__wrapper:not(.is-disabled):hover {
-  border-color: color-mix(in srgb, var(--muted, #737c8f) 48%, var(--line, #e5e8ef));
+  border-color: color-mix(in srgb, var(--muted, #6f7869) 48%, var(--line, #dce3d2));
   background: var(--surface, #fff);
 }
 .fluentread-select .el-select__wrapper.is-focused:not(.is-disabled) {
-  border-color: color-mix(in srgb, var(--brand, #ef4776) 65%, var(--line, #e5e8ef));
+  border-color: color-mix(in srgb, var(--brand, #648433) 65%, var(--line, #dce3d2));
   background: var(--surface, #fff);
-  box-shadow: 0 0 0 2px var(--brand-soft, #fff0f4);
+  box-shadow: 0 0 0 2px var(--brand-soft, #edf5dd);
 }
 .fluentread-select .el-select__wrapper.is-disabled { opacity: .6; cursor: not-allowed; }
 .fluentread-select .el-select__selected-item,
-.fluentread-select .el-select__input { color: var(--ink, #172033); font-size: 13px; }
+.fluentread-select .el-select__input { color: var(--ink, #252a24); font-size: 13px; }
 /* 焦点由外层完整控件显示；皮肤的全局输入焦点规则也不能在内部重复绘制矩形。 */
 .fluentread-select .el-select__input:focus-visible { outline: none !important; }
-.fluentread-select .el-select__placeholder.is-transparent { color: var(--muted, #737c8f); }
-.fluentread-select .el-select__caret { color: var(--muted, #737c8f); font-size: 14px; }
+.fluentread-select .el-select__placeholder.is-transparent { color: var(--muted, #6f7869); }
+.fluentread-select .el-select__caret { color: var(--muted, #6f7869); font-size: 14px; }
 .fluentread-select--wrap-label .el-select__selection { align-items: center; }
 /* 关闭时用标签撑开高度，筛选输入保留焦点入口但不额外占一行。 */
 .fluentread-select--wrap-label .el-select__input-wrapper { position: absolute; inset: 0; opacity: 0; }
@@ -146,22 +146,22 @@ defineExpose({
   overflow-wrap: anywhere;
 }
 .fluentread-select--wrap-label .el-select__placeholder > span { white-space: normal; }
-.fluentread-select-search-icon { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--muted, #737c8f); stroke-width: 1.5; stroke-linecap: round; }
-.fluentread-select .el-tag { --el-tag-text-color: var(--ink, #172033); --el-tag-bg-color: var(--surface, #fff); --el-tag-border-color: var(--line, #e5e8ef); border-radius: 6px; }
+.fluentread-select-search-icon { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--muted, #6f7869); stroke-width: 1.5; stroke-linecap: round; }
+.fluentread-select .el-tag { --el-tag-text-color: var(--ink, #252a24); --el-tag-bg-color: var(--surface, #fff); --el-tag-border-color: var(--line, #dce3d2); border-radius: 6px; }
 
 .fluentread-select-popper.el-popper {
   box-sizing: border-box;
   max-width: calc(100vw - 24px);
-  border: 1px solid var(--line, #e5e8ef);
+  border: 1px solid var(--line, #dce3d2);
   border-radius: var(--fr-menu-radius, 14px);
   background: var(--surface, #fff);
-  box-shadow: var(--fr-menu-shadow, 0 8px 28px rgba(27, 36, 57, .12));
+  box-shadow: var(--fr-menu-shadow, 0 8px 24px rgba(37, 42, 36, .1));
   --el-bg-color-overlay: var(--surface, #fff);
-  --el-color-primary: var(--brand, #ef4776);
-  --el-border-color-light: var(--line, #e5e8ef);
-  --el-text-color-regular: var(--ink, #172033);
-  --el-text-color-placeholder: var(--muted, #737c8f);
-  --el-fill-color-light: var(--surface-soft, #f7f8fb);
+  --el-color-primary: var(--brand, #648433);
+  --el-border-color-light: var(--line, #dce3d2);
+  --el-text-color-regular: var(--ink, #252a24);
+  --el-text-color-placeholder: var(--muted, #6f7869);
+  --el-fill-color-light: var(--surface-soft, #f5f7f0);
 }
 /* 退场菜单及时让出鼠标命中，避免切换选择器时截走松开事件。 */
 .fluentread-select-popper.el-zoom-in-top-leave-active { pointer-events: none; }
@@ -178,19 +178,19 @@ defineExpose({
   margin: 2px 0;
   padding: 8px 34px 8px 12px;
   border-radius: 9px;
-  color: var(--ink, #172033);
+  color: var(--ink, #252a24);
   font-size: 13px;
   line-height: 1.5;
   white-space: normal;
   overflow-wrap: anywhere;
 }
-.fluentread-select-popper .el-select-dropdown__item.is-hovering:not(.is-disabled) { background: var(--surface-soft, #f7f8fb); }
+.fluentread-select-popper .el-select-dropdown__item.is-hovering:not(.is-disabled) { background: var(--surface-soft, #f5f7f0); }
 .fluentread-select-popper .el-select-dropdown__item.is-selected {
-  color: var(--brand-strong, #dc315f);
-  background: var(--brand-soft, #fff0f4);
+  color: var(--brand-strong, #456021);
+  background: var(--brand-soft, #edf5dd);
   font-weight: 650;
 }
-.fluentread-select-popper .el-select-dropdown__item.is-selected.is-hovering { background: var(--brand-soft, #fff0f4); }
+.fluentread-select-popper .el-select-dropdown__item.is-selected.is-hovering { background: var(--brand-soft, #edf5dd); }
 /* 单选和多选共用无文字的勾选标记；多选标签仍由 Element Plus 管理。 */
 .fluentread-select-popper.el-popper .el-select-dropdown .el-select-dropdown__item.is-selected::after {
   content: '';
@@ -205,12 +205,12 @@ defineExpose({
   mask: none;
   transform: translateY(-65%) rotate(45deg);
 }
-.fluentread-select-popper .el-select-dropdown__item.is-disabled { color: var(--muted, #737c8f); cursor: not-allowed; }
-.fluentread-select-popper .el-select-group__title { height: auto; padding: 10px 12px 5px; color: var(--muted, #737c8f); font-size: 11px; font-weight: 600; line-height: 1.5; }
+.fluentread-select-popper .el-select-dropdown__item.is-disabled { color: var(--muted, #6f7869); cursor: not-allowed; }
+.fluentread-select-popper .el-select-group__title { height: auto; padding: 10px 12px 5px; color: var(--muted, #6f7869); font-size: 11px; font-weight: 600; line-height: 1.5; }
 .fluentread-select-popper .el-select-group__wrap:not(:last-of-type) { padding-bottom: 9px; }
-.fluentread-select-popper .el-select-group__wrap:not(:last-of-type)::after { right: 12px; bottom: 2px; left: 12px; background: var(--line, #e5e8ef); }
-.fluentread-select-popper .el-select-dropdown__empty { margin: 0; padding: 24px 16px; color: var(--muted, #737c8f); font-size: 13px; }
-.fluentread-select-popper .el-popper__arrow::before { border-color: var(--line, #e5e8ef); background: var(--surface, #fff); }
+.fluentread-select-popper .el-select-group__wrap:not(:last-of-type)::after { right: 12px; bottom: 2px; left: 12px; background: var(--line, #dce3d2); }
+.fluentread-select-popper .el-select-dropdown__empty { margin: 0; padding: 24px 16px; color: var(--muted, #6f7869); font-size: 13px; }
+.fluentread-select-popper .el-popper__arrow::before { border-color: var(--line, #dce3d2); background: var(--surface, #fff); }
 @media (prefers-reduced-motion: reduce) {
   .fluentread-select .el-select__wrapper { transition: none; }
 }

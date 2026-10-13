@@ -190,17 +190,17 @@ onBeforeUnmount(() => {
   align-items: center;
   width: min(286px, calc(100vw - 32px));
   padding: 11px 10px 11px 12px;
-  border: 1px solid rgba(229, 88, 139, 0.24);
+  border: 1px solid #e7eae1;
   border-radius: 14px;
-  background: rgba(255, 252, 253, 0.84);
-  box-shadow: 0 10px 28px rgba(68, 38, 52, 0.14), 0 2px 7px rgba(68, 38, 52, 0.06);
-  color: #3f3540;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(37, 42, 36, 0.1), 0 2px 7px rgba(37, 42, 36, 0.04);
+  color: #252a24;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 12px;
   line-height: 1.35;
   pointer-events: auto;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .fr-progress-indicator {
@@ -212,8 +212,8 @@ onBeforeUnmount(() => {
   height: 34px;
   padding: 8px 7px;
   border-radius: 10px;
-  background: linear-gradient(145deg, #fff0f5, #ffe0eb);
-  color: #e84f87;
+  background: #edf5dd;
+  color: #648433;
 }
 
 .fr-translation-progress.fr-compact {
@@ -277,7 +277,7 @@ onBeforeUnmount(() => {
 }
 
 .fr-progress-copy strong {
-  color: #342b35;
+  color: #252a24;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -292,7 +292,7 @@ onBeforeUnmount(() => {
 }
 
 .fr-progress-counts b {
-  color: #bd2f62;
+  color: #456021;
   font-variant-numeric: tabular-nums;
   font-weight: 750;
 }
@@ -321,19 +321,19 @@ onBeforeUnmount(() => {
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #988b95;
+  color: #737970;
   cursor: pointer;
 }
 
 .fr-progress-dismiss:hover,
 .fr-progress-dismiss:focus-visible {
-  background: #f8e9ef;
-  color: #cf3e73;
+  background: #edf5dd;
+  color: #456021;
   outline: none;
 }
 
 .fr-progress-dismiss:focus-visible {
-  box-shadow: 0 0 0 2px rgba(232, 79, 135, 0.28);
+  box-shadow: 0 0 0 2px rgba(100, 132, 51, 0.28);
 }
 
 .fr-progress-dismiss svg {
@@ -346,10 +346,10 @@ onBeforeUnmount(() => {
 }
 
 .fr-dark {
-  border-color: rgba(242, 116, 162, 0.3);
-  background: rgba(38, 31, 39, 0.84);
+  border-color: #394035;
+  background: #262d25;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), 0 2px 7px rgba(0, 0, 0, 0.16);
-  color: #f7edf1;
+  color: #edf0e8;
 }
 
 .fr-dark.fr-compact {
@@ -359,35 +359,35 @@ onBeforeUnmount(() => {
 }
 
 .fr-dark .fr-progress-indicator {
-  background: linear-gradient(145deg, #593043, #442635);
-  color: #ff80ae;
+  background: #303b25;
+  color: #bedf7b;
 }
 
 .fr-dark .fr-progress-copy strong {
-  color: #fff7fa;
+  color: #f5f7f0;
 }
 
 .fr-dark .fr-progress-counts {
-  color: #d1c2c9;
+  color: #afb6a9;
 }
 
 .fr-dark .fr-progress-counts b {
-  color: #ff80ae;
+  color: #bedf7b;
 }
 
 .fr-dark .fr-progress-divider {
-  background: #5d4c55;
+  background: #394035;
 }
 
 .fr-dark .fr-progress-copy small,
 .fr-dark .fr-progress-dismiss {
-  color: #bfaeb7;
+  color: #afb6a9;
 }
 
 .fr-dark .fr-progress-dismiss:hover,
 .fr-dark .fr-progress-dismiss:focus-visible {
-  background: #523242;
-  color: #ff91b8;
+  background: #303b25;
+  color: #bedf7b;
 }
 
 .fr-progress-panel-enter-active,
@@ -411,7 +411,7 @@ onBeforeUnmount(() => {
 }
 
 .fr-modal-waiting .fr-progress-indicator {
-  color: #a87389;
+  color: #737970;
 }
 
 .fr-static.fr-progress-panel-enter-active,

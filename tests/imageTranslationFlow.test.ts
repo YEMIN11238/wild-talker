@@ -599,7 +599,7 @@ describe('图片控件界面语言', () => {
         const ui = createImageControls({onAction() {}, onPrepare() {}, translate: source => translateLegacyText(source, language)});
         try {
             const brand = translate('common.brand', language);
-            expect(translateLegacyText('流畅阅读', language)).toBe(brand);
+            expect(translateLegacyText('万能说客（Wild Talker）', language)).toBe(brand);
             expect(ui.feedback.querySelector('.fr-image-feedback-title')!.textContent).toBe(`${brand} · ${translateLegacyText('图片翻译', language)}`);
             expect(ui.button.title).toBe(`${brand} · ${translateLegacyText('翻译图片', language)}`);
             expect(ui.button.getAttribute('aria-label')).toBe(ui.button.title);
@@ -622,12 +622,12 @@ describe('图片控件界面语言', () => {
         details.hidden = false;
         language = 'ja-JP'; controls.refreshLanguage();
         expect(controls.button.textContent).toBe('元画像');
-        expect(controls.button.title).toBe('FluentRead · 元画像に戻す');
+        expect(controls.button.title).toBe('万能说客（Wild Talker） · 元画像に戻す');
         expect(details.textContent).toBe('原文');
         expect(details.hidden).toBe(false);
         language = 'zh-CN'; controls.refreshLanguage();
         expect(controls.button.textContent).toBe('原图');
-        expect(controls.button.title).toBe('流畅阅读 · 恢复原图');
+        expect(controls.button.title).toBe('万能说客（Wild Talker） · 恢复原图');
         expect(details.textContent).toBe('原文');
         controls.dispose();
     });

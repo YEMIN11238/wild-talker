@@ -60,7 +60,7 @@ describe('options navigation view-model', () => {
       '翻译统计',
       '高级选项',
       '备份与恢复',
-      '关于流畅阅读',
+      '关于万能说客（Wild Talker）',
     ])
     expect(resolveNavigationItem('settings-translation')).toMatchObject({
       group: '基础配置',

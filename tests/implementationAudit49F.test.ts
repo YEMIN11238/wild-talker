@@ -1230,9 +1230,9 @@ describe('49F actual pinned-data virtual catalog consumer', () => {
 
     afterEach(() => vi.unstubAllEnvs());
 
-    it('reconciles all 19 authoritative established rules without mutating pinned data and reuses every unchanged rule', async () => {
+    it('loads all 19 established rules from the prepared resource without mutating pinned data and reuses every unchanged rule', async () => {
         const {catalogs, original, originalSnapshot} = await loadCatalogs();
-        expect(original.established).toHaveLength(17);
+        expect(original.established).toHaveLength(19);
         expect(catalogs.established).toHaveLength(19);
         for (const name of ['established', 'websites', 'profiles']) {
             const authoritative = JSON.parse(readFileSync(resolve(process.cwd(), `src/core/site-adaptation/catalog/${name}.json`), 'utf8'));
@@ -1251,9 +1251,9 @@ describe('49F actual pinned-data virtual catalog consumer', () => {
         expect(github.content.flatMap((entry: any) => entry.css)).toContain('a[data-testid="issue-listitem-title-link"]');
         expect(github.protect).toContain('[data-testid="issues-list-surface"] [class*="Description-module__container"]');
         expect(original.established.find((rule: any) => rule.id === 'github').protect)
-            .not.toContain('[data-testid="issues-list-surface"] [class*="Description-module__container"]');
+            .toContain('[data-testid="issues-list-surface"] [class*="Description-module__container"]');
         expect(JSON.stringify(original)).toBe(originalSnapshot);
-        expect(original.established).toHaveLength(17);
+        expect(original.established).toHaveLength(19);
     });
 
     it.each(['https://meet.google.com/fixture', 'https://github.com/fixture'] as const)('excludes native captions or code through the actual virtual catalog and real engine at %s', async url => {

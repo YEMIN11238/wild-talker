@@ -245,13 +245,23 @@ describe('page error notice', () => {
         expect(old.isConnected).toBe(false);expect(unrelated.isConnected).toBe(true);expect(removeAbort).toHaveBeenCalledOnce();
         current.parentElement!.remove();showPageNotice('重建堆栈', 'error');expect(frames.size).toBe(1);expect(vi.getTimerCount()).toBe(1);
     });
-    it('同文案不同类型或不同功能保留独立反馈，同 key 更新采用当前语言', async () => {
+    it('同文案不同类型或不同功能保留独立反馈，同 key 更新修复旧图标描述并采用当前语言', async () => {
         registerAllUiLanguageBundles();const previous = config.uiLanguage;
         try {
             const first = showPageNotice('完成', 'success');const error = showPageNotice('完成', 'error');
             const keyed = showPageNotice('完成', 'success', {key: 'copy'});
             expect(first).not.toBe(error);expect(keyed).not.toBe(first);
-            config.uiLanguage = 'en-US';showPageNotice('完成', 'success', {key: 'copy'});
+            const mark = keyed.querySelector<HTMLImageElement>('img.notice-mark')!;
+            const title = keyed.querySelector('.notice-title');
+            expect(mark).not.toBeNull();
+            const iconSource = mark.src;
+            mark.alt = '旧版通知品牌描述';
+            config.uiLanguage = 'en-US';
+            expect(showPageNotice('完成', 'success', {key: 'copy'})).toBe(keyed);
+            expect(keyed.querySelector('img.notice-mark')).toBe(mark);
+            expect(keyed.querySelector('.notice-title')).toBe(title);
+            expect(mark.alt).toBe('万能说客（Wild Talker）');
+            expect(mark.src).toBe(iconSource);
             expect(keyed.querySelector('.notice-title')?.textContent).toBe('Done');
         } finally {config.uiLanguage = previous;}
     });
@@ -465,7 +475,7 @@ describe('page error notice', () => {
             const details = [...shadow.querySelectorAll('.notice-detail')].map((node) => node.textContent);
             expect(details[0]).toBe(detail);
             expect(details[1]).toBe(imageFailure);
-            expect(shadow.querySelector<HTMLImageElement>('img.notice-mark')?.alt).toBe('FluentRead');
+            expect(shadow.querySelector<HTMLImageElement>('img.notice-mark')?.alt).toBe('万能说客（Wild Talker）');
             expect(shadow.querySelector('img.notice-mark')?.getAttribute('aria-hidden')).toBe('true');
         } finally {
             config.uiLanguage = previousLanguage;

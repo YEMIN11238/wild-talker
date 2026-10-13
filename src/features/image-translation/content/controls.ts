@@ -11,15 +11,15 @@ import brandIcon from '../../../../public/icon/32.png?inline';
 export type ImageControlPhase = 'idle' | 'loading' | 'translated' | 'error';
 // 沿用 ui/styles/tokens.css 的品牌、文字与表面色；在所属 Shadow UI 内声明，避免继承宿主变量。
 export const IMAGE_CONTROLS_CSS = IMAGE_READER_CSS + `
-.fr-image-controls,.fr-image-feedback {--fr-image-brand:#dc315f;--fr-image-brand-soft:#fff0f4;--fr-image-ink:#172033;--fr-image-muted:#737c8f;--fr-image-line:#e5e8ef;--fr-image-surface:#fff;color:var(--fr-image-ink);font:13px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-sizing:border-box;}
+.fr-image-controls,.fr-image-feedback {--fr-image-brand:#456021;--fr-image-brand-soft:#edf5dd;--fr-image-ink:#252a24;--fr-image-muted:#737970;--fr-image-line:#e7eae1;--fr-image-surface:#fff;color:var(--fr-image-ink);font:13px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-sizing:border-box;}
 .fr-image-controls {position:absolute;left:8px;bottom:8px;max-width:calc(100% - 16px);display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:auto;z-index:2;}
 .fr-image-feedback {position:absolute;left:50%;top:50%;width:max-content;display:flex;flex-direction:column;gap:8px;transform:translate(-50%,-50%);padding:12px 14px;border:1px solid var(--fr-image-line);border-radius:12px;background:var(--fr-image-surface);box-shadow:0 8px 28px rgba(27,36,57,.12),0 2px 6px rgba(27,36,57,.04);pointer-events:none;}
 .fr-image-controls[hidden],.fr-image-feedback[hidden],.fr-image-controls [hidden],.fr-image-feedback [hidden] {display:none!important;}
 .fr-image-feedback-title {font-size:14px;line-height:1.4;font-weight:650;}
 .fr-image-status {display:flex;align-items:center;gap:9px;min-width:0;overflow-wrap:anywhere;white-space:normal;}
-.fr-image-spinner {width:12px;height:12px;flex:0 0 auto;box-sizing:border-box;border:1.5px solid #b9aab333;border-top-color:#947985;border-radius:50%;animation:fr-image-spin .75s linear infinite;}
+.fr-image-spinner {width:12px;height:12px;flex:0 0 auto;box-sizing:border-box;border:1.5px solid #b9aab333;border-top-color:#648433;border-radius:50%;animation:fr-image-spin .75s linear infinite;}
 .fr-image-spinner[data-animated=false] {animation:none;}
-.fr-image-actions {display:flex;align-items:center;flex-wrap:wrap;gap:2px;padding:2px;border:1px solid #ffffff66;border-radius:9px;background:rgba(250,251,253,.62);backdrop-filter:blur(6px);box-shadow:0 1px 5px rgba(27,36,57,.06);}
+.fr-image-actions {display:flex;align-items:center;flex-wrap:wrap;gap:2px;padding:2px;border:1px solid #ffffff66;border-radius:9px;background:#fff;backdrop-filter:none;box-shadow:0 1px 5px rgba(27,36,57,.06);}
 .fr-image-controls button,.fr-image-feedback button {all:unset;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:24px;padding:3px 7px;border-radius:6px;cursor:pointer;color:inherit;font:inherit;font-size:11px;font-weight:500;white-space:nowrap;}
 .fr-image-controls button:hover,.fr-image-feedback button:hover {background:var(--fr-image-brand-soft);color:var(--fr-image-brand);}
 .fr-image-controls button:focus-visible,.fr-image-feedback button:focus-visible {outline:2px solid var(--fr-image-brand);outline-offset:2px;}
@@ -28,13 +28,13 @@ export const IMAGE_CONTROLS_CSS = IMAGE_READER_CSS + `
 .fr-image-controls[data-phase=idle] .fr-image-actions {opacity:.28;padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none;}
 .fr-image-controls[data-phase=idle] .fluent-read-image-translation-button::before {filter:grayscale(1);}
 .fr-image-controls[data-phase=idle]:hover .fluent-read-image-translation-button::before,.fr-image-controls[data-phase=idle]:focus-within .fluent-read-image-translation-button::before {filter:none;}
-.fr-image-controls[data-phase=idle] .fr-image-actions:hover,.fr-image-controls[data-phase=idle]:focus-within .fr-image-actions,.fr-image-controls .fr-image-actions:hover,.fr-image-controls:focus-within .fr-image-actions {opacity:1;background:rgba(250,251,253,.92);}
+.fr-image-controls[data-phase=idle] .fr-image-actions:hover,.fr-image-controls[data-phase=idle]:focus-within .fr-image-actions,.fr-image-controls .fr-image-actions:hover,.fr-image-controls:focus-within .fr-image-actions {opacity:1;background:#fff;}
 .fr-image-controls[data-animations=false] .fr-image-actions {transition:none;}
 .fr-image-controls[data-phase=idle] .fluent-read-image-translation-button {width:24px;height:24px;padding:5px;font-size:0;}
 .fr-image-controls .fluent-read-image-translation-button::before {content:"";display:block;width:14px;height:14px;flex:0 0 auto;margin-right:5px;background:url("${brandIcon}") center/contain no-repeat;}
 .fr-image-controls[data-phase=idle] .fluent-read-image-translation-button::before {margin-right:0;}
 .fr-image-feedback-title::before {content:"";display:inline-block;width:16px;height:16px;margin-right:6px;vertical-align:-2px;background:url("${brandIcon}") center/contain no-repeat;}
-.fr-image-feedback[data-phase=loading] {padding:6px 9px;border-color:#ffffff66;border-radius:9px;background:rgba(250,251,253,.6);backdrop-filter:blur(5px);box-shadow:0 1px 5px rgba(27,36,57,.06);color:#475569;font-size:11px;opacity:.8;}
+.fr-image-feedback[data-phase=loading] {padding:6px 9px;border-color:#ffffff66;border-radius:9px;background:#f5f7f0;backdrop-filter:none;box-shadow:0 1px 5px rgba(27,36,57,.06);color:#475569;font-size:11px;opacity:.8;}
 .fr-image-feedback[data-phase=loading] .fr-image-status {gap:6px;}
 .fr-image-feedback[data-phase=error] {width:340px;padding:16px;pointer-events:auto;overflow:auto;overscroll-behavior:contain;}
 .fr-image-feedback[data-phase=error] .fr-image-status {color:#536074;}
@@ -45,13 +45,13 @@ export const IMAGE_CONTROLS_CSS = IMAGE_READER_CSS + `
 .fr-image-feedback .fr-image-actions {padding:4px 0 0;border:0;border-radius:0;box-shadow:none;gap:8px;background:transparent;}
 .fr-image-feedback button {min-height:32px;max-width:100%;padding:6px 12px;white-space:normal;text-align:center;overflow-wrap:anywhere;}
 .fr-image-feedback .fr-image-prepare,.fr-image-feedback .fr-image-model-settings,.fr-image-feedback[data-preparation=false][data-recovery=false] .fluent-read-image-translation-button {order:-1;background:var(--fr-image-brand);color:#fff;font-weight:650;}
-.fr-image-feedback .fr-image-prepare:hover,.fr-image-feedback .fr-image-model-settings:hover,.fr-image-feedback[data-preparation=false][data-recovery=false] .fluent-read-image-translation-button:hover {background:#c62752;color:#fff;}
+.fr-image-feedback .fr-image-prepare:hover,.fr-image-feedback .fr-image-model-settings:hover,.fr-image-feedback[data-preparation=false][data-recovery=false] .fluent-read-image-translation-button:hover {background:#456021;color:#fff;}
 .fr-image-feedback .fr-image-dismiss,.fr-image-feedback[data-preparation=true] .fluent-read-image-translation-button {color:var(--fr-image-muted);}
  .fr-image-feedback[data-manga=true][data-phase=loading] {flex-direction:row;align-items:center;gap:6px;transform:none;min-width:0;padding:6px 9px;font-size:11px;pointer-events:none;animation:fr-manga-feedback .12s ease .15s both;}
 .fr-image-feedback[data-manga=true] .fr-image-status {gap:6px;min-width:0;}
 .fr-image-feedback[data-manga=true] .fr-image-status>span:last-child {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .fr-image-progress {height:2px;width:36px;flex:0 0 36px;border-radius:2px;background:#47556930;overflow:hidden;}
-.fr-image-progress>span {display:block;height:100%;background:#947985;border-radius:inherit;}
+.fr-image-progress>span {display:block;height:100%;background:#648433;border-radius:inherit;}
 @keyframes fr-manga-feedback {from {opacity:0;} to {opacity:1;}}
 @keyframes fr-image-spin {to {transform:rotate(360deg);}}
 @media (prefers-reduced-motion: reduce) {.fr-image-spinner {animation:none;}.fr-image-controls .fr-image-actions {transition:none;}}
@@ -130,7 +130,7 @@ export function createImageControls(actions: {onAction(): void; onPrepare(): voi
     let sourceMessage = '翻译图片';
     let progress: number | undefined;
     const refreshLanguage = () => {
-        const brand = localize('流畅阅读');
+        const brand = localize('万能说客（Wild Talker）');
         heading.textContent = `${brand} · ${localize('图片翻译')}`;
         prepare.textContent = localize('下载语言包并翻译');
         modelSettings.textContent = localize('调整本地模型');

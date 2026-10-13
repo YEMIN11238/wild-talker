@@ -72,7 +72,7 @@
     "settings.webdav.error.decrypt": "The backup could not be decrypted or is damaged. Device configuration was not changed.",
     "settings.webdav.error.failure": "The operation did not finish. Check the network and local storage and try again.",
     "settings.cloud.privacyEncryption": "Configuration is encrypted before upload. The app passphrase is public; account, directory, and device security provide the main protection.",
-    "settings.cloud.privacyWebDavStorage": "Accesses only the FluentRead backup under your chosen server directory.",
+    "settings.cloud.privacyWebDavStorage": "Accesses only the 万能说客（Wild Talker） backup under your chosen server directory.",
     "settings.cloud.privacyWebDavConnection": "The connection password stays on this device. Server access requires a manual action.",
     "settings.cloud.currentAccount": "Backup account: {email}",
     "settings.cloud.changed.credentials": "API keys, OAuth tokens and authentication",

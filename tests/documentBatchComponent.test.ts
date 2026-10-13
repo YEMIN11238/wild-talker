@@ -15,6 +15,7 @@ import * as pdfOcr from '@/src/features/document-translation/services/pdfOcr';
 import {createDocumentFileLoadGuard} from '@/src/features/document-translation/services/translation';
 import {generateDocumentArchive} from '@/src/features/document-translation/services/archive';
 import {TranslationRequestError} from '@/src/services/translation/errors';
+import * as documentDownloadCopy from '@/src/app/document-translation/downloadCopy';
 
 // 编译真实页面 setup，注入可控解析/翻译边界；可见控件与下载文件另由真实浏览器套件验证。
 const require = createRequire(import.meta.url);
@@ -64,6 +65,7 @@ beforeEach(async () => {
   const exports: Record<string, any> = {};
   new Function('require', 'exports', compiled)((id: string) => {
     if (id === 'vue') return {...vue, onMounted: () => {}, onUnmounted: (fn: () => void) => unload.push(fn)};
+    if (id === './downloadCopy') return documentDownloadCopy;
     if (id === '@/src/app/document-translation' || id === '@/src/core/translation/result') return api;
     if (id === 'webextension-polyfill') return {runtime: {sendMessage: vi.fn()}};
     if (id.startsWith('element-plus') || id.endsWith('.css') || id.endsWith('.vue')) return {};
@@ -198,7 +200,8 @@ describe('document batch page lifecycle', () => {
     await state.loadFiles([file('episode.srt', '1\n00:00:01,000 --> 00:00:03,000\nHello there.\n')]);
     state.editSegment(0, '校订后的字幕');
     state.previewMode = 'translated';
-    state.downloadDialog = {showModal: vi.fn(), close: vi.fn()};
+    // 真实 dialog 的 close 事件会释放 downloadOpen；setup 夹具必须模拟同一个模板端口。
+    state.downloadDialog = {showModal: vi.fn(), close: vi.fn(() => {state.downloadOpen = false;})};
     state.openDownload();
     expect(state.outputMode).toBe('translated');
     expect(state.downloadFileName).toBe('episode.translated.srt');
@@ -213,20 +216,26 @@ describe('document batch page lifecycle', () => {
     state.previewMode = 'bilingual';
     state.openDownload();
     expect(state.outputMode).toBe('bilingual');
+    state.downloadDialog.close();
     state.previewMode = 'source';
     state.outputMode = 'translated';
     state.openDownload();
     expect(state.outputMode).toBe('translated');
   });
 
-  it('does not open or submit export while the queue is busy or partial export is unconfirmed', async () => {
+  it('opens original-file downloads before translation but refuses busy or unconfirmed translated exports', async () => {
     await state.loadFiles([file('a.txt', 'First.\n\nSecond.')]);
-    state.downloadDialog = {showModal: vi.fn(), close: vi.fn()};
-    state.openDownload();
-    expect(state.downloadDialog.showModal).not.toHaveBeenCalled();
-    state.editSegment(0, '第一段');
+    state.downloadDialog = {showModal: vi.fn(), close: vi.fn(() => {state.downloadOpen = false;})};
     state.openDownload();
     expect(state.downloadDialog.showModal).toHaveBeenCalledOnce();
+    expect(state.originalDownloadSource).toMatchObject({fileName: 'a.txt'});
+    expect(state.hasTranslation).toBe(false);
+    await state.downloadDocument();
+    expect(download).not.toHaveBeenCalled();
+    state.downloadDialog.close();
+    state.editSegment(0, '第一段');
+    state.openDownload();
+    expect(state.downloadDialog.showModal).toHaveBeenCalledTimes(2);
     await state.downloadDocument();
     expect(download).not.toHaveBeenCalled();
     state.partialExportAcknowledged = true;

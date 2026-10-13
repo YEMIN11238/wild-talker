@@ -1,7 +1,7 @@
 <!--
  * @file src/features/settings/ui/VideoSentenceLearningAppearanceSettings.vue
  * 文件职责：在界面风格中心独立提供完整句学习的外观设置，左侧预览、右侧调整。
- * 主要内容：复用品牌粉与深灰面板，实时展示紧凑或舒适布局、背景不透明度、字号、宽度和默认四角位置；恢复默认只改变该面板配置。
+ * 主要内容：与真实播放器面板复用亮暗表面、文字和青柠操作色，随当前界面主题更新，实时展示紧凑或舒适布局、背景不透明度、字号、宽度和默认四角位置；恢复默认只改变该面板配置。
  * 模块边界：只编辑父级传入的 Config 草稿，保存和重开持久化沿用设置中心既有配置管线；预览不播放视频、不发送翻译请求，不保存拖动位置。
  -->
 <template>
@@ -10,7 +10,7 @@
       <template #preview>
         <div class="learning-preview-scene" :data-position="appearance.position" :data-layout="appearance.layout" data-video-learning-preview-scene>
           <span class="learning-preview-video-label" aria-hidden="true">Sea otters</span>
-          <div class="learning-preview-card" :data-layout="appearance.layout" :style="previewStyle" data-video-learning-preview>
+          <div class="learning-preview-card fr-video-learning-surface" :data-layout="appearance.layout" :data-learning-theme="learningTheme" :style="previewStyle" data-video-learning-preview>
             <header><strong><i aria-hidden="true" /><span>{{ t('video.learning.title') }}</span></strong><span class="learning-preview-header-actions" aria-hidden="true"><span class="learning-preview-header-tools"><span>?</span><span>☷</span><span>⌃</span><span>×</span></span></span></header>
             <div class="learning-preview-content">
               <span class="learning-preview-meta">3 / 24 · 0:12–0:16</span>
@@ -46,7 +46,7 @@
   </SettingsGroup>
 </template>
 <script setup lang="ts">
-import {computed, type CSSProperties} from 'vue';
+import {computed, onBeforeUnmount, ref, type CSSProperties} from 'vue';
 import type {Config} from '@/src/core/config/model';
 import {DEFAULT_VIDEO_SENTENCE_LEARNING_APPEARANCE, VIDEO_SENTENCE_LEARNING_APPEARANCE_RANGES, getVideoSentenceLearningAppearanceCssVars, type VideoSentenceLearningPosition} from '@/src/core/config/videoSentenceLearningAppearance';
 import {useUiI18n} from '@/src/ui/i18n';
@@ -60,43 +60,50 @@ const {t} = useUiI18n();
 // 保存或恢复历史会替换整份草稿；继续绑定当前 prop，避免修改旧对象。
 const appearance = computed(() => props.config.videoSentenceLearningAppearance);
 const ranges = VIDEO_SENTENCE_LEARNING_APPEARANCE_RANGES;
-const previewStyle = computed(() => getVideoSentenceLearningAppearanceCssVars(appearance.value) as CSSProperties);
+const previewStyle = computed(() => ({...getVideoSentenceLearningAppearanceCssVars(appearance.value), '--fr-learning-opacity': String(appearance.value.backgroundOpacity / 100)}) as CSSProperties);
+const systemTheme = typeof window === 'undefined' ? undefined : window.matchMedia?.('(prefers-color-scheme: dark)');
+const systemDark = ref(systemTheme?.matches ?? false);
+const learningTheme = computed(() => props.config.theme === 'dark' || ((!props.config.theme || props.config.theme === 'auto') && systemDark.value) ? 'dark' : 'light');
+function handleSystemThemeChange(event: MediaQueryListEvent): void {systemDark.value = event.matches;}
+systemTheme?.addEventListener('change', handleSystemThemeChange);
+onBeforeUnmount(() => systemTheme?.removeEventListener('change', handleSystemThemeChange));
 const layoutOptions = computed(() => ['compact', 'comfortable'].map(value => ({value, label: t(`video.learningAppearance.${value}`)})));
 const positionOptions = computed(() => (['top-left', 'top-right', 'bottom-left', 'bottom-right'] as VideoSentenceLearningPosition[]).map(value => ({value, label: t(`video.learningAppearance.${value}`)})));
 function resetAppearance(): void {Object.assign(appearance.value, DEFAULT_VIDEO_SENTENCE_LEARNING_APPEARANCE);}
 </script>
 <style scoped>
+@import '../../video-subtitle/ui/videoSentenceLearningTheme.css';
 .video-learning-appearance-group :deep(.settings-group-body) { overflow:clip; }
-.learning-preview-scene { position:relative; min-height:400px; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:linear-gradient(160deg,#193b48,#14212a 52%,#697470); }
+.learning-preview-scene { position:relative; min-height:400px; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:var(--surface-soft); }
 .learning-preview-scene[data-layout="comfortable"] { min-height:460px; }
-.learning-preview-scene::before { position:absolute; inset:62% -10% -18%; border-radius:50%; background:linear-gradient(145deg,#76877b,#384f58); content:''; }
-.learning-preview-video-label { position:absolute; left:20px; bottom:18px; color:#fff; font-size:20px; opacity:.9; }
-.learning-preview-card { position:absolute; top:12px; right:12px; box-sizing:border-box; width:min(calc(var(--fluent-read-video-learning-width) * .75),calc(100% - 24px)); overflow:hidden; border:1px solid rgba(255,255,255,.13); border-radius:12px; color:#f1f1f3; background:var(--fluent-read-video-learning-background); box-shadow:0 8px 24px rgba(0,0,0,.25); font-family:system-ui,sans-serif; font-size:13px; line-height:var(--fluent-read-video-learning-line-height); }
+.learning-preview-scene::before { position:absolute; inset:62% -10% -18%; border-radius:50%; background:var(--brand-soft); content:''; }
+.learning-preview-video-label { position:absolute; left:20px; bottom:18px; color:var(--muted); font-size:16px; opacity:.8; }
+.learning-preview-card { position:absolute; top:12px; right:12px; box-sizing:border-box; width:min(calc(var(--fluent-read-video-learning-width) * .75),calc(100% - 24px)); overflow:hidden; border:1px solid var(--fr-learning-border); border-radius:var(--fr-learning-radius); color:var(--fr-learning-text); background:var(--fr-learning-background); box-shadow:var(--fr-learning-shadow); font-family:system-ui,sans-serif; font-size:13px; line-height:var(--fluent-read-video-learning-line-height); }
 .learning-preview-scene[data-position="top-left"] .learning-preview-card { right:auto; left:12px; }
 .learning-preview-scene[data-position="bottom-left"] .learning-preview-card { top:auto; right:auto; bottom:12px; left:12px; }
 .learning-preview-scene[data-position="bottom-right"] .learning-preview-card { top:auto; bottom:12px; }
-.learning-preview-card header { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px var(--fluent-read-video-learning-padding); border-bottom:1px solid rgba(255,255,255,.1); }
+.learning-preview-card header { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px var(--fluent-read-video-learning-padding); border-bottom:1px solid var(--fr-learning-border); }
 .learning-preview-card header strong { display:flex; align-items:center; gap:6px; min-width:0; font-weight:600; }
 .learning-preview-card header strong span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .learning-preview-header-actions { flex:none; }
-.learning-preview-card header i { width:6px; height:6px; flex:none; border-radius:50%; background:#ef4776; }
-.learning-preview-card header > span,.learning-preview-meta { color:#b5b5bd; font-size:.85em; }
+.learning-preview-card header i { width:6px; height:6px; flex:none; border-radius:50%; background:var(--fr-learning-brand); }
+.learning-preview-card header > span,.learning-preview-meta { color:var(--fr-learning-muted); font-size:.85em; }
 .learning-preview-header-actions,.learning-preview-header-tools { display:flex; align-items:center; gap:2px; }
 .learning-preview-header-actions span > :is(span,b) { display:inline-flex; align-items:center; justify-content:center; width:16px; min-width:16px; height:22px; font-size:12px; font-weight:400; }
 .learning-preview-card[data-layout="compact"] .learning-preview-mode-caption { display:none; }
-.learning-preview-follow,.learning-preview-mode-caption { color:#b5b5bd; font-size:11px; }
+.learning-preview-follow,.learning-preview-mode-caption { color:var(--fr-learning-muted); font-size:11px; }
 .learning-preview-content { display:grid; gap:var(--fluent-read-video-learning-gap); padding:var(--fluent-read-video-learning-padding); }
 .learning-preview-card p { margin:0; overflow-wrap:anywhere; }
 .learning-preview-original { font-size:var(--fluent-read-video-learning-original-font-size); font-weight:550; }
-.learning-preview-translation { color:#d5d5db; font-size:var(--fluent-read-video-learning-font-size); }
+.learning-preview-translation { color:var(--fr-learning-text); font-size:var(--fluent-read-video-learning-font-size); }
 .learning-preview-replay { display:grid; grid-template-columns:24px minmax(0,1fr) 24px; align-items:center; gap:6px; text-align:center; }
-.learning-preview-replay strong { padding:5px; border:1px solid rgba(239,71,118,.3); border-radius:7px; color:#ffb3c6; background:rgba(239,71,118,.17); font-size:.9em; }
-.learning-preview-assistance { display:flex; align-items:center; justify-content:space-between; gap:2px; padding:3px; border-radius:7px; color:#c4c4cb; background:rgba(0,0,0,.2); font-size:.8em; }
+.learning-preview-replay strong { padding:5px; border:1px solid var(--fr-learning-border); border-radius:9px; color:var(--fr-learning-accent); background:var(--fr-learning-brand-soft); font-size:.9em; }
+.learning-preview-assistance { display:flex; align-items:center; justify-content:space-between; gap:2px; padding:3px; border-radius:9px; color:var(--fr-learning-muted); background:var(--fr-learning-control); font-size:.8em; }
 .learning-preview-assistance span { padding:3px 6px; }
-.learning-preview-assistance .selected { border-radius:5px; background:rgba(255,255,255,.12); }
-.learning-preview-card footer { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; align-items:center; padding:8px var(--fluent-read-video-learning-padding); border-top:1px solid rgba(255,255,255,.1); text-align:center; font-size:.85em; }
-.learning-preview-card footer span,.learning-preview-card footer strong { padding:5px 2px; border:1px solid rgba(255,255,255,.15); border-radius:6px; }
-.learning-preview-card footer strong { border-color:#ef4776; color:#fff; background:#ef4776; font-weight:550; }
+.learning-preview-assistance .selected { border-radius:7px; color:var(--fr-learning-primary-ink); background:var(--fr-learning-primary); }
+.learning-preview-card footer { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; align-items:center; padding:8px var(--fluent-read-video-learning-padding); border-top:1px solid var(--fr-learning-border); text-align:center; font-size:.85em; }
+.learning-preview-card footer span,.learning-preview-card footer strong { padding:5px 2px; border:1px solid var(--fr-learning-border); border-radius:8px; }
+.learning-preview-card footer strong { border-color:var(--fr-learning-primary); color:var(--fr-learning-primary-ink); background:var(--fr-learning-primary); font-weight:550; }
 .learning-appearance-hint { margin:10px 0 0; color:var(--muted); font-size:11px; line-height:1.5; }
 .learning-appearance-controls { display:grid; gap:18px; }
 .learning-appearance-controls :deep(.settings-item) { padding:0; border:0; }
@@ -108,7 +115,7 @@ function resetAppearance(): void {Object.assign(appearance.value, DEFAULT_VIDEO_
 .learning-appearance-position > strong { color:var(--ink); font-size:12px; font-weight:500; }
 .learning-position-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin-top:10px; }
 .learning-position-grid button { padding:8px; border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--surface-soft); cursor:pointer; font-size:12px; }
-.learning-position-grid button.selected { border-color:var(--brand); color:var(--brand-strong); background:color-mix(in srgb,var(--brand) 10%,var(--surface)); }
+.learning-position-grid button.selected { border-color:var(--brand); color:var(--brand-strong); background:var(--brand-soft); }
 .learning-position-grid button:focus-visible,.learning-appearance-reset:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
-.learning-appearance-reset { justify-self:start; padding:0; border:0; color:var(--brand-strong); background:transparent; cursor:pointer; font-size:12px; }
+.learning-appearance-reset { justify-self:start; min-height:32px; padding:6px 10px; border:0; border-radius:9px; color:var(--brand-strong); background:transparent; cursor:pointer; font-size:12px; }
 </style>

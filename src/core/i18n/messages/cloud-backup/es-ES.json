@@ -72,7 +72,7 @@
     "settings.webdav.error.decrypt": "La copia no se pudo descifrar o está dañada. No se modificó la configuración local.",
     "settings.webdav.error.failure": "La operación no terminó. Comprueba la red y el almacenamiento local e inténtalo de nuevo.",
     "settings.cloud.privacyEncryption": "La configuración se cifra antes de subirla. La contraseña de la aplicación es pública; la protección depende principalmente de la cuenta, los permisos de la carpeta y el dispositivo.",
-    "settings.cloud.privacyWebDavStorage": "Solo accede a la copia de FluentRead en la carpeta del servidor elegida.",
+    "settings.cloud.privacyWebDavStorage": "Solo accede a la copia de 万能说客（Wild Talker） en la carpeta del servidor elegida.",
     "settings.cloud.privacyWebDavConnection": "La contraseña permanece en este dispositivo. El acceso al servidor requiere una acción manual.",
     "settings.cloud.currentAccount": "Cuenta de copia de seguridad: {email}",
     "settings.cloud.changed.credentials": "Claves API, tokens OAuth y autenticación",

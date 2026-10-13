@@ -190,7 +190,7 @@ describe('video player menu composition', () => {
 
     refreshVideoUiText(menu, 'ja-JP');
     expect(menu.querySelector('[data-mode="off"]')?.textContent).toBe('オフ');
-    expect(menu.querySelector('[data-mode="off"]')?.getAttribute('title')).toContain('FluentRead');
+    expect(menu.querySelector('[data-mode="off"]')?.getAttribute('title')).toContain('万能说客（Wild Talker）');
     expect(menu.querySelector('[data-action="download-translated-subtitles"]')?.getAttribute('aria-label')).toBe(
       menu.querySelector('[data-action="download-translated-subtitles"]')?.getAttribute('title'),
     );

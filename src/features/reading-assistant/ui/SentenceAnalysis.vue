@@ -94,8 +94,8 @@ watch(() => [props.source, props.annotations.length] as const, ([source, length]
 .fr-sentence-gap { white-space: pre-wrap; padding-top: 6px; }
 .fr-sentence-tokens button { --pos-color: #846242; font: inherit; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; max-width: 100%; margin: 0; padding: 6px 9px; border: 1px solid color-mix(in srgb,var(--pos-color) 18%,transparent); border-bottom: 2px solid color-mix(in srgb,var(--pos-color) 45%,transparent); border-radius: 8px; background: color-mix(in srgb,var(--pos-color) 5%,transparent); color: inherit; cursor: pointer; text-align: start; white-space: normal; overflow-wrap: anywhere; }
 .fr-sentence-token-text { max-width: 100%; font-size: 13px; line-height: 1.5; }
-.fr-sentence-token-meta { max-width: 100%; font-size: 11px; line-height: 1.45; color: var(--fr-reading-muted, var(--el-text-color-secondary, #756a74)); white-space: normal; overflow-wrap: anywhere; user-select: none; }
-.fr-dark-theme .fr-sentence-token-meta { color: #b6a9b5; }
+.fr-sentence-token-meta { max-width: 100%; font-size: 11px; line-height: 1.45; color: var(--fr-reading-muted, var(--el-text-color-secondary, #737970)); white-space: normal; overflow-wrap: anywhere; user-select: none; }
+.fr-dark-theme .fr-sentence-token-meta { color: #afb6a9; }
 .fr-sentence-tokens button[data-pos=noun], .fr-sentence-tokens button[data-pos=pronoun] { --pos-color:#3c7fbb; }
 .fr-sentence-tokens button[data-pos=verb], .fr-sentence-tokens button[data-pos=auxiliary] { --pos-color:#bd5481; }
 .fr-sentence-tokens button[data-pos=adjective], .fr-sentence-tokens button[data-pos=adverb] { --pos-color:#398579; }
@@ -116,8 +116,8 @@ watch(() => [props.source, props.annotations.length] as const, ([source, length]
 .fr-sentence-meaning { font-size: 13px; line-height: 1.7; }
 .fr-sentence-role { font-size: 12px; }
 .fr-sentence-role > span { margin-inline-end: 8px; opacity: .65; }
-.fr-sentence-reference { margin-top: 6px; font-size: 11px; color: var(--fr-reading-muted, var(--el-text-color-secondary, #756a74)); }
+.fr-sentence-reference { margin-top: 6px; font-size: 11px; color: var(--fr-reading-muted, var(--el-text-color-secondary, #737970)); }
 .fr-sentence-reference summary { cursor: pointer; width: fit-content; }
 .fr-sentence-reference p { line-height: 1.7; }
-.fr-dark-theme .fr-sentence-reference { color: #b6a9b5; }
+.fr-dark-theme .fr-sentence-reference { color: #afb6a9; }
 </style>

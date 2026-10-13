@@ -912,6 +912,134 @@ describe('document translation reading-order priority and batch sizing', () => {
     });
 });
 
+
+describe('document protected-literal response recovery', () => {
+    const invalid = () => new TranslationRequestError(serializeTranslationError({
+        code: 'GLOSSARY_PLACEHOLDER_INVALID', retryable: false, message: '翻译服务未完整保留术语，请重试或切换翻译服务',
+    }));
+    const ai = () => createDocumentSegmentTranslator({waitUntilReady: mocks.waitUntilReady,
+        getDefaultService: () => 'deepseek', getDefaultModel: () => 'deepseek-flash', supportsBatch: () => false,
+        supportsAIMultiSegment: () => true, translateText: mocks.translateText, translateTextBatch: mocks.translateTextBatch});
+
+    it('downgrades a damaged protected batch for this document, keeping completed history and frozen provider settings', async () => {
+        const segments = Array.from({length: 21}, (_, id) => ({id, source: `MiMo audio paragraph ${id}`}));
+        const prior = ['已经完成的第一段'];
+        mocks.translateTextBatch.mockRejectedValue(invalid());
+        mocks.translateText.mockImplementation(async source => `正确译文 ${source}`);
+        const committed: number[] = [];
+        const sleep = vi.fn();
+        const result = await ai()(segments, {fileName: 'MiMo.pdf', initialTranslations: prior, batchConcurrency: 1,
+            glossaryIds: ['technical'], glossaryRevision: 'frozen', sourceLanguage: 'en', targetLanguage: 'zh-Hans',
+            retryBackoff: {maxWaitMs: 120000, sleep}, onSegment: ({id}) => committed.push(id)});
+        expect(result[0]).toBe(prior[0]);
+        expect(committed).toEqual(Array.from({length: 20}, (_, index) => index + 1));
+        expect(mocks.translateTextBatch).toHaveBeenCalledOnce();
+        expect(mocks.translateText).toHaveBeenCalledTimes(20);
+        expect(sleep).not.toHaveBeenCalled();
+        for (const [, , request] of mocks.translateText.mock.calls) expect(request).toMatchObject({glossaryIds: ['technical'],
+            glossaryRevision: 'frozen', glossaryContext: 'document', sourceLanguage: 'en', targetLanguage: 'zh-Hans',
+            serviceOverride: 'deepseek', modelOverride: 'deepseek-flash', enableNativeBatch: false});
+        mocks.translateTextBatch.mockReset().mockResolvedValue(['下一份文档的译文']);
+        await ai()([{id: 0, source: 'Next document.'}], {fileName: 'next.pdf'});
+        expect(mocks.translateTextBatch).toHaveBeenCalledOnce();
+    });
+
+    it('retries a protected single paragraph once without repeated backoff or bypassing the existing gateway', async () => {
+        mocks.translateText.mockRejectedValueOnce(invalid()).mockResolvedValue('完整 MiMo 译文');
+        const onRetry = vi.fn(), sleep = vi.fn(), committed = vi.fn();
+        expect(await ai()([{id: 0, source: 'MiMo describes audio.'}], {fileName: 'paper.pdf', batchTranslation: false,
+            retryBackoff: {maxWaitMs: 120000, sleep}, onRetry, onSegment: committed})).toEqual(['完整 MiMo 译文']);
+        expect(mocks.translateText).toHaveBeenCalledTimes(2);
+        expect(mocks.translateText.mock.calls[0]).toEqual(mocks.translateText.mock.calls[1]);
+        expect(onRetry).not.toHaveBeenCalled(); expect(sleep).not.toHaveBeenCalled();
+        expect(committed).toHaveBeenCalledOnce();
+    });
+
+    it('splits only at sentence boundaries, retains decimal literals and commits all recovered sentences atomically', async () => {
+        const source = 'MiMo follows Dr. Smith. Audio runs at 6.25 Hz. The frame is projected.';
+        mocks.translateText.mockRejectedValueOnce(invalid()).mockRejectedValueOnce(invalid())
+            .mockResolvedValueOnce('MiMo 遵循 Smith 博士。').mockResolvedValueOnce('音频速率为 6.25 Hz。').mockResolvedValueOnce('帧被投影。');
+        const committed = vi.fn();
+        const result = await ai()([{id: 0, source}], {fileName: 'paper.pdf', batchTranslation: false, pageContext: 'c'.repeat(4000), onSegment: committed});
+        expect(mocks.translateText.mock.calls.map(call => call[0])).toEqual([source, source,
+            'MiMo follows Dr. Smith. ', 'Audio runs at 6.25 Hz. ', 'The frame is projected.']);
+        for (const [, , request] of mocks.translateText.mock.calls.slice(2)) {
+            expect(request.pageContext).toContain(source); expect(request.pageContext.length).toBe(4000);
+            expect(request.enableNativeBatch).toBe(false); expect(request.glossaryContext).toBe('document');
+        }
+        expect(result).toEqual(['MiMo 遵循 Smith 博士。 音频速率为 6.25 Hz。 帧被投影。']);
+        expect(committed).toHaveBeenCalledOnce();
+    });
+
+    it.each(['A single MiMo sentence.', 'Read <g1>MiMo. Audio.</g1>', 'Read ```MiMo. Audio.```',
+        '__FRTERM_existing__ remains. Next sentence.', '___FLUENTREAD_existing_0_BEGIN___ MiMo. Audio.',
+        Array.from({length: 9}, (_, index) => `MiMo sentence ${index}.`).join(' ')])('stops after exactly two full attempts for unsafe or over-budget source %s', async source => {
+        mocks.translateText.mockRejectedValue(invalid()); const committed = vi.fn();
+        await expect(ai()([{id: 0, source}], {fileName: 'paper.pdf', batchTranslation: false, onSegment: committed})).rejects.toThrow('未完整保留术语');
+        expect(mocks.translateText).toHaveBeenCalledTimes(2); expect(committed).not.toHaveBeenCalled();
+    });
+
+    it('bounds successful recovery at eight sentences and does not save any partial paragraph on persistent marker loss', async () => {
+        const source = Array.from({length: 8}, (_, index) => `MiMo sentence ${index}.`).join(' ');
+        mocks.translateText.mockRejectedValueOnce(invalid()).mockRejectedValueOnce(invalid()).mockImplementation(async source => `译文 ${source}`);
+        const committed = vi.fn();
+        await ai()([{id: 0, source}], {fileName: 'paper.pdf', batchTranslation: false, onSegment: committed});
+        expect(mocks.translateText).toHaveBeenCalledTimes(10); expect(committed).toHaveBeenCalledOnce();
+        mocks.translateText.mockReset().mockRejectedValueOnce(invalid()).mockRejectedValueOnce(invalid())
+            .mockResolvedValueOnce('第一句译文。').mockRejectedValueOnce(invalid());
+        committed.mockClear();
+        const initial = ['上次完成的段落', ''];
+        await expect(ai()([{id: 0, source: 'Done.'}, {id: 1, source}], {fileName: 'paper.pdf', batchTranslation: false,
+            initialTranslations: initial, onSegment: ({id, translation}) => {committed(id); initial[id] = translation;}})).rejects.toThrow('第 2 段');
+        expect(mocks.translateText).toHaveBeenCalledTimes(4); expect(committed).not.toHaveBeenCalled();
+        expect(initial).toEqual(['上次完成的段落', '']);
+        mocks.translateText.mockReset().mockResolvedValue('重新完成的完整段落');
+        expect(await ai()([{id: 0, source: 'Done.'}, {id: 1, source}], {fileName: 'paper.pdf', batchTranslation: false, initialTranslations: initial}))
+            .toEqual(['上次完成的段落', '重新完成的完整段落']);
+        expect(mocks.translateText).toHaveBeenCalledOnce();
+    });
+
+    it('does not request another recovery sentence or commit late data after another worker has failed', async () => {
+        const source = 'MiMo first sentence. Second sentence. Third sentence.';
+        let rejectOther!: (error: Error) => void, finishSentence!: (value: string) => void;
+        let beginSentence!: () => void; const started = new Promise<void>(resolve => {beginSentence = resolve;});
+        mocks.translateText.mockImplementation(async (origin: string) => {
+            if (origin === source) throw invalid();
+            if (origin === 'Another worker.') return new Promise((_resolve, reject) => {rejectOther = reject;});
+            beginSentence(); return new Promise(resolve => {finishSentence = resolve;});
+        });
+        const committed = vi.fn();
+        const running = ai()([{id: 0, source}, {id: 1, source: 'Another worker.'}], {fileName: 'paper.pdf', batchTranslation: false, onSegment: committed});
+        const outcome = expect(running).rejects.toThrow('第 2 段文档翻译失败：401 unauthorized');
+        await started;
+        rejectOther(new TranslationRequestError(serializeTranslationError({kind: 'authentication', retryable: false, message: '401 unauthorized'})));
+        await outcome;
+        finishSentence('迟到的第一句译文。');
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(mocks.translateText).toHaveBeenCalledTimes(4);
+        expect(committed).not.toHaveBeenCalled();
+    });
+
+    it('stops immediately on authentication failure during recovery and on cancellation before another attempt or sentence', async () => {
+        const source = 'MiMo first sentence. Second sentence.';
+        mocks.translateText.mockRejectedValueOnce(invalid()).mockRejectedValueOnce(new TranslationRequestError(serializeTranslationError({
+            kind: 'authentication', retryable: false, message: '401 unauthorized'})));
+        await expect(ai()([{id: 0, source}], {fileName: 'paper.pdf', batchTranslation: false})).rejects.toThrow('401');
+        expect(mocks.translateText).toHaveBeenCalledTimes(2);
+        for (const stopAt of [1, 2, 3]) {
+            const controller = new AbortController(); let calls = 0; const committed = vi.fn();
+            mocks.translateText.mockReset().mockImplementation(async () => {
+                calls++; if (calls === stopAt) controller.abort();
+                if (calls < 3) throw invalid();
+                return '第一句译文。';
+            });
+            await expect(ai()([{id: 0, source}], {fileName: 'paper.pdf', batchTranslation: false, signal: controller.signal,
+                onSegment: committed})).rejects.toMatchObject({name: 'AbortError'});
+            expect(mocks.translateText).toHaveBeenCalledTimes(stopAt); expect(committed).not.toHaveBeenCalled();
+        }
+    });
+});
+
 describe('document translation retry backoff', () => {
     const segments = [{id: 0, source: 'First'}, {id: 1, source: 'Second'}];
     const sleeper = () => {const waits: number[] = []; return {waits, sleep: async (milliseconds: number) => {waits.push(milliseconds);}};};

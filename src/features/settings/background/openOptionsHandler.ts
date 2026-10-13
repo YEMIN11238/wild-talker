@@ -70,8 +70,9 @@ export function createOpenOptionsPageHandler(
             if (section === undefined) {
                 await dependencies.openDefaultPage();
             } else {
-                const destination = typeof learningTab === 'string' ? learningTab : service;
-                if (typeof target === 'string') await dependencies.openSection(section, typeof destination === 'string' ? destination : undefined, target);
+                // learningTab 与 service 已在上方严格校验，只可能为字符串或 undefined。
+                const destination = typeof learningTab === 'string' ? learningTab : service as string | undefined;
+                if (typeof target === 'string') await dependencies.openSection(section, destination, target);
                 else if (typeof destination === 'string') await dependencies.openSection(section, destination);
                 else await dependencies.openSection(section);
             }

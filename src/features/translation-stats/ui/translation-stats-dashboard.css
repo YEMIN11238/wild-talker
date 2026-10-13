@@ -22,7 +22,7 @@
 .translation-stats button:focus-visible,
 .stats-service-table tbody tr:focus-visible,
 .stats-dialog button:focus-visible {
-  outline: 2px solid rgba(239, 71, 118, .35);
+  outline: 2px solid color-mix(in srgb, var(--brand, #648433) 35%, transparent);
   outline-offset: 2px;
 }
 
@@ -107,7 +107,7 @@
 .stats-range button.active {
   color: var(--brand-strong);
   background: var(--surface);
-  box-shadow: 0 2px 7px rgba(31, 40, 61, .08);
+  box-shadow: 0 2px 7px rgba(37, 42, 36, .08);
 }
 
 .stats-actions {
@@ -131,7 +131,7 @@
 }
 
 .stats-button:hover:not(:disabled) {
-  border-color: rgba(239, 71, 118, .45);
+  border-color: color-mix(in srgb, var(--brand, #648433) 45%, transparent);
   color: var(--brand-strong);
 }
 
@@ -141,10 +141,10 @@
 .stats-button-danger {
   border-color: transparent;
   color: #fff;
-  background: var(--brand-strong);
+  background: var(--stats-danger);
 }
 
-.stats-button-danger:hover:not(:disabled) { color: #fff; background: var(--brand); }
+.stats-button-danger:hover:not(:disabled) { color: #fff; background: var(--stats-danger); }
 
 .stats-link {
   padding: 0;
@@ -191,9 +191,9 @@
   min-width: 0;
   padding: 18px 20px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--surface);
-  box-shadow: 0 7px 22px rgba(31, 40, 61, .035);
+  box-shadow: none;
 }
 
 .stats-card strong,
@@ -725,7 +725,7 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(15, 20, 32, .46);
+  background: rgba(37, 42, 36, .46);
   backdrop-filter: blur(4px);
 }
 
@@ -733,10 +733,10 @@
   width: min(100%, 420px);
   padding: 22px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 20px;
   color: var(--ink);
   background: var(--surface);
-  box-shadow: 0 24px 60px rgba(15, 20, 32, .22);
+  box-shadow: var(--fr-menu-shadow);
 }
 
 .stats-dialog h2 { margin: 0 0 8px; font-size: 16px; }

@@ -103,10 +103,10 @@ function componentTimers() {return vi.getTimerCount() - port.backgroundTimers}
 describe('UiLanguageOnboarding 实际保存与生命周期', () => {
   it('欢迎页品牌随当前预览语言本地化，七语往返不自动保存或确认', async () => {
     await mount({initialLanguage: 'zh-CN'})
-    expect(button('.onboarding-brand strong').textContent).toBe('流畅阅读')
+    expect(button('.onboarding-brand strong').textContent).toBe('万能说客（Wild Talker）')
     for (const {value} of languageRules.UI_LANGUAGE_OPTIONS) {
       await languageStep();choose(value)();await settle();callback(button('.onboarding-back'))();await settle()
-      expect(button('.onboarding-brand strong').textContent, value).toBe(value === 'zh-CN' ? '流畅阅读' : 'FluentRead')
+      expect(button('.onboarding-brand strong').textContent, value).toBe('万能说客（Wild Talker）')
       expect(state.selectedLanguage).toBe(value)
     }
     expect(setLanguage).not.toHaveBeenCalled();expect(saved).not.toHaveBeenCalled();expect(confirmed).not.toHaveBeenCalled()

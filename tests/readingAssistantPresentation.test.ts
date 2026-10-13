@@ -38,6 +38,22 @@ describe('reading context respects the selected prose boundary', () => {
         expect(captureReadingSelection(range, 'word', 1500).context).toBe('The word matters.');
         delete (window as unknown as {getComputedStyle?: unknown}).getComputedStyle;
     });
+    it.each(['display:none', 'visibility:hidden', 'visibility:collapse'])('omits context when the prose has an ancestor with %s', style => {
+        const {range} = fixture(`<article style="${style}"><p id="selected">Hello there.</p></article>`);
+        expect(captureReadingSelection(range, 'Hello', 500)).toEqual({text: 'Hello', context: '', sentence: 'Hello'});
+    });
+    it('checks computed ancestor visibility and omits collapsed descendant text', () => {
+        const {range, window} = fixture('<article class="css-hidden"><p>Hello <span id="selected">word</span><span style="visibility:collapse">SECRET</span>.</p></article>');
+        Object.defineProperty(window, 'getComputedStyle', {configurable: true, value: vi.fn(element => ({
+            display: element.classList.contains('css-hidden') ? 'none' : element.style.display,
+            visibility: element.style.visibility,
+        }))});
+        try {
+            expect(captureReadingSelection(range, 'word', 500).context).toBe('');
+            range.startContainer.parentElement!.closest('article')!.classList.remove('css-hidden');
+            expect(captureReadingSelection(range, 'word', 500).context).toBe('Hello word.');
+        } finally {delete (window as unknown as {getComputedStyle?: unknown}).getComputedStyle;}
+    });
     it('selects the later identical word sentence and clips long paragraphs around it', () => {
         const prefix = `Practice helps. ${'Earlier material. '.repeat(250)}`;
         const {range} = fixture(`<p>${prefix}The <span id="selected">practice</span> here means rehearsal. ${'Later material. '.repeat(200)}</p>`);

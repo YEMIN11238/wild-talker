@@ -644,8 +644,8 @@ function profileSwitchLabel(profile: QuickTranslationProfile): string {
   min-width: 0;
   box-sizing: border-box;
   padding: 16px 20px;
-  border-top: 1px solid var(--line, #e5e8ef);
-  color: var(--ink, #172033);
+  border-top: 1px solid var(--line, #dce3d2);
+  color: var(--ink, #252a24);
 }
 
 .profiles-toolbar,
@@ -680,7 +680,7 @@ function profileSwitchLabel(profile: QuickTranslationProfile): string {
 
 .profiles-copy p {
   margin-top: 3px;
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -692,7 +692,7 @@ function profileSwitchLabel(profile: QuickTranslationProfile): string {
 
 .capacity-label {
   flex: none;
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   font-size: 11px;
   font-weight: 650;
 }
@@ -705,15 +705,15 @@ function profileSwitchLabel(profile: QuickTranslationProfile): string {
 
 .profile-card {
   overflow: hidden;
-  border: 1px solid var(--line, #e5e8ef);
-  border-radius: 11px;
+  border: 1px solid var(--line, #dce3d2);
+  border-radius: 14px;
   background: var(--surface, #fff);
   transition: border-color 150ms ease, background 150ms ease;
 }
 
 .profile-card:hover,
 .profile-card.is-expanded {
-  border-color: rgba(239, 71, 118, .34);
+  border-color: color-mix(in srgb, var(--brand, #648433) 34%, transparent);
 }
 
 .profile-card.is-unavailable {
@@ -741,7 +741,7 @@ function profileSwitchLabel(profile: QuickTranslationProfile): string {
 .delete-button:focus-visible,
 .add-button:focus-visible,
 .hotkey-button:focus-visible {
-  outline: 2px solid rgba(239, 71, 118, .35);
+  outline: 2px solid var(--brand, #648433);
   outline-offset: 2px;
 }
 
@@ -755,10 +755,10 @@ kbd {
   max-width: 96px;
   padding: 5px 8px;
   overflow: hidden;
-  border: 1px solid rgba(239, 71, 118, .2);
+  border: 1px solid color-mix(in srgb, var(--brand, #648433) 20%, transparent);
   border-radius: 8px;
-  color: var(--brand-strong, #dc315f);
-  background: var(--brand-soft, #fff0f4);
+  color: var(--brand-strong, #456021);
+  background: var(--brand-soft, #edf5dd);
   font-size: 10px;
   font-weight: 750;
   text-align: center;
@@ -767,9 +767,9 @@ kbd {
 }
 
 .profile-summary > kbd.empty {
-  border-color: var(--line, #e5e8ef);
-  color: var(--muted, #737c8f);
-  background: var(--surface-soft, #f7f8fb);
+  border-color: var(--line, #dce3d2);
+  color: var(--muted, #6f7869);
+  background: var(--surface-soft, #f5f7f0);
 }
 
 .service-summary {
@@ -793,7 +793,7 @@ kbd {
 
 .service-summary small {
   margin-top: 2px;
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   font-size: 9.5px;
 }
 
@@ -803,7 +803,7 @@ kbd {
 
 .summary-chevron {
   flex: none;
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   font-size: 13px;
   transform: rotate(0deg);
   transition: transform 150ms ease;
@@ -839,8 +839,8 @@ kbd {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   padding: 13px 12px 10px;
-  border-top: 1px solid var(--line, #e5e8ef);
-  background: var(--surface-soft, #f7f8fb);
+  border-top: 1px solid var(--line, #dce3d2);
+  background: var(--surface-soft, #f5f7f0);
 }
 
 .editor-field {
@@ -851,7 +851,7 @@ kbd {
 }
 
 .editor-field > span {
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   font-size: 10px;
   font-weight: 700;
 }
@@ -863,12 +863,12 @@ kbd {
 .editor-field :deep(.el-select__wrapper) {
   min-height: 38px;
   border-radius: 10px;
-  box-shadow: 0 0 0 1px var(--line, #e5e8ef) inset;
+  box-shadow: 0 0 0 1px var(--line, #dce3d2) inset;
 }
 
 .field-hint {
   margin-top: -2px;
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   font-size: 9px;
 }
 
@@ -889,30 +889,30 @@ kbd {
   gap: 12px;
   min-height: 40px;
   padding: 7px 10px;
-  border: 1px solid var(--line, #e5e8ef);
+  border: 1px solid var(--line, #dce3d2);
   border-radius: 10px;
-  color: var(--ink, #172033);
+  color: var(--ink, #252a24);
   background: var(--surface, #fff);
   cursor: pointer;
   text-align: left;
 }
 
 .hotkey-button:hover {
-  border-color: var(--brand, #ef4776);
+  border-color: var(--brand, #648433);
 }
 
 .hotkey-button kbd {
-  color: var(--brand-strong, #dc315f);
+  color: var(--brand-strong, #456021);
   font-size: 11px;
   font-weight: 750;
 }
 
 .hotkey-button.empty kbd {
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
 }
 
 .hotkey-button small {
-  color: var(--muted, #737c8f);
+  color: var(--muted, #6f7869);
   font-size: 9px;
 }
 
@@ -921,18 +921,18 @@ kbd {
   gap: 4px;
   min-height: 32px;
   padding: 5px 12px;
-  border: 1px solid rgba(239, 71, 118, .28);
+  border: 1px solid color-mix(in srgb, var(--brand, #648433) 28%, transparent);
   border-radius: 8px;
-  color: var(--brand-strong, #dc315f);
-  background: var(--brand-soft, #fff0f4);
+  color: var(--brand-strong, #456021);
+  background: var(--brand-soft, #edf5dd);
   cursor: pointer;
   font-size: 12px;
   font-weight: 650;
 }
 
 .add-button:hover:not(:disabled) {
-  border-color: rgba(239, 71, 118, .48);
-  background: rgba(239, 71, 118, .12);
+  border-color: color-mix(in srgb, var(--brand, #648433) 48%, transparent);
+  background: color-mix(in srgb, var(--brand, #648433) 12%, transparent);
 }
 
 .add-button > span {

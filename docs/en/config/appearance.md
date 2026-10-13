@@ -1,5 +1,7 @@
 # Appearance & reading aids
 
+The personal Wild Talker edition uses paper-like cards, thin borders and lime action accents across settings, the document/PDF reader and page panels. The popup uses teal and apricot for its main actions. **General settings → Interface theme** applies light, dark or system preference to the document page, manga entry and sentence-learning panel. An explicit light preference overrides a dark operating system. The sentence-learning preview shares its theme styles with the actual panel; background opacity affects that panel only. Branding and setup guides in About navigate inside the extension, while source attribution and the full license remain available locally.
+
 Make translations easy to distinguish from the original and comfortable to read.
 
 Under **Settings → Interface style**, **Sentence learning appearance** follows **Menu bar layout** and precedes **Interface font**.

@@ -89,7 +89,7 @@ describe('audit48 J complete rendering through controlled Canvas port',()=>{
  it.each(SHARE_CARD_THEMES)('renders %s with columns/alignment/footer and exact literal text',async theme=>{
   const port=canvasPort();const result=await renderShareCard({original:'123 مرحبا',translation:'<svg>',source:'example.test'},normalizeShareCardPreferences({theme,fontSize:'large'}));
   expect(result.width).toBe(960);expect(result.height).toBeGreaterThanOrEqual(450);expect(result.blob.type).toBe('image/png');
-  expect(port.painted.map(x=>x.text)).toEqual(['123 مرحبا','<svg>','example.test','流畅阅读']);
+  expect(port.painted.map(x=>x.text)).toEqual(['123 مرحبا','<svg>','example.test','万能说客（Wild Talker）']);
   expect(port.painted[0].direction).toBe('rtl');expect(port.painted[0].align).toBe(theme==='sky'||theme==='sunset'?'center':'right');
   expect(port.operations.filter(x=>x[0]==='save')).toHaveLength(1);expect(port.operations.filter(x=>x[0]==='restore')).toHaveLength(1);
  });
@@ -182,7 +182,7 @@ describe('audit48 J actual ShareCardStudio client template and public runtime',(
  it('品牌通过实际工作台传入，语言和同语言资源迟到均重绘而保留摘录',async()=>{
   ports.config.uiLanguage='zh-CN';const ctx=await client();await ctx.studio.open(ctx.source);await ctx.paint();
   const first=ctx.port.canvases.at(-1),firstSize=[first.width,first.height],originalText=ctx.source.original;
-  expect(ctx.port.painted.at(-1).text).toBe('流畅阅读');expect(ctx.port.painted.map(x=>x.text).join(' ')).toContain(originalText);
+  expect(ctx.port.painted.at(-1).text).toBe('万能说客（Wild Talker）');expect(ctx.port.painted.map(x=>x.text).join(' ')).toContain(originalText);
   ports.brandOverride!.value='流畅阅读';ports.config.uiLanguage='en-US';await ctx.paint();
   expect(ctx.port.painted.at(-1).text).toBe('流畅阅读');
   const beforeResource=ctx.port.canvases.length;
@@ -191,7 +191,7 @@ describe('audit48 J actual ShareCardStudio client template and public runtime',(
   const foreign=ctx.port.canvases.at(-1);expect([foreign.width,foreign.height]).toEqual(firstSize);
   expect(ctx.port.painted.map(x=>x.text).join(' ')).toContain(originalText);
   ports.brandOverride!.value=undefined;ports.config.uiLanguage='zh-CN';await ctx.paint();
-  expect(ctx.port.painted.at(-1).text).toBe('流畅阅读');
+  expect(ctx.port.painted.at(-1).text).toBe('万能说客（Wild Talker）');
   ctx.studio.close();await settle();expect(ctx.urls.size).toBe(0);
  });
  it('waits for config hydration before opening with persisted appearance and preserves the host',async()=>{

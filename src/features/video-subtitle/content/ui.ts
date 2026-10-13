@@ -835,12 +835,12 @@ export function installVideoSubtitleStyle(): HTMLStyleElement {
       width: auto !important;
     }
     #${VIDEO_TRANSLATION_BUTTON_ID}.${VIDEO_TRANSLATION_ACTIVE_CLASS} .fluent-read-video-subtitle-button-icon {
-      background: #ec4899 !important;
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, .16), 0 2px 8px rgba(236, 72, 153, .42) !important;
+      background: #bedf7b !important;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, .16), 0 2px 8px rgba(190, 223, 123, .42) !important;
     }
     #${VIDEO_TRANSLATION_BUTTON_ID}:not(.${VIDEO_TRANSLATION_ACTIVE_CLASS}) .fluent-read-video-subtitle-button-icon {
-      background: rgba(236, 72, 153, .16) !important;
-      box-shadow: 0 0 0 1px rgba(236, 72, 153, .62), 0 2px 8px rgba(236, 72, 153, .2) !important;
+      background: rgba(190, 223, 123, .16) !important;
+      box-shadow: 0 0 0 1px rgba(190, 223, 123, .62), 0 2px 8px rgba(190, 223, 123, .2) !important;
     }
     .${VIDEO_FALLBACK_CONTROLS_CLASS} {
       position: absolute !important;
@@ -860,12 +860,12 @@ export function installVideoSubtitleStyle(): HTMLStyleElement {
     }
     /* 视频界面的外观只赋给自有节点，不向宿主网页或独立设置页注入主题。 */
     #${VIDEO_TRANSLATION_MENU_ID}, #fluent-read-video-learning-panel {
-      --fr-video-menu-brand: #ef4776;
-      --fr-video-menu-brand-strong: #dc315f;
-      --fr-video-menu-brand-strong-hover: #cf315e;
-      --fr-video-menu-brand-text: #ffadc2;
-      --fr-video-menu-brand-soft: rgba(239, 71, 118, .2);
-      --fr-video-menu-surface: #18181c;
+      --fr-video-menu-brand: #bedf7b;
+      --fr-video-menu-brand-strong: #a9c971;
+      --fr-video-menu-brand-strong-hover: #cfe995;
+      --fr-video-menu-brand-text: #d0e8a5;
+      --fr-video-menu-brand-soft: rgba(190, 223, 123, .2);
+      --fr-video-menu-surface: #262d25;
       --fr-video-menu-border: rgba(255, 255, 255, .1);
       --fr-video-menu-radius: 12px;
       --fr-video-menu-shadow: 0 10px 30px rgba(0, 0, 0, .36);
@@ -954,14 +954,14 @@ export function installVideoSubtitleStyle(): HTMLStyleElement {
       gap: 9px !important;
       width: 100% !important;
       padding: 9px 11px !important;
-      border: 1px solid rgba(239, 71, 118, .3) !important;
+      border: 1px solid rgba(190, 223, 123, .3) !important;
       border-radius: 9px !important;
       color: var(--fr-video-menu-brand-text) !important;
       background: var(--fr-video-menu-brand-soft) !important;
       font-weight: 600 !important;
       text-align: left !important;
     }
-    #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-learning:hover { background: rgba(239, 71, 118, .28) !important; }
+    #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-learning:hover { background: rgba(190, 223, 123, .28) !important; }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-learning:disabled { opacity: .45 !important; cursor: default !important; }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-learning-label { flex: 1 !important; }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-learning .fluent-read-video-menu-icon-next { width: 16px !important; height: 16px !important; }
@@ -1149,7 +1149,7 @@ export function installVideoSubtitleStyle(): HTMLStyleElement {
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-mode:hover { color: var(--fr-video-menu-text) !important; }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-mode[aria-checked="true"] {
       background: var(--fr-video-menu-brand-soft) !important;
-      box-shadow: inset 0 0 0 1px rgba(239, 71, 118, .32) !important;
+      box-shadow: inset 0 0 0 1px rgba(190, 223, 123, .32) !important;
       color: var(--fr-video-menu-brand-text) !important;
       font-weight: 600 !important;
     }
@@ -1214,10 +1214,10 @@ export function installVideoSubtitleStyle(): HTMLStyleElement {
       overflow: hidden !important;
       border-radius: 8px !important;
       background: var(--fr-video-menu-brand-soft) !important;
-      box-shadow: inset 0 0 0 1px rgba(239, 71, 118, .3) !important;
+      box-shadow: inset 0 0 0 1px rgba(190, 223, 123, .3) !important;
       color: var(--fr-video-menu-brand-text) !important;
     }
-    #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-ai:hover:not(:disabled) { background: rgba(239, 71, 118, .28) !important; }
+    #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-ai:hover:not(:disabled) { background: rgba(190, 223, 123, .28) !important; }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-ai[data-native="true"],
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-menu-ai[data-ready="true"] {
       background: var(--fr-video-menu-control) !important;
@@ -1379,8 +1379,8 @@ export function installVideoSubtitleStyle(): HTMLStyleElement {
     }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-option:hover { background: rgba(255, 255, 255, .09) !important; }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-option[aria-checked="true"] {
-      background: rgba(239, 71, 118, .12) !important;
-      box-shadow: inset 0 0 0 1px rgba(239, 71, 118, .55) !important;
+      background: rgba(190, 223, 123, .12) !important;
+      box-shadow: inset 0 0 0 1px rgba(190, 223, 123, .55) !important;
     }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-option-radio {
       grid-row: 1 / 3 !important;
@@ -1391,7 +1391,7 @@ export function installVideoSubtitleStyle(): HTMLStyleElement {
     }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-option[aria-checked="true"] .fluent-read-video-model-option-radio {
       background: var(--fr-video-menu-brand) !important;
-      box-shadow: inset 0 0 0 3px rgba(40, 24, 32, 1), 0 0 0 1.5px var(--fr-video-menu-brand) !important;
+      box-shadow: inset 0 0 0 3px #262d25, 0 0 0 1.5px var(--fr-video-menu-brand) !important;
     }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-option-name {
       display: inline-flex !important;
@@ -1440,8 +1440,8 @@ export function installVideoSubtitleStyle(): HTMLStyleElement {
     }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-prompt-cancel { background: var(--fr-video-menu-control) !important; color: var(--fr-video-menu-muted) !important; }
     #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-prompt-cancel:hover { background: var(--fr-video-menu-control-hover) !important; color: var(--fr-video-menu-text) !important; }
-    #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-prompt-confirm { background: var(--fr-video-menu-brand) !important; color: #fff !important; font-weight: 600 !important; }
-    #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-prompt-confirm:hover { background: #dc315f !important; }
+    #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-prompt-confirm { background: var(--fr-video-menu-brand) !important; color: #273512 !important; font-weight: 600 !important; }
+    #${VIDEO_TRANSLATION_MENU_ID} .fluent-read-video-model-prompt-confirm:hover { background: #a9c971 !important; }
 
     /* 触屏上略微放大可点区域；仍保持单行结构，不额外增加行数。 */
     @media (pointer: coarse) {

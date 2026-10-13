@@ -514,7 +514,7 @@ describe('document user actions: download consumers', () => {
         expect(guard.defaultPrevented).toBe(true);
         await fire(button('document.batch.zip'), 'click');
         await vi.waitFor(() => expect(blobs).toHaveLength(1));
-        expect(anchors[0].download).toBe('FluentRead-documents.zip');
+        expect(anchors[0].download).toBe('Wild-Talker-documents.zip');
         const zip = await JSZip.loadAsync(await blobs[0].arrayBuffer());
         expect(await zip.file('1/same.bilingual.txt')!.async('string')).toContain('T:First');
         expect(await zip.file('2/same.bilingual.txt')!.async('string')).toContain('T:Second');

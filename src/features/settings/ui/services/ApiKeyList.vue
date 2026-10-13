@@ -162,34 +162,34 @@ async function addKey(): Promise<void> {
 .api-key-entry { width: 100%; max-width: 640px; min-width: 0; }
 .api-key-entry :deep(.el-input) { width: 100% !important; max-width: none !important; min-width: 0; }
 .api-key-entry :deep(.el-input__wrapper) { min-height: 38px; padding-inline: 11px; border-radius: 10px; background: var(--surface, #fff); box-shadow: inset 0 0 0 1px var(--line); }
-.api-key-entry :deep(.el-input__wrapper:hover) { box-shadow: inset 0 0 0 1px var(--line, #e3e7ee); }
-.api-key-entry :deep(.el-input__wrapper.is-focus) { background: var(--surface, #fff); box-shadow: inset 0 0 0 1px var(--brand, #ef4776); }
+.api-key-entry :deep(.el-input__wrapper:hover) { box-shadow: inset 0 0 0 1px var(--line, #dce3d2); }
+.api-key-entry :deep(.el-input__wrapper.is-focus) { background: var(--surface, #fff); box-shadow: inset 0 0 0 1px var(--brand, #648433); }
 .api-key-entry :deep(.el-input__inner) { font-size: 13px; letter-spacing: .05em; }
 .api-key-entry :deep(.el-input__inner::placeholder) { letter-spacing: 0; }
 .api-key-row-status { min-width: 0; }
-.api-key-state { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 5px; font-size: 11px; line-height: 1.6; color: var(--muted, #737d90); }
+.api-key-state { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 5px; font-size: 11px; line-height: 1.6; color: var(--muted, #6f7869); }
 .api-key-state.is-success { color: var(--key-success); }
 .api-key-state.is-error, .api-key-state.is-duplicate { color: var(--key-error); }
-.api-key-state.is-checking { color: var(--brand-strong, #bd3159); }
-.api-key-duration { margin-left: 1px; color: var(--muted, #737d90); font-size: 10px; font-variant-numeric: tabular-nums; }
+.api-key-state.is-checking { color: var(--brand-strong, #456021); }
+.api-key-duration { margin-left: 1px; color: var(--muted, #6f7869); font-size: 10px; font-variant-numeric: tabular-nums; }
 .api-key-idle-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .5; }
 .api-key-error-toggle { border: 0; padding: 3px 0; background: transparent; text-align: left; cursor: pointer; }
 .api-key-error-toggle:hover { text-decoration: underline; text-underline-offset: 3px; }
 .api-key-list .api-key-chevron { width: 12px; height: 12px; transition: transform .15s; }
 .api-key-chevron.is-expanded { transform: rotate(180deg); }
 .api-key-row-actions { display: flex; justify-content: flex-end; gap: 4px; }
-.api-key-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex: 0 0 32px; border: 1px solid transparent; border-radius: 8px; padding: 7px; background: transparent; color: var(--muted, #737d90); cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
-.api-key-icon-button:hover:not(:disabled) { background: var(--surface-soft, #f7f8fb); color: var(--ink, #263044); }
-.api-key-icon-button:focus-visible, .api-key-add:focus-visible, .api-key-error-toggle:focus-visible { outline: 2px solid var(--brand, #ef4776); outline-offset: 2px; }
+.api-key-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex: 0 0 32px; border: 1px solid transparent; border-radius: 8px; padding: 7px; background: transparent; color: var(--muted, #6f7869); cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.api-key-icon-button:hover:not(:disabled) { background: var(--surface-soft, #f5f7f0); color: var(--ink, #252a24); }
+.api-key-icon-button:focus-visible, .api-key-add:focus-visible, .api-key-error-toggle:focus-visible { outline: 2px solid var(--brand, #648433); outline-offset: 2px; }
 .api-key-icon-button.is-retry { color: var(--key-error); }
 .api-key-remove:hover:not(:disabled) { color: var(--key-error); }
 .api-key-icon-button:disabled { opacity: .3; cursor: default; }
 .api-key-error { grid-column: 1 / -1; margin: -2px 0 0; padding: 9px 12px; border-radius: 6px; color: var(--key-error); background: color-mix(in srgb, var(--key-error) 6%, transparent); font-size: 11px; line-height: 1.7; overflow-wrap: anywhere; }
 .api-key-list-footer { grid-column: 2; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; min-width: 0; }
 .api-key-tools { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px 12px; min-width: 0; }
-.api-key-add { display: inline-flex; align-items: center; flex: 0 0 auto; gap: 5px; min-height: 30px; border: 0; border-radius: 6px; padding: 4px 5px; background: transparent; color: var(--brand-strong, #bd3159); font-size: 12px; font-weight: 550; cursor: pointer; }
-.api-key-add:hover { background: var(--brand-soft, #fff1f5); }
-.api-key-spinner { flex: 0 0 12px; width: 12px; height: 12px; border: 1.5px solid var(--line, #e3e7ee); border-top-color: currentColor; border-radius: 50%; animation: api-key-spin .9s linear infinite; }
+.api-key-add { display: inline-flex; align-items: center; flex: 0 0 auto; gap: 5px; min-height: 30px; border: 0; border-radius: 6px; padding: 4px 5px; background: transparent; color: var(--brand-strong, #456021); font-size: 12px; font-weight: 550; cursor: pointer; }
+.api-key-add:hover { background: var(--brand-soft, #edf5dd); }
+.api-key-spinner { flex: 0 0 12px; width: 12px; height: 12px; border: 1.5px solid var(--line, #dce3d2); border-top-color: currentColor; border-radius: 50%; animation: api-key-spin .9s linear infinite; }
 :global(:root.dark .api-key-list) { --key-success: #84d4ae; --key-error: #f3a0ad; }
 @keyframes api-key-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .api-key-spinner { animation: none; } }

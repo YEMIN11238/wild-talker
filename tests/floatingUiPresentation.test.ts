@@ -146,13 +146,11 @@ describe('低干扰悬浮 UI', () => {
       .toContain('pointer-events: auto');
   });
 
-  it('进度面板使用半透明背景，并由活动请求而非离屏候选决定显隐', () => {
+  it('进度面板使用实色纸面背景，并由活动请求而非离屏候选决定显隐', () => {
     const panel = source('src/features/full-page-translation/ui/TranslationProgressPanel.vue');
     const panelRule = cssRule(panel, '.fr-translation-progress');
-    const backgroundAlpha = Number(panelRule.match(/background:\s*rgba\([^;]+,\s*([0-9.]+)\)/u)?.[1]);
-
-    expect(backgroundAlpha).toBeGreaterThanOrEqual(0.7);
-    expect(backgroundAlpha).toBeLessThan(0.9);
+    expect(panelRule).toMatch(/background:\s*#fff;/u);
+    expect(panelRule).toMatch(/backdrop-filter:\s*none;/u);
     expect(panel).toContain('createProgressPanelVisibility(');
     expect(panel).not.toContain('progress.value.remaining > 0');
     expect(panel).toContain("class=\"fr-progress-compact-check\"");

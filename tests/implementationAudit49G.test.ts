@@ -213,9 +213,12 @@ async function shippedCatalogs() {
             if (typeof source !== 'string') throw new Error(`Catalog producer did not load ${name}`);
             const compiled = await vite.transformWithEsbuild(source, `${name}.js`, {format: 'cjs', target: 'es2018'});
             realm.module = {exports: {}};
-            runInContext(compiled.code, realm, {timeout: 5_000});
+            // 编译后的每个 CommonJS 模块拥有独立词法作用域；仅 data namespace
+            // 来自共享 manager realm，不能把 module-local const 暴露为全局声明。
+            runInContext(`(function(module, exports) {\n${compiled.code}\n})(module, module.exports);`, realm, {filename: `${name}.cjs`, timeout: 5_000});
             catalogs[name] = realm.module.exports.default;
         }
+        expect(runInContext('typeof catalog', realm)).toBe('undefined');
         return {catalogs, original};
     } finally {
         vi.unstubAllEnvs();
@@ -228,9 +231,14 @@ describe('audit 49G shipped userscript resources', () => {
         const realm = createContext({window: host});
         runInContext(asset('userscript/resources/fluentread-data.v1.js'), realm, {filename: resolve(resourceRoot, 'userscript/resources/fluentread-data.v1.js'), timeout: 5_000});
         const data = realm.__FLUENTREAD_USERSCRIPT_DATA__;
-        expect(Object.keys(data).sort()).toEqual(['css', 'english', 'siteCatalogs', 'zhCNMessages']);
+        expect(Object.keys(data).sort()).toEqual(['css', 'english', 'languageBundles', 'siteCatalogs', 'zhCNMessages']);
         expect(data.english.messages['settings.excludedLanguages.title']).toBe('Languages to skip');
         expect(data.zhCNMessages['settings.excludedLanguages.title']).toBe('不翻译的语言');
+        expect(Object.keys(data.languageBundles).sort()).toEqual(['en-US', 'es-ES', 'fr-FR', 'ja-JP', 'ko-KR', 'ru-RU']);
+        for (const language of Object.keys(data.languageBundles)) {
+            expect(data.languageBundles[language].messages['settings.excludedLanguages.title']).toBeTypeOf('string');
+            expect(data.languageBundles[language].messages['settings.excludedLanguages.title']).not.toBe(data.zhCNMessages['settings.excludedLanguages.title']);
+        }
         expect(Object.keys(data.siteCatalogs).sort()).toEqual(['established', 'profiles', 'websites']);
         expect(host).toEqual({existing: 'host'});
     });
@@ -239,18 +247,24 @@ describe('audit 49G shipped userscript resources', () => {
         const realm = createContext({});
         runInContext(asset('userscript/resources/fluentread-data.v1.js'), realm, {filename: resolve(resourceRoot, 'userscript/resources/fluentread-data.v1.js'), timeout: 5_000});
         const {catalogs, original} = await shippedCatalogs();
-        expect(original.established).toHaveLength(17);
+        const publishedEstablished = JSON.parse(readFileSync(resolve(resourceRoot, 'src/core/site-adaptation/catalog/established.json'), 'utf8'));
+        expect(original.established).toHaveLength(publishedEstablished.length);
         expect(realm.__FLUENTREAD_USERSCRIPT_DATA__.siteCatalogs.established).toEqual(original.established);
-        for (const rule of original.established) {
-            const current = catalogs.established.find((candidate: any) => candidate.id === rule.id);
-            if (JSON.stringify(current) === JSON.stringify(rule)) expect(current).toBe(rule);
-            else expect(current).not.toBe(rule);
-        }
-        expect(catalogs.websites).toBe(original.websites);
-        expect(catalogs.profiles).toBe(original.profiles);
         for (const name of ['established', 'profiles', 'websites']) {
             const expected = JSON.parse(readFileSync(resolve(process.cwd(), `src/core/site-adaptation/catalog/${name}.json`), 'utf8'));
             expect(catalogs[name]).toEqual(expected);
+            // 已发布资源可早于仓库新增网站。增量投影须精确覆盖现有规则与顺序，
+            // 同时复用未变化的 data 对象，不强迫有增删改的数组保持旧身份。
+            if (JSON.stringify(expected) === JSON.stringify(original[name])) expect(catalogs[name]).toBe(original[name]);
+            else expect(catalogs[name]).not.toBe(original[name]);
+            const originalEntries = Array.isArray(original[name])
+                ? original[name].map((rule: any) => [rule.id, rule]) : Object.entries(original[name]);
+            for (const [id, rule] of originalEntries) {
+                const current = Array.isArray(catalogs[name]) ? catalogs[name].find((candidate: any) => candidate.id === id) : catalogs[name][id];
+                if (JSON.stringify(current) === JSON.stringify(rule)) expect(current).toBe(rule);
+                else expect(current).not.toBe(rule);
+            }
+            expect(realm.__FLUENTREAD_USERSCRIPT_DATA__.siteCatalogs[name]).toEqual(original[name]);
         }
         const pending = [realm.__FLUENTREAD_USERSCRIPT_DATA__, catalogs];
         while (pending.length) {

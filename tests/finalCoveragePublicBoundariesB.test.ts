@@ -154,7 +154,7 @@ async function ocrSdkFixture(failFirst = false) {
     const worker = {
         setParameters: vi.fn(async () => undefined),
         terminate: vi.fn(async () => undefined),
-        recognize: vi.fn(async () => {
+        recognize: vi.fn(async (_image: string) => {
             if (failFirst && !failed) {
                 failed = true;
                 // 合理的外部 SDK 端口：同一作业既拒绝 Promise，也递送 errorHandler。
@@ -170,8 +170,24 @@ async function ocrSdkFixture(failFirst = false) {
     const createWorker = vi.fn(async (_languages: string[], _oem: number, input: SdkOptions) => {options = input; return worker;});
     port('tesseract.js', () => ({createWorker, PSM: {SPARSE_TEXT: 11, SPARSE_TEXT_OSD: 12, SINGLE_BLOCK: 6}}));
     vi.stubGlobal('chrome', {runtime: {getURL: (path: string) => `chrome-extension://boundary-b${path}`}});
+    // 识别前的真实透明度检查需要 Canvas；本夹具代表已解码、同尺寸且完全不透明的 PNG。
+    // 只控制浏览器像素端口，不替换生产预处理、取消、Worker 或缓存算法。
+    const canvases: Array<{width: number; height: number; drawImage: ReturnType<typeof vi.fn>; putImageData: ReturnType<typeof vi.fn>; toBlob: ReturnType<typeof vi.fn>}> = [];
+    vi.stubGlobal('document', {createElement: (tag: string) => {
+        expect(tag).toBe('canvas');
+        const canvas = {width: 0, height: 0, drawImage: vi.fn(), putImageData: vi.fn(),
+            toBlob: vi.fn(() => {throw new Error('Opaque original PNG must not be re-encoded');})};
+        const context = {drawImage: canvas.drawImage, putImageData: canvas.putImageData, getImageData: () => {
+            const data = new Uint8ClampedArray(canvas.width * canvas.height * 4);
+            for (let index = 3; index < data.length; index += 4) data[index] = 255;
+            return {data};
+        }};
+        canvases.push(canvas);
+        return {...canvas, get width() {return canvas.width;}, set width(value: number) {canvas.width = value;},
+            get height() {return canvas.height;}, set height(value: number) {canvas.height = value;}, getContext: () => context};
+    }});
     const {recognizeImage} = await import('@/src/features/image-translation/services/ocrRuntime');
-    return {recognizeImage, createWorker, worker, reason, escaped, sdkCallbacks};
+    return {recognizeImage, createWorker, worker, reason, escaped, sdkCallbacks, canvases};
 }
 
 describe('final boundary B actual OCR public consumer', () => {
@@ -192,6 +208,10 @@ describe('final boundary B actual OCR public consumer', () => {
             {text: 'Retried text', bbox: {x0: 1, y0: 2, x1: 70, y1: 20}},
         ]);
         expect(fixture.worker.recognize).toHaveBeenCalledOnce();
+        expect(fixture.worker.recognize.mock.calls[0][0]).toBe('data:image/png;base64,fixture');
+        expect(fixture.canvases).toHaveLength(2);
+        expect(fixture.canvases.every(canvas => canvas.width === 0 && canvas.height === 0)).toBe(true);
+        expect(fixture.canvases.every(canvas => canvas.drawImage.mock.calls[0][0] === image && !canvas.putImageData.mock.calls.length && !canvas.toBlob.mock.calls.length)).toBe(true);
     });
 
     it('consumes SDK error callbacks without escaping an exception and preserves the original job rejection for a clean retry', async () => {
@@ -207,6 +227,10 @@ describe('final boundary B actual OCR public consumer', () => {
         expect(fixture.worker.setParameters).toHaveBeenCalledOnce();
         expect(fixture.worker.recognize).toHaveBeenCalledTimes(2);
         expect(image.src).toBe('borrowed-source');
+        expect(fixture.worker.recognize.mock.calls.every(call => call[0] === 'data:image/png;base64,sdk-fixture')).toBe(true);
+        expect(fixture.canvases).toHaveLength(2);
+        expect(fixture.canvases.every(canvas => canvas.width === 0 && canvas.height === 0)).toBe(true);
+        expect(fixture.canvases.every(canvas => canvas.drawImage.mock.calls[0][0] === image && !canvas.putImageData.mock.calls.length && !canvas.toBlob.mock.calls.length)).toBe(true);
     });
 });
 

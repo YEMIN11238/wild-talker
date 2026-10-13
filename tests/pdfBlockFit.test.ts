@@ -14,6 +14,11 @@ const page = (blocks: PdfDocumentBlock[], extra: Partial<PdfDocumentPage> = {}):
 const monospace = (text: string, fontSize: number) => Array.from(text).length * fontSize;
 
 describe('PDF layout overlay block selection', () => {
+    it('reports unreadable measured width without dropping text when a font returns a non-finite glyph advance', () => {
+        const fit = fitPdfBlockText({text: '字', width: 100, height: 100, fontSize: 12, lineHeight: 15, minFontSize: 6, weight: 400}, () => NaN);
+        expect(fit).toMatchObject({fontSize: 6, overflow: true});
+        expect(fit.lines.join('')).toBe('字');
+    });
     it('replaces ordinary prose only and keeps protected kinds, preserved regions and empty geometry as source pixels', () => {
         const blocks = [
             block(0, 40, 40, 200, 24),

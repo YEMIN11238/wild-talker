@@ -1268,12 +1268,12 @@ describe('options UI composition architecture', () => {
     expect(fullPageProfiles).toBeGreaterThan(translation.indexOf('aria-label="右键全文翻译"'))
   })
 
-  it('loads shared tokens before the unchanged settings page rules', () => {
+  it('loads the shared paper and lime tokens before settings page rules', () => {
     const pageStyles = sourceBody('src/features/settings/ui/settings-page.css')
     const tokens = source('src/ui/styles/tokens.css')
 
     expect(pageStyles.startsWith('@import "../../../ui/styles/tokens.css";')).toBe(true)
-    expect(tokens).toContain('--fr-color-brand: #ef4776;')
+    expect(tokens).toContain('--fr-color-brand: #648433;')
     expect(tokens).toContain('--surface-soft: var(--fr-color-surface-soft);')
   })
 

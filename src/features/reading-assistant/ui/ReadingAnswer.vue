@@ -83,5 +83,5 @@ const AnswerInline = ({text}: {text: string}) => parseReadingEvidence(text, prop
 .is-compact { font-size: 13px; line-height: 1.75; }
 .is-compact h3, .is-compact h4 { margin-top: 18px; font-size: 13px; }
 .is-compact p, .is-compact ul, .is-compact ol { margin-bottom: 10px; }
-.fr-dark-theme .fr-reading-markdown { --fr-answer-quote: #b6a9b5; --fr-answer-border: #514651; --fr-answer-soft: #352f38; --fr-answer-code: #413846; }
+.fr-dark-theme .fr-reading-markdown { --fr-answer-quote: #afb6a9; --fr-answer-border: #394035; --fr-answer-soft: #2b3328; --fr-answer-code: #413846; }
 </style>

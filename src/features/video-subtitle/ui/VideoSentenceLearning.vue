@@ -1,11 +1,11 @@
 <!--
  * @file src/features/video-subtitle/ui/VideoSentenceLearning.vue
  * 文件职责：在现有播放器上提供可关闭的完整句学习面板，连接原始字幕、主动播放控制和现有收藏。
- * 主要内容：以双语阅读卡呈现原句、译文和按需讲解；索引跟随播放、合并快速换句的翻译请求，收起后暂停新请求，按配置身份管理自动译文并保留人工草稿；固定操作与准确的异步收藏状态支持小播放器连续学习。
+ * 主要内容：以随当前界面主题切换的双语阅读卡呈现原句、译文和按需讲解，预览与播放器共享白色或深灰表面及青柠操作色；索引跟随播放、合并快速换句的翻译请求，收起后暂停新请求，按配置身份管理自动译文并保留人工草稿；固定操作与准确的异步收藏状态支持小播放器连续学习。
  * 模块边界：不创建播放器、不采集音频、不计算复习或掌握状态；翻译沿用注入的字幕服务，解释与收藏通过已有公共协议，卸载取消控制与迟到回写。
  -->
 <template>
-  <section ref="panel" class="fr-video-learning" :class="{'is-collapsed': !expanded}" :style="appearanceStyle" :data-learning-layout="appearance.layout" role="region" :aria-label="t('video.learning.title')" tabindex="-1"
+  <section ref="panel" class="fr-video-learning fr-video-learning-surface" :class="{'is-collapsed': !expanded}" :style="appearanceStyle" :data-learning-layout="appearance.layout" :data-learning-theme="learningTheme" role="region" :aria-label="t('video.learning.title')" tabindex="-1"
     :data-learning-sentence-id="sentence?.id" :data-learning-sentence-index="index" :data-learning-pinned="pinned"
     :data-start-ms="sentence?.startMs" :data-end-ms="sentence?.endMs" @click.stop @pointerdown.stop>
     <header class="fr-video-learning-header">
@@ -80,7 +80,13 @@ const props = defineProps<{video: HTMLVideoElement; cues: VideoSubtitleCue[]; pl
 const emit = defineEmits<{close: []}>();
 const {t} = useUiI18n();
 const appearance = ref(normalizeVideoSentenceLearningAppearance(config.videoSentenceLearningAppearance));
-const appearanceStyle = computed(() => getVideoSentenceLearningAppearanceCssVars(appearance.value));
+const appearanceStyle = computed(() => ({...getVideoSentenceLearningAppearanceCssVars(appearance.value), '--fr-learning-opacity': String(appearance.value.backgroundOpacity / 100)}));
+const interfaceTheme = ref(config.theme);
+const systemTheme = props.video.ownerDocument?.defaultView?.matchMedia?.('(prefers-color-scheme: dark)');
+const systemDark = ref(systemTheme?.matches ?? false);
+const learningTheme = computed(() => interfaceTheme.value === 'dark' || ((!interfaceTheme.value || interfaceTheme.value === 'auto') && systemDark.value) ? 'dark' : 'light');
+function handleSystemThemeChange(event: MediaQueryListEvent): void {systemDark.value = event.matches;}
+systemTheme?.addEventListener('change', handleSystemThemeChange);
 const helpOpen = ref(false);
 const sentences = computed(() => buildVideoSentenceTimeline(props.cues));
 const sentenceTimeIndex = computed(() => createVideoSentenceTimeIndex(sentences.value));
@@ -281,6 +287,7 @@ const learningConfigFingerprint = () => JSON.stringify([config.on, config.videoT
   getVideoTranslationConfigFingerprint(config), config.harness]);
 let configRevision = learningConfigFingerprint();
 const unsubscribe = subscribeConfig(() => {
+  interfaceTheme.value = config.theme;
   const nextAppearance = normalizeVideoSentenceLearningAppearance(config.videoSentenceLearningAppearance);
   if (JSON.stringify(nextAppearance) !== JSON.stringify(appearance.value)) appearance.value = nextAppearance;
   const next = learningConfigFingerprint(); if (next === configRevision) return;
@@ -291,7 +298,7 @@ const unsubscribe = subscribeConfig(() => {
   if (wasExplaining) explanationStopped.value = true;
   scheduleTranslation(); notice.value = t('video.learning.settingsChanged');
 });
-onBeforeUnmount(() => { active = false; cancelPending(); controller?.destroy(); unsubscribe();
+onBeforeUnmount(() => { active = false; cancelPending(); controller?.destroy(); unsubscribe(); systemTheme?.removeEventListener('change', handleSystemThemeChange);
   (props.video.ownerDocument?.defaultView ?? props.video.ownerDocument)?.removeEventListener('keydown', onPlayerKeydown, true);
   props.video.removeEventListener('timeupdate', followPlayback); props.video.removeEventListener('seeking', onSeeking); });
 </script>

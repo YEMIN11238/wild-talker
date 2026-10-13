@@ -284,7 +284,7 @@ async function main() {
         }
       };
       const variants = baseline ? [['light', 'light', 'default', 'zh-CN', 340]] : [
-        ['light', 'light', 'default', 'zh-CN', 320], ['dark', 'dark', 'default', 'zh-CN', 320],
+        ['light', 'light', 'default', 'zh-CN', 360], ['dark', 'dark', 'default', 'zh-CN', 360],
         ['minimal', 'light', 'minimal', 'zh-CN', 310], ['compact', 'light', 'compact', 'zh-CN', 300],
         ['yuebai', 'light', 'yuebai', 'zh-CN', 320], ['english', 'light', 'default', 'en-US', 380],
       ];
@@ -389,35 +389,29 @@ async function main() {
       assert.deepEqual(report.consoleErrors, []); report.ok = true; return;
     }
     if (process.argv.includes('--footer-only')) {
-      // 仅验证开源入口的视觉改动，避免重复整个服务/翻译矩阵。
+      // 仅验证底部开源标志移除及预览一致性，避免重复整个服务/翻译矩阵。
       report.evidenceBoundary = 'Production popup/footer and settings preview in isolated Edge; no translation or persistence matrix in this footer-only run.';
       for (const [name, theme, interfaceSkin] of [
         ['light', 'light', 'default'], ['dark', 'dark', 'default'],
         ['minimal', 'light', 'minimal'], ['compact', 'light', 'compact'], ['yuebai', 'light', 'yuebai'],
       ]) {
         await patch({theme, interfaceSkin}); await geometry(popup, name); await wait(250);
-        const styles = await popup.locator('.opensource-link').evaluate(node => {
-          const s = getComputedStyle(node); return {border: s.borderColor, color: s.color, background: s.backgroundColor};
-        });
-        assert.equal(styles.border, 'rgba(0, 0, 0, 0)'); report.layout[`footer-${name}`] = styles;
-        await shot(popup, `footer-popup-${name}`); report.cases.push(`${name}: neutral open-source capsule without visible border`);
+        assert.equal(await popup.locator('.opensource-link, footer a[href*="github.com"]').count(), 0);
+        await shot(popup, `footer-popup-${name}`); report.cases.push(`${name}: GitHub mark removed from popup footer`);
       }
       await patch({theme: 'light', interfaceSkin: 'default'}); await geometry(popup, 'light');
-      await popup.locator('.opensource-link').hover(); await wait(250);
-      assert.equal(await popup.locator('.opensource-link').evaluate(node => getComputedStyle(node).borderColor), 'rgba(0, 0, 0, 0)');
-      await shot(popup, 'footer-popup-hover');
       const options = await open(`${origin}/options.html#settings-interface`, {width: 1440, height: 960});
       const preview = options.locator('.popup-layout-live-preview'); await preview.scrollIntoViewIfNeeded();
-      assert.equal(await preview.locator('.preview-open-source').evaluate(node => getComputedStyle(node).borderColor), 'rgba(0, 0, 0, 0)');
+      assert.equal(await preview.locator('.preview-open-source').count(), 0);
       await shot(preview, 'footer-layout-preview');
       assert.deepEqual(report.consoleErrors, []); report.ok = true; return;
     }
     currentCase = 'restored-main';
     assert.equal((await popup.locator('[data-testid="popup-version"]').innerText()).trim(), `v${manifest.version}`);
-    assert.match(await popup.locator('.donation-button').innerText(), /赞赏/);
+    assert.equal(await popup.locator('.donation-button, .donation-card, img[src*="approve"], a[href*="ko-fi"]').count(), 0);
     assert.match(await popup.locator('[data-testid="popup-feature-services"]').innerText(), /翻译服务/);
     assert.equal(await popup.getByText('快捷功能', {exact: true}).count(), 0);
-    const light = await geometry(popup, 'default-light'); assert.equal(light.background, 'rgb(255, 255, 255)');
+    const light = await geometry(popup, 'default-light'); assert.equal(light.background, 'rgb(242, 244, 237)');
     const site = popup.locator('.site-rule-row');
     assert.equal(await site.locator('.site-rule-copy').count(), 0);
     assert.equal(await site.getByRole('switch').count(), 2);
@@ -427,13 +421,9 @@ async function main() {
     const serviceFrame = await popup.locator('.provider-summary').evaluate(node => {const style = getComputedStyle(node); return {border: style.borderTopWidth, radius: style.borderRadius, background: style.backgroundColor};});
     assert.equal(serviceFrame.border, '1px'); assert.notEqual(serviceFrame.background, 'rgba(0, 0, 0, 0)'); report.layout.serviceFrame = serviceFrame;
     assert(light.footerBottom <= light.height + 1); assert(light.scrollHeight <= light.clientHeight + 1);
-    await shot(popup, 'popup-light'); report.cases.push('restored main actions, site controls, version, donation and footer; white canvas; no heading/clipping');
-    await popup.locator('.donation-button').click(); await popup.locator('.donation-card').waitFor(); await shot(popup, 'donation');
-    await popup.locator('.donation-kofi').scrollIntoViewIfNeeded(); await shot(popup, 'donation-bottom'); await popup.locator('.donation-close').click();
-    const link = popup.locator('.opensource-link'); assert.match(await link.innerText(), /开源项目.*↗/s);
-    await context.route('https://github.com/Bistutu/FluentRead', route => route.fulfill({contentType: 'text/html', body: '<title>Project link fixture</title>'}));
-    const projectPagePromise = context.waitForEvent('page'); await link.click(); const projectPage = await projectPagePromise; await projectPage.waitForURL('https://github.com/Bistutu/FluentRead'); await projectPage.close();
-    report.cases.push('open-source capsule opens the declared GitHub URL in a new tab (navigation fixture)');
+    await shot(popup, 'popup-light'); report.cases.push('restored main actions, site controls, version and footer without donation; white canvas; no heading/clipping');
+    assert.equal(await popup.locator('.opensource-link, footer a[href*="github.com"]').count(), 0);
+    report.cases.push('popup footer retains statistics and cache actions without GitHub mark');
     // --services-only 跳过页面动作与站点规则，只验证翻译服务面板；用于面板改动的聚焦回归。
     const servicesOnly = process.argv.includes('--services-only');
     if (!servicesOnly) {

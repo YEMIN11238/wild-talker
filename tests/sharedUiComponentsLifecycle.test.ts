@@ -525,7 +525,7 @@ describe('shared UI actual client SFC lifecycle', () => {
     key(mounted.root.querySelector('[data-preview-popup-module="translation"] > button')!, 'ArrowDown');await settle();expect(moduleUpdate).toHaveBeenLastCalledWith(['siteRule', 'translation', 'quickFeatures', 'footer']);
     expect(mounted.root.querySelector('[aria-live="polite"]')!.textContent).toContain('"position":2');
     event(mounted.root.querySelector('[data-preview-action]')!, 'click');expect(edit).toHaveBeenCalledWith('quickFeature');mounted.props.editScope = 'quickFeature';await settle();
-    key(mounted.root.querySelector('[data-preview-quick-feature="hover"] > button')!, 'ArrowRight');await settle();expect(featureUpdate).toHaveBeenLastCalledWith(['image', 'hover']);
+    key(mounted.root.querySelector('[data-preview-quick-feature="hover"] > button')!, 'ArrowDown');await settle();expect(featureUpdate).toHaveBeenLastCalledWith(['image', 'hover']);
     mounted.props.quickFeatureItems = mounted.props.quickFeatureItems.map((item: any) => ({...item, visible: false}));await settle();expect(mounted.root.querySelector('[data-preview-popup-module="quickFeatures"]')).toBeNull();
   });
   it('announces the module ID when the real parent synchronously removes the moved module in place', async () => {
@@ -550,7 +550,7 @@ describe('shared UI actual client SFC lifecycle', () => {
     });
     mounted = await mount(PopupLayoutPreview, {...layoutProps(), editScope: 'quickFeature'}, {listeners: {'onUpdate:quickFeatureOrder': update}});
     const items = mounted.props.quickFeatureItems;
-    key(mounted.root.querySelector('[data-preview-quick-feature="hover"] > button')!, 'ArrowRight');await settle();
+    key(mounted.root.querySelector('[data-preview-quick-feature="hover"] > button')!, 'ArrowDown');await settle();
     expect(update).toHaveBeenCalledOnce();expect(update).toHaveBeenLastCalledWith(['image', 'hover']);expect(mounted.props.quickFeatureItems).toBe(items);
     expect(mounted.root.querySelector('[data-preview-quick-feature="hover"]')).toBeNull();
     expect(mounted.root.querySelector('[data-preview-quick-feature="image"]')).not.toBeNull();
@@ -704,6 +704,20 @@ describe('shared UI actual client SFC lifecycle', () => {
     expect(mounted.root.querySelector('[data-service-icon-fallback]')).not.toBeNull();
     expect(icon.getAttribute('title')).toBe('unknown');
     expect(icon.getAttribute('aria-hidden')).toBe('true');
+  });
+  it('reactively reuses the exact Doubao brand paths for the free web service without a remote image', async () => {
+    const mounted = await mount(ServiceIcon, {service: 'doubao', label: 'Doubao'});
+    const svg = mounted.root.querySelector('svg')!.outerHTML;
+    const paths = () => [...mounted.root.querySelectorAll('svg[data-brand-icon] path')].map(path => path.getAttribute('d'));
+    expect(paths()).toEqual(brandPaths.doubao.map(path => path.d));
+    mounted.props.service = 'doubaoWeb';mounted.props.label = 'Doubao Web';await settle();
+    expect(mounted.root.querySelector('svg')!.outerHTML).toBe(svg);
+    expect(paths()).toEqual(brandPaths.doubao.map(path => path.d));
+    const icon = mounted.root.querySelector('.service-brand-icon')!;
+    expect(icon.getAttribute('data-service')).toBe('doubaoWeb');
+    expect(icon.getAttribute('title')).toBe('Doubao Web');
+    expect(icon.getAttribute('aria-hidden')).toBe('true');
+    expect(mounted.root.querySelector('[data-service-icon-fallback], img, image')).toBeNull();
   });
   it('falls back to info for all unknown icon names including inherited object keys', async () => {
     const mounted = await mount(UiIcon, {name: 'info'});const path = mounted.root.querySelector('path')!.getAttribute('d');

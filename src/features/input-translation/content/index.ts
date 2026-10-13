@@ -428,7 +428,7 @@ export function createInputTranslationContentFeature(
                     opacity: 0;
                     transform: translateY(3px);
                     box-sizing: border-box;
-                    background: rgba(17, 24, 39, 0.88);
+                    background: #262d25;
                     color: #fff;
                     padding: 8px 12px;
                     border: 0;
@@ -439,13 +439,13 @@ export function createInputTranslationContentFeature(
                     z-index: 2147483647;
                     pointer-events: ${restore || previewText ? 'auto' : 'none'};
                     transition: opacity 0.2s ease, transform 0.2s ease;
-                    backdrop-filter: blur(8px);
+                    backdrop-filter: none;
                     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
                 }
                 .fluent-input-tooltip.show { opacity: 1; transform: translateY(0); }
                 .fluent-input-tooltip.hide { opacity: 0; transform: translateY(-5px); }
-                .fluent-input-tooltip.translating { background: rgba(29, 78, 216, 0.96); }
-                .fluent-input-tooltip.success { background: rgba(22, 101, 52, 0.96); }
+                .fluent-input-tooltip.translating { background: #456021; }
+                .fluent-input-tooltip.success { background: #267260; }
                 .fluent-input-tooltip.error { background: rgba(185, 28, 28, 0.96); }
             `,
             onMount(container) {

@@ -7,9 +7,9 @@
 import {hasDistinctTranslation} from '@/src/core/translation/result';
 export interface ImageReaderLine {text: string; sourceText?: string}
 export const IMAGE_READER_CSS = `
-.fr-image-reader {--fr-image-brand:#dc315f;--fr-image-brand-soft:#fff0f4;--fr-image-ink:#172033;--fr-image-muted:#737c8f;--fr-image-line:#e5e8ef;--fr-image-surface:#fff;position:fixed;right:16px;top:16px;width:min(400px,calc(100vw - 24px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column;box-sizing:border-box;border:1px solid var(--fr-image-line);border-radius:12px;background:var(--fr-image-surface);box-shadow:0 12px 40px #17203326;pointer-events:auto;z-index:3;color:var(--fr-image-ink);font:13px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+.fr-image-reader {--fr-image-brand:#456021;--fr-image-brand-soft:#edf5dd;--fr-image-ink:#252a24;--fr-image-muted:#737970;--fr-image-line:#e7eae1;--fr-image-surface:#fff;position:fixed;right:16px;top:16px;width:min(400px,calc(100vw - 24px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column;box-sizing:border-box;border:1px solid var(--fr-image-line);border-radius:12px;background:var(--fr-image-surface);box-shadow:0 12px 40px #17203326;pointer-events:auto;z-index:3;color:var(--fr-image-ink);font:13px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
 .fr-image-reader[hidden] {display:none!important;}
-.fr-image-reader[data-theme=dark] {--fr-image-ink:#ece5ef;--fr-image-muted:#c1b1c5;--fr-image-line:#49404c;--fr-image-surface:#2b2630;--fr-image-brand-soft:#413548;--fr-image-brand:#ffa7ca;}
+.fr-image-reader[data-theme=dark] {--fr-image-ink:#edf0e8;--fr-image-muted:#afb6a9;--fr-image-line:#394035;--fr-image-surface:#262d25;--fr-image-brand-soft:#303b25;--fr-image-brand:#bedf7b;}
 .fr-image-reader header {display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;padding:10px 12px;border-bottom:1px solid var(--fr-image-line);}
 .fr-image-reader strong {flex:1;font-size:14px;}
 .fr-image-reader button {all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:4px 8px;border-radius:6px;font:inherit;font-size:12px;cursor:pointer;}

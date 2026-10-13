@@ -35,7 +35,26 @@ async function zipBytes(files: Record<string, string>): Promise<Uint8Array> {
 }
 
 afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
+});
+
+it('detects an unlabelled JPEG raster by its complete magic bytes and preserves the source page with a live cancellation signal', async () => {
+    const pdf = await PDFDocument.create();
+    pdf.addPage([200, 300]).drawText('Source');
+    const document: ParsedDocument = {fileName: 'raster.pdf', format: 'pdf', label: 'PDF', parts: [], segments: [{id: 0, source: 'Source'}],
+        binary: {kind: 'pdf', bytes: await pdf.save(), pages: [{pageNumber: 1, width: 200, height: 300, segmentIndexes: [0], blocks: []}]}};
+    const jpeg = Uint8Array.from(Buffer.from('/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AL+AA//Z', 'base64'));
+    const embed = vi.spyOn(PDFDocument.prototype, 'embedJpg');
+    const controller = new AbortController();
+    const download = await createDocumentDownload(document, ['Translated'], 'bilingual', {signal: controller.signal, pdfPageRasterizer: async () => jpeg});
+    expect(embed).toHaveBeenCalledOnce();
+    expect(embed).toHaveBeenCalledWith(jpeg);
+    const restored = await PDFDocument.load(download.data as Uint8Array);
+    expect(restored.getPageCount()).toBe(1);
+    expect(restored.getPages()[0].getWidth()).toBeGreaterThan(200);
+    await expect(createDocumentDownload(document, ['Translated'], 'translated', {pdfPageRasterizer: async () => new Uint8Array([0xff, 0x00])})).rejects.toBeTruthy();
+    expect(embed).toHaveBeenCalledOnce();
 });
 
 function pdfItem(overrides: Partial<PdfTextItem> = {}): PdfTextItem {

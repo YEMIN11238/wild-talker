@@ -21,9 +21,13 @@ const options = [
 ]
 
 describe('service catalog helpers', () => {
-  it('provides a public website or guide for every built-in service', () => {
+  it('provides real public websites and hides absent destinations for built-in composites', () => {
     for (const service of Object.values(services)) {
       const website = getServiceWebsite(service)
+      if ([services.freeTranslation, services.localTranslation, services.custom].includes(service)) {
+        expect(website, service).toBeUndefined()
+        continue
+      }
       expect(website, service).toBeDefined()
       const url = new URL(website!.url)
       expect(url.protocol).toBe('https:')
@@ -33,7 +37,8 @@ describe('service catalog helpers', () => {
       url: 'https://console.cloud.tencent.com/hunyuan', kind: 'website',
     })
     expect(getServiceWebsite(services.chromeTranslator)?.kind).toBe('documentation')
-    expect(getServiceWebsite(services.freeTranslation)?.kind).toBe('documentation')
+    expect(getServiceWebsite(services.freeTranslation)).toBeUndefined()
+    expect(getServiceWebsite(services.localTranslation)).toBeUndefined()
     expect(getServiceWebsite(services.myMemory)).toEqual({url: 'https://mymemory.translated.net/doc/spec.php', kind: 'documentation'})
   })
 
@@ -58,15 +63,14 @@ describe('service catalog helpers', () => {
       .toBe('https://platform.openai.com/')
   })
 
-  it('falls back to a setup guide for incomplete or non-web service addresses', () => {
+  it('keeps only New API official documentation for incomplete or non-web service addresses', () => {
     for (const endpoint of ['', 'not a url', '/relative', '//example.com', 'javascript:alert(1)',
       'data:text/html,hello', 'file:///tmp/config', 'ftp://example.com', 'blob:https://example.com/id']) {
       for (const service of ['custom:personal', services.custom, services.newapi]) {
-        const link = getServiceWebsite(service, {endpoint})!
-        expect(link.kind).toBe('documentation')
-        expect(link.url).toBe(service === services.newapi
-          ? 'https://docs.newapi.pro/'
-          : 'https://fluent.thinkstu.com/config/translation-engines')
+        const link = getServiceWebsite(service, {endpoint})
+        expect(link).toEqual(service === services.newapi
+          ? {url: 'https://docs.newapi.pro/', kind: 'documentation'}
+          : undefined)
       }
     }
   })

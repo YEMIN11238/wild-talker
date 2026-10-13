@@ -34,6 +34,20 @@ let translate: ReturnType<typeof vi.fn>, sendRuntimeMessage: ReturnType<typeof v
 let cancelReading: ReturnType<typeof vi.fn>, unsubscribe: ReturnType<typeof vi.fn>, emit: ReturnType<typeof vi.fn>;
 let readingCallbacks: {progress: (value: any) => void; result: (value: any) => void; error: (cause: Error) => void};
 
+function attachSystemTheme(initialDark: boolean) {
+  const listeners = new Set<(event: MediaQueryListEvent) => void>();
+  const media = {matches: initialDark,
+    addEventListener: vi.fn((_type: string, listener: (event: MediaQueryListEvent) => void) => listeners.add(listener)),
+    removeEventListener: vi.fn((_type: string, listener: (event: MediaQueryListEvent) => void) => listeners.delete(listener)),
+  };
+  const keyboardWindow = Object.assign(new EventTarget(), {matchMedia: vi.fn(() => media)});
+  Object.assign(video, {ownerDocument: {defaultView: keyboardWindow}});
+  return {media, listeners, keyboardWindow, change(dark: boolean) {
+    media.matches = dark;
+    listeners.forEach(listener => listener({matches: dark} as MediaQueryListEvent));
+  }};
+}
+
 async function flush(): Promise<void> {
   await Promise.resolve(); await vue.nextTick(); await Promise.resolve(); await vue.nextTick();
 }
@@ -90,6 +104,54 @@ beforeEach(() => {
 afterEach(() => {close(); vi.unstubAllGlobals(); vi.useRealTimers();});
 
 describe('完整句学习组件的调度与异步归属回归', () => {
+  it('保存的浅色优先于系统深色，主题与系统变化不取消首句翻译、讲解或循环', async () => {
+    const system = attachSystemTheme(true);
+    config.theme = 'light';
+    const pending = deferred<string>(); translate.mockReturnValueOnce(pending.promise);
+    await mount();
+    expect(state.learningTheme).toBe('light');
+    expect(system.keyboardWindow.matchMedia).toHaveBeenCalledWith('(prefers-color-scheme: dark)');
+    expect(state.appearanceStyle['--fr-learning-opacity']).toBe('0.94');
+    state.toggleMode('loop'); state.explain();
+    const signal = translate.mock.calls[0][1] as AbortSignal;
+    const selected = state.sentence.id;
+    const playCalls = (video.play as ReturnType<typeof vi.fn>).mock.calls.length;
+    config.theme = 'dark'; subscription(); await flush();
+    expect(state.learningTheme).toBe('dark');
+    config.theme = 'auto'; subscription(); await flush();
+    expect(state.learningTheme).toBe('dark');
+    system.change(false); await flush(); expect(state.learningTheme).toBe('light');
+    system.change(true); await flush(); expect(state.learningTheme).toBe('dark');
+    config.theme = 'light'; subscription(); await flush();
+    expect(state.learningTheme).toBe('light');
+    system.change(false); system.change(true); await flush();
+    expect(state.learningTheme).toBe('light');
+    expect(signal.aborted).toBe(false);
+    expect(cancelReading).not.toHaveBeenCalled();
+    expect(state.explaining).toBe(true); expect(state.mode).toBe('loop');
+    expect(state.sentence.id).toBe(selected); expect(state.index).toBe(0);
+    expect(state.notice).toBe(''); expect(translate).toHaveBeenCalledOnce();
+    expect(video.play).toHaveBeenCalledTimes(playCalls);
+    pending.resolve('First translated sentence'); await flush();
+    expect(state.translation).toBe('First translated sentence');
+    const themeBeforeClose = state.learningTheme;
+    const listener = system.media.addEventListener.mock.calls[0][1];
+    close();
+    expect(unsubscribe).toHaveBeenCalledOnce();
+    expect(system.media.removeEventListener).toHaveBeenCalledWith('change', listener);
+    expect(system.listeners.size).toBe(0);
+    system.change(false); await flush(); expect(state.learningTheme).toBe(themeBeforeClose);
+  });
+
+  it('缺少媒体所属窗口时自动主题安全回落浅色，配置主题仍可独立切换', async () => {
+    config.theme = 'auto'; await mount();
+    expect(state.learningTheme).toBe('light');
+    config.theme = ''; subscription(); await flush(); expect(state.learningTheme).toBe('light');
+    config.theme = 'dark'; subscription(); await flush(); expect(state.learningTheme).toBe('dark');
+    config.theme = 'light'; subscription(); await flush(); expect(state.learningTheme).toBe('light');
+    expect(translate).toHaveBeenCalledOnce();
+  });
+
   it('播放器焦点下在捕获阶段接管学习键，编辑、修饰、组合输入与页面外区域保留原操作', async () => {
     const {document} = parseHTML('<html><body><div id="player"><button id="native"></button><div id="host"><section><input/><textarea/><div contenteditable><span id="editable"></span></div></section></div></div><button id="outside"></button></body></html>');
     const keyboardWindow = new EventTarget();

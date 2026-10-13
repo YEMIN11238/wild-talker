@@ -19,6 +19,19 @@ const chineseTerms = (): GlossaryLibrary => ({id: 'notes', name: '阅读用语',
     entries: [{id: 'record', source: '记录', target: '笔记', caseSensitive: false}]});
 
 describe('圈选整块文字翻译事务', () => {
+    it.each([['video', ['notes'], true], ['video', [], false], ['page', null, true]] as const)
+    ('uses frozen %s glossary scope with a blank source language instead of bypassing a confirmed same-language term', async (context, ids, applies) => {
+        const source = config();
+        source.from = 'zh-Hans';
+        source.glossaryEnabled = true;
+        source.glossaryLibraries = [chineseTerms()];
+        source.videoGlossaryIds = ids ? [...ids] : null;
+        const text = '保存记录并重新打开页面。';
+        const translate = vi.fn(async (_request: TranslationRequestMessage) => '保存笔记并重新打开页面。');
+        const result = await prepareAreaTextTranslation(source, ' ', 'Video', {pageUrl: 'https://example.org/video', context}, translate)({...recognized, sourceText: text}, options());
+        expect(result.translatedText).toBe(applies ? '保存笔记并重新打开页面。' : text);
+        expect(translate).toHaveBeenCalledTimes(applies ? 1 : 0);
+    });
     it.each([
         ['修复保存记录后再次打开页面时内容丢失的问题。', 'zh-Hans', 'en'],
         ['You can return to your saved paragraphs after closing the browser.', 'en', 'zh-Hans'],
@@ -78,6 +91,9 @@ describe('圈选整块文字翻译事务', () => {
         const source = config();
         source.glossaryEnabled = true;
         Reflect.deleteProperty(source, 'glossaryLibraries');
+        const frozen = createTranslationProviderConfigSnapshot(source);
+        expect(frozen.glossaryLibraries).toEqual([]);
+        expect(Object.isFrozen(frozen.glossaryLibraries)).toBe(true);
         const text = '修复保存记录后再次打开页面时内容丢失的问题。';
         const translate = vi.fn(async (_request: TranslationRequestMessage) => '不应请求');
         const result = await prepareAreaTextTranslation(source, 'zh-Hans', '', {}, translate)({...recognized, sourceText: text}, options());

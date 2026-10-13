@@ -103,6 +103,26 @@ beforeEach(async () => {
 afterEach(async () => {ports.pagePending?.resolve(ports.tasks.find(value => value.role === 'preview')?.page); ports.renderPending?.resolve(); app?.unmount(); await flush(); await vi.dynamicImportSettled(); windowTimers.forEach(timer => clearTimeout(timer)); windowTimers.clear(); vi.restoreAllMocks(); vi.unstubAllGlobals();});
 
 describe('documentbinaryAudit actual DocumentApp SFC ownership', () => {
+    it('uses the saved document theme before system colors and reacts to theme updates', async () => {
+        expect(state.isDark).toBe(false);
+        state.config.theme = 'dark'; await flush();
+        expect(state.isDark).toBe(true);
+        state.colorSchemeMedia.matches = true;
+        state.config.theme = 'light'; await flush();
+        expect(state.isDark).toBe(false);
+        state.colorSchemeMedia.dispatchEvent(new Event('change')); await flush();
+        expect(state.isDark).toBe(false);
+        state.config.theme = 'auto'; await flush();
+        expect(state.isDark).toBe(true);
+        state.colorSchemeMedia.matches = false;
+        state.colorSchemeMedia.dispatchEvent(new Event('change')); await flush();
+        expect(state.isDark).toBe(false);
+        ports.observer({...ports.config, theme: 'dark'}); await flush();
+        expect(state.isDark).toBe(true);
+        ports.observer({...ports.config, theme: 'light'}); await flush();
+        expect(state.isDark).toBe(false);
+    });
+
     it('keeps the exact original download copy localized and reacts to the shared language selection', async () => {
         for (const language of ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'ru-RU', 'es-ES']) {
             const copy = getDocumentDownloadCopy(language);

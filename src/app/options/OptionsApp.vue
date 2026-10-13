@@ -1,24 +1,19 @@
 <!--
  @file src/app/options/OptionsApp.vue
  文件职责：实现扩展 Options 页的顶层布局，组织设置导航、全局搜索结果和学习中心入口，并把选中分区交给对应 feature UI。
- 主要内容：侧栏展示品牌与多语言宣传语；关于页以随界面语言显示产品名的宽幅品牌介绍、项目链接卡片、开源项目下方的微信交流按钮和独立赞赏区组织内容，联系二维码与赞赏码在当前页弹窗展示；渲染默认展开的分组侧栏、窄屏分类选择和全局搜索，搜索只在同次派生内复用原始查询的小写值和语言入口判断，语言恢复查询优先展示现有软件语言入口并定位选择控件；普通设置连续展示并提供顶部滚动定位导航，统计保留任务视图切换，智能高亮锚点及搜索入口随脚本版能力隐藏，服务目录使用完整工作区，复用 settingsNavigation 的项目解析/过滤逻辑，在 SettingsSections 与 LearningCenter 之间切换并重置内容区滚动，同步 URL hash 的深链接与前进后退导航，兼容模型用量迁入翻译统计后的旧链接；界面根节点注册在卸载时只释放本页面句柄。
+ 主要内容：使用分离圆角侧栏与宽幅工作区，主区固定页头显示当前栏目名称、现有说明与搜索入口；侧栏展示品牌与多语言宣传语；关于页以随界面语言显示产品名的宽幅品牌介绍、插件内使用指南和明确标注的上游来源组织内容，许可证在本地展开，不跳转上游官网、文档和反馈渠道；渲染默认展开的分组侧栏、窄屏分类选择和全局搜索，搜索只在同次派生内复用原始查询的小写值和语言入口判断，语言恢复查询优先展示现有软件语言入口并定位选择控件；普通设置连续展示并提供顶部滚动定位导航，统计保留任务视图切换，智能高亮锚点及搜索入口随脚本版能力隐藏，服务目录使用完整工作区，复用 settingsNavigation 的项目解析/过滤逻辑，在 SettingsSections 与 LearningCenter 之间切换并重置内容区滚动，同步 URL hash 的深链接与前进后退导航，兼容模型用量迁入翻译统计后的旧链接；界面根节点注册在卸载时只释放本页面句柄。
  模块边界：组件负责页面壳、导航状态和主题、界面皮肤根属性同步，不定义具体配置字段、不直接写 browser.storage，也不实现词汇仓库；设置表单、收藏与阅读记录业务由各 feature 组件拥有；学习栏目加载失败的重载动作在普通设置页保留栏目参数，页内设置只重载宿主文档。
 -->
 <template>
   <div class="settings-app" :class="{'has-overlay-close': Boolean(props.onClose)}">
     <aside class="sidebar">
-      <a class="brand" :href="websiteUrl" target="_blank" rel="noopener noreferrer" :aria-label="t('options.aboutWebsite')" :title="t('options.aboutWebsite')">
+      <button class="brand" type="button" data-about-brand :aria-label="t('options.aboutTitle')" @click="selectSection('settings-about')">
         <img :src="iconUrl" alt="" />
         <div class="brand-copy">
           <strong data-i18n-ignore>{{ t('common.brand') }}</strong>
           <p class="sidebar-tagline" data-testid="brand-tagline" data-i18n-ignore>{{ t('brand.tagline') }}</p>
         </div>
-      </a>
-
-          <label class="search-box">
-            <UiIcon name="search" :size="16" />
-            <input v-model.trim="query" type="search" :placeholder="t('options.search')" :aria-label="t('options.search')" @keydown.esc="query = ''" />
-          </label>
+      </button>
 
       <nav ref="navigationElement" :aria-label="t('options.navLabel')">
         <section v-for="(group, index) in localizedNavigationGroups" :key="group.label" class="nav-group">
@@ -49,8 +44,23 @@
     </aside>
 
     <main class="workspace">
-      <h1 class="settings-content-title">{{ activeItem.title }}</h1>
-      <header v-show="((activePanels.length || hasSectionAnchors) && !userscriptUnavailableSection) || props.onClose" class="topbar">
+      <header class="workspace-heading">
+        <div class="workspace-heading-copy">
+          <span class="workspace-kicker">{{ activeItem.kicker }}</span>
+          <h1 class="settings-content-title">{{ activeItem.title }}</h1>
+          <p class="workspace-description">{{ activeItem.summary }}</p>
+        </div>
+        <div class="workspace-heading-tools">
+          <label class="search-box">
+            <UiIcon name="search" :size="17" />
+            <input v-model.trim="query" type="search" :placeholder="t('options.search')" :aria-label="t('options.search')" @keydown.esc="query = ''" />
+          </label>
+          <button v-if="props.onClose" type="button" class="userscript-settings-close" :aria-label="t('common.close')" :title="t('common.close')" @click="props.onClose()">
+            <UiIcon name="close" :size="18" />
+          </button>
+        </div>
+      </header>
+      <header v-show="(activePanels.length || hasSectionAnchors) && !userscriptUnavailableSection" class="topbar">
         <nav v-if="activePanels.length && !userscriptUnavailableSection" class="settings-page-tabs" :aria-label="t('options.categories')">
         <button v-for="panel in activePanels" :key="panel.id" type="button" :data-settings-category="panel.id" :aria-current="activePanel === panel.id ? 'true' : undefined" @click="selectPanel(panel.id)">{{ t(panel.labelKey) }}</button>
       </nav>
@@ -63,9 +73,6 @@
           @availability-change="hasSectionAnchors = $event"
           @navigate="cancelPendingSearchReveal?.()"
         />
-        <button v-if="props.onClose" type="button" class="userscript-settings-close" :aria-label="t('common.close')" :title="t('common.close')" @click="props.onClose()">
-          <UiIcon name="close" :size="18" />
-        </button>
       </header>
 
       <div v-if="query && filteredResults.length" class="search-results">
@@ -87,60 +94,35 @@
           <header class="about-hero">
             <div class="about-intro">
               <div class="about-identity">
-                <img class="about-logo" :src="iconUrl" alt="流畅阅读图标" />
+                <img class="about-logo" :src="iconUrl" :alt="`${t('common.brand')}图标`" />
                 <div>
                   <strong>{{ t('common.brand') }}</strong>
-                  <span class="about-version">V{{ version }} · {{ t('options.aboutHeroDescription') }}</span>
+                  <span class="about-version">V{{ version }} · {{ t('options.aboutLocalProduct') }}</span>
                 </div>
               </div>
-              <h2 data-i18n-ignore>{{ t('brand.tagline') }}</h2>
+              <h2 data-i18n-ignore>{{ t('options.aboutLocalHero') }}</h2>
             </div>
           </header>
           <div class="about-grid">
-            <section class="about-panel about-links-panel" :aria-label="t('options.aboutLearnMore')">
-              <h3>{{ t('options.aboutLearnMore') }}</h3>
-              <p class="about-panel-description">{{ t('options.aboutLinksDescription') }}</p>
+            <section class="about-panel about-links-panel" :aria-label="t('options.aboutLocalGuide')">
+              <h3>{{ t('options.aboutLocalGuide') }}</h3>
+              <p class="about-panel-description">{{ t('options.aboutLocalGuideDescription') }}</p>
               <div class="about-links">
-                <a v-for="link in aboutLinks" :key="link.label" :class="{ 'about-website': link.href === websiteUrl }" :href="link.href" target="_blank" rel="noopener noreferrer">
+                <button v-for="link in aboutLinks" :key="link.section" type="button" :data-about-section="link.section" @click="selectSection(link.section)">
                   <span class="about-link-icon"><UiIcon :name="link.icon" :size="23" /></span>
                   <span class="about-link-copy"><strong>{{ t(link.label) }}</strong><small>{{ t(link.description) }}</small></span>
-                  <UiIcon name="external" :size="16" />
-                </a>
-                <button
-                  ref="wechatContactTrigger"
-                  class="about-wechat-contact"
-                  type="button"
-                  aria-haspopup="dialog"
-                  @click="openQrPreview('contact')"
-                >
-                  <span class="about-link-icon"><UiIcon name="scan" :size="23" /></span>
-                  <span class="about-link-copy"><strong>{{ t('options.aboutWechatContact') }}</strong><small>{{ t('options.aboutWechatContactDescription') }}</small></span>
                   <UiIcon name="arrow-right" :size="16" />
                 </button>
               </div>
             </section>
-            <article class="about-panel about-support-panel">
-              <h3>{{ t('popup.donationTitle') }}</h3>
-              <p class="about-panel-description">{{ t('options.aboutThanks') }}</p>
-              <div class="about-support-options">
-                <button
-                  ref="approvePreviewTrigger"
-                  class="about-support-method about-support-wechat"
-                  data-support-method="wechat"
-                  type="button"
-                  :aria-label="t('options.aboutEnlargeCode')"
-                  :title="t('options.aboutEnlargeCode')"
-                  @click="openQrPreview('support')"
-                >
-                  <!-- 绑定表达式让模板编译器保留 public 路径，避免再打包一份带 hash 的同图。 -->
-                  <img class="about-support-qr" :src="getSupportImageUrl(approveUrl)" :alt="t('popup.donationCodeAlt')" width="1152" height="1152" />
-                  <span>{{ t('popup.donationWechat') }}</span>
-                </button>
-                <a class="about-support-method about-support-kofi-link" data-support-method="kofi" href="https://ko-fi.com/thinkstu" target="_blank" rel="noopener noreferrer">
-                  <span class="about-support-mark" aria-hidden="true"><UiIcon name="star" :size="26" /></span>
-                  <span class="about-support-kofi-label">{{ t('popup.donationKofi') }}<UiIcon name="external" :size="15" /></span>
-                </a>
-              </div>
+            <article class="about-panel about-personal-panel">
+              <h3>{{ t('options.aboutLocalSource') }}</h3>
+              <p class="about-panel-description">{{ t('options.aboutLocalSourceDescription') }}</p>
+              <code class="about-source-url" data-i18n-ignore>https://github.com/FluentRead/FluentRead</code>
+              <details class="about-license-details">
+                <summary>{{ t('options.aboutLocalLicense') }}</summary>
+                <pre data-i18n-ignore>{{ upstreamLicense.text }}</pre>
+              </details>
             </article>
           </div>
 
@@ -155,32 +137,12 @@
       </section>
 
     </main>
-    <el-dialog
-      v-model="approvePreviewVisible"
-      class="about-qr-dialog"
-      :class="qrPreviewKind === 'contact' ? 'about-wechat-contact-dialog' : 'about-approve-dialog'"
-      :title="qrPreviewKind === 'contact' ? t('options.aboutWechatContact') : t('popup.donationWechat')"
-      width="min(560px, calc(100vw - 32px))"
-      align-center
-      :close-on-click-modal="true"
-      :close-on-press-escape="true"
-      destroy-on-close
-      @closed="restoreApprovePreviewFocus"
-    >
-      <img
-        class="about-approve-preview"
-        :src="qrPreviewUrl"
-        :alt="qrPreviewKind === 'contact' ? t('options.aboutWechatContactCodeAlt') : t('popup.donationCodeAlt')"
-        :width="qrPreviewKind === 'contact' ? 888 : 1152"
-        :height="qrPreviewKind === 'contact' ? 1131 : 1152"
-      />
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import UiIcon from '@/src/ui/components/UiIcon.vue'
-import {getSupportImageUrl, getContactImageUrl} from './aboutImages'
+import upstreamLicense from '@/src/app/options/upstreamLicense.json'
 import {SETTINGS_TABBED_SECTION_IDS, settingsPagePanels, resolveSettingsPanel, filterNavigationItems, filterSettingsSearchTargets, isUiLanguageSearch, settingsSearchTargets} from '@/src/features/settings/model/navigation';
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import SettingsNavigationIcon from '@/src/features/settings/ui/SettingsNavigationIcon.vue'
@@ -212,30 +174,12 @@ const props = defineProps<{
 }>()
 let disposed = false
 const version = process.env.VUE_APP_VERSION
-const websiteUrl = 'https://read.thinkstu.com'
 const iconUrl = globalThis.__FLUENTREAD_ICON_DATA__ || '/icon/128.png'
-const approveUrl = globalThis.__FLUENTREAD_APPROVE_DATA__ || '/misc/approve.jpg'
-const approvePreviewVisible = ref(false)
-const qrPreviewUrl = ref<string>()
-const approvePreviewTrigger = ref<HTMLButtonElement | null>(null)
-const wechatContactTrigger = ref<HTMLButtonElement | null>(null)
-const qrPreviewKind = ref<'contact' | 'support'>('support')
-function openQrPreview(kind: 'contact' | 'support') {
-  const nextUrl = kind === 'contact' ? getContactImageUrl() : getSupportImageUrl(approveUrl)
-  qrPreviewKind.value = kind
-  qrPreviewUrl.value = nextUrl
-  approvePreviewVisible.value = true
-}
-function restoreApprovePreviewFocus() {
-  if (disposed || activeSection.value !== 'settings-about') return
-  const trigger = qrPreviewKind.value === 'contact' ? wechatContactTrigger : approvePreviewTrigger
-  trigger.value?.focus({preventScroll: true})
-}
 const aboutLinks = [
-  {href: websiteUrl, icon: 'globe', label: 'options.aboutWebsite', description: 'options.aboutWebsiteDescription'},
-  {href: 'https://fluent.thinkstu.com/', icon: 'book', label: 'options.aboutDocs', description: 'options.aboutDocsDescription'},
-  {href: 'https://github.com/Bistutu/FluentRead', icon: 'card', label: 'options.aboutProject', description: 'options.aboutProjectDescription'},
-  {href: 'https://github.com/Bistutu/FluentRead/issues', icon: 'info', label: 'options.aboutFeedback', description: 'options.aboutFeedbackDescription'},
+  {section: 'settings-services', icon: 'globe', label: 'options.aboutLocalApi', description: 'options.aboutLocalApiDescription'},
+  {section: 'settings-general', icon: 'book', label: 'options.aboutLocalReading', description: 'options.aboutLocalReadingDescription'},
+  {section: 'settings-selection', icon: 'card', label: 'options.aboutLocalSelection', description: 'options.aboutLocalSelectionDescription'},
+  {section: 'settings-interface', icon: 'info', label: 'options.aboutLocalAppearance', description: 'options.aboutLocalAppearanceDescription'},
 ]
 const {t, translateLegacy} = useUiI18n()
 const query = ref('')
@@ -506,7 +450,6 @@ async function revealActiveNavigation() {
 }
 
 watch(activeSection, () => {
-  approvePreviewVisible.value = false
   void revealActiveNavigation()
 })
 

@@ -444,14 +444,14 @@ function handleCancel() {
 .custom-hotkey-overlay {
   position: fixed; z-index: 3000; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  padding: 20px; overflow-y: auto; background: rgba(23, 32, 51, .38);
+  padding: 20px; overflow-y: auto; background: rgba(37, 42, 36, .38);
   backdrop-filter: blur(4px); font-family: inherit;
 }
 .custom-hotkey-dialog {
   display: flex; flex-direction: column; width: min(500px, 100%);
   max-height: calc(100dvh - 40px); min-height: 0; overflow: hidden;
-  border: 1px solid var(--line); border-radius: 16px; outline: none;
-  color: var(--ink); background: var(--surface); box-shadow: 0 16px 48px rgba(23,32,51,.16);
+  border: 1px solid var(--line); border-radius: 20px; outline: none;
+  color: var(--ink); background: var(--surface); box-shadow: var(--fr-menu-shadow);
 }
 .dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 22px 16px; border-bottom: 1px solid var(--line); }
 .dialog-heading, .section-heading { min-width: 0; }
@@ -503,8 +503,8 @@ function handleCancel() {
 .clear-button:hover { text-decoration: underline; }
 .secondary-button { border: 1px solid var(--line); color: var(--ink); background: var(--surface); }
 .secondary-button:hover { background: var(--surface-soft); }
-.primary-button { border: 1px solid var(--brand); color: #fff; background: var(--brand); }
-.primary-button:hover:not(:disabled) { background: var(--brand-strong); border-color: var(--brand-strong); }
+.primary-button { border: 1px solid var(--brand); color: var(--brand-strong); background: var(--brand-soft); }
+.primary-button:hover:not(:disabled) { background: color-mix(in srgb, var(--brand) 14%, var(--surface)); border-color: var(--brand-strong); }
 .primary-button:disabled { border-color: var(--line); color: var(--muted); background: var(--surface-soft); cursor: not-allowed; }
 .custom-hotkey-dialog button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 @media (max-width: 560px) {

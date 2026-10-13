@@ -4,7 +4,7 @@ import {parseHTML} from 'linkedom';
 const mocks = vi.hoisted(() => ({
     config: {on: true, disableImageTranslator: true, disableFloatingBall: true, floatingBallDisabledDomains: [] as string[], imageTranslationMangaEnabled: true,
         imageTranslationMangaPromptEnabled: true, imageTranslationMangaDownloadConfirmed: false,
-        imageTranslationMangaSites: [] as unknown[], imageTranslationMangaPrefetchPages:3, animations:false, from: 'auto', to: 'zh-Hans', imageTranslationService: ''},
+        imageTranslationMangaSites: [] as unknown[], imageTranslationMangaPrefetchPages:3, animations:false, theme:'auto' as 'light' | 'dark' | 'auto', from: 'auto', to: 'zh-Hans', imageTranslationService: ''},
     create: vi.fn(), status: vi.fn(), toggle: vi.fn(), subscribe: vi.fn(), persist: vi.fn(), send: vi.fn(),
     stopStatus: vi.fn(), stopConfig: vi.fn(),
 }));
@@ -23,7 +23,7 @@ beforeEach(() => {
     const dom = parseHTML('<html><body></body></html>');vi.stubGlobal('document', dom.document);vi.stubGlobal('Event', dom.window.Event);
     vi.stubGlobal('location', {href});
     Object.assign(mocks.config, {on: true, disableImageTranslator: true, disableFloatingBall: true, floatingBallDisabledDomains: [], imageTranslationMangaEnabled: true,
-        imageTranslationMangaPromptEnabled: true, imageTranslationMangaDownloadConfirmed: false, imageTranslationMangaSites: [], from: 'auto', to: 'zh-Hans', imageTranslationService: ''});
+        imageTranslationMangaPromptEnabled: true, imageTranslationMangaDownloadConfirmed: false, imageTranslationMangaSites: [], theme:'auto', from: 'auto', to: 'zh-Hans', imageTranslationService: ''});
     mocks.subscribe.mockReturnValue(mocks.stopConfig);mocks.status.mockReturnValue(mocks.stopStatus);
     mocks.create.mockResolvedValue({remove: vi.fn(), mounted: {instance: {open: vi.fn()}}});
     mocks.send.mockResolvedValue({success: true, ready: true, inpaintingReady: true});
@@ -31,6 +31,15 @@ beforeEach(() => {
 afterEach(() => {unmountMangaEntry();vi.unstubAllGlobals();});
 
 describe('独立漫画入口所有权和配置端口', () => {
+
+    it('把已保存主题传入实际漫画组件，并实时同步亮暗和跟随系统设置而不启动请求', async () => {
+        mocks.config.theme='light';await mountMangaEntry({} as never);
+        expect(props().settings.theme).toBe('light');
+        mocks.config.theme='dark';mocks.subscribe.mock.calls[0][0]();expect(props().settings.theme).toBe('dark');
+        mocks.config.theme='auto';document.dispatchEvent(new Event('fluentread-route-change'));expect(props().settings.theme).toBe('auto');
+        expect(mocks.send).not.toHaveBeenCalled();expect(mocks.toggle).not.toHaveBeenCalled();expect(mocks.persist).not.toHaveBeenCalled();
+    });
+
     it.each([
         ['https://mangalib.me/ru/1--title/read/v22/c129?p=2', 'ru', 'rus'],
         ['https://mangahub.ru/read/123?page=2', 'ru', 'rus'],
@@ -116,7 +125,7 @@ describe('独立漫画入口所有权和配置端口', () => {
         mocks.config.imageTranslationMangaDownloadConfirmed = true;mocks.config.imageTranslationService = 'google';
         mocks.config.imageTranslationMangaPrefetchPages = 0;
         mocks.config.from = 'ru';
-        mocks.subscribe.mock.calls[0][0]();expect(props().settings).toEqual({sourceLanguage: 'ru', promptEnabled: false, floatingBallVisible: false, to: 'en', downloadConfirmed: true, service: 'google', animations:false, toolsDisplay:'always', prefetchPages:0});
+        mocks.subscribe.mock.calls[0][0]();expect(props().settings).toEqual({sourceLanguage: 'ru', promptEnabled: false, floatingBallVisible: false, to: 'en', downloadConfirmed: true, service: 'google', animations:false, theme:'auto', toolsDisplay:'always', prefetchPages:0});
         location.href = 'https://example.com/';document.dispatchEvent(new Event('fluentread-route-change'));
         expect(props().page).toEqual({site: '', route: location.href});
         expect(openMangaEntry()).toBe(true);expect(value.mounted.instance.open).toHaveBeenCalledOnce();

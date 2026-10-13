@@ -292,7 +292,7 @@ watch(pickerOpen, (open) => {
   display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; min-height: 44px; padding: 8px 12px;
   border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: var(--surface); text-align: left; cursor: pointer;
 }
-.model-picker-trigger:hover { border-color: #ef9ab1; background: #fff8fa; }
+.model-picker-trigger:hover { border-color: color-mix(in srgb, var(--brand, #648433) 42%, var(--line, #dce3d2)); background: var(--surface-soft, #f5f7f0); }
 .model-picker-trigger > span { display: flex; min-width: 0; flex-direction: column; }
 .model-picker-trigger small { margin-top: 2px; color: var(--muted); font-size: 10px; }
 .model-picker-trigger strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
@@ -318,18 +318,18 @@ watch(pickerOpen, (open) => {
 .model-picker-heading strong { font-size: 14px; }
 .model-picker-heading small { margin-top: 2px; color: var(--muted); font-size: 10px; }
 .model-add-button, .model-add-form button {
-  padding: 7px 10px; border: 1px solid #ef4776; border-radius: 9px; color: var(--brand-strong); background: #fff4f7; font-size: 11px; font-weight: 750; cursor: pointer;
+  padding: 7px 10px; border: 1px solid var(--brand, #648433); border-radius: 9px; color: var(--brand-strong); background: var(--brand-soft, #edf5dd); font-size: 11px; font-weight: 750; cursor: pointer;
 }
-.model-add-button:disabled { border-color: var(--line); color: #9aa2b1; background: #f5f6f8; cursor: not-allowed; }
+.model-add-button:disabled { border-color: var(--line); color: var(--muted, #6f7869); background: var(--surface-soft, #f5f7f0); cursor: not-allowed; }
 .model-limit { margin: -2px 0 9px; color: #8b5b00; font-size: 10px; }
-.model-add-form { margin-bottom: 10px; padding: 10px; border: 1px solid #f2c0ce; border-radius: 11px; background: #fff7f9; }
-.model-add-form > label { display: block; margin-bottom: 6px; color: #46526a; font-size: 11px; font-weight: 700; }
+.model-add-form { margin-bottom: 10px; padding: 10px; border: 1px solid color-mix(in srgb, var(--brand, #648433) 30%, var(--line, #dce3d2)); border-radius: 11px; background: var(--brand-soft, #edf5dd); }
+.model-add-form > label { display: block; margin-bottom: 6px; color: var(--ink, #252a24); font-size: 11px; font-weight: 700; }
 .model-add-form > div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 7px; }
 .model-add-form input, .model-picker-search input {
   min-width: 0; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: var(--surface); outline: none; font-size: 12px;
 }
-.model-add-form input:focus, .model-picker-search input:focus { border-color: #ef4776; box-shadow: 0 0 0 3px rgba(239, 71, 118, .1); }
-.model-add-form .plain-button { border-color: transparent; color: #697386; background: transparent; }
+.model-add-form input:focus, .model-picker-search input:focus { border-color: var(--brand, #648433); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand, #648433) 10%, transparent); }
+.model-add-form .plain-button { border-color: transparent; color: var(--muted, #6f7869); background: transparent; }
 .model-error { margin: 7px 0 0; color: #c52f58; font-size: 10px; }
 .model-picker-search { display: grid; grid-template-columns: 18px minmax(0, 1fr); align-items: center; gap: 5px; margin-bottom: 9px; color: var(--muted); }
 .model-picker-search input { width: 100%; }
@@ -346,9 +346,9 @@ watch(pickerOpen, (open) => {
 .model-picker-option strong { min-width: 0; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
 .model-picker-chip.active .model-picker-option { color: var(--ink); }
 .model-check { color: var(--brand-strong); font-size: 11px; }
-.model-remove-button { width: 28px; padding: 0; border: 0; border-left: 1px solid #efd6dd; color: #a84a62; background: transparent; font-size: 15px; cursor: pointer; }
-.model-remove-button:hover { background: #fff0f4; }
-.model-picker-empty { margin: 18px 0 8px; color: #9299a8; font-size: 11px; text-align: center; }
+.model-remove-button { width: 28px; padding: 0; border: 0; border-left: 1px solid var(--line); color: var(--fr-danger, #b1435e); background: transparent; font-size: 15px; cursor: pointer; }
+.model-remove-button:hover { background: var(--fr-danger-soft, #fff0f3); }
+.model-picker-empty { margin: 18px 0 8px; color: var(--muted, #6f7869); font-size: 11px; text-align: center; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 :global(:root.dark .model-picker-popper.el-popper),
 :global(:root.dark .model-picker-panel) { border-color: var(--line); color: var(--ink); background: var(--surface); }

@@ -24,7 +24,7 @@ describe('learning center video source UI', () => {
         expect(youtube).not.toContain('需要启用 FluentRead 视频字幕');
         const x = await render({...context, sourceUrl: 'https://x.com/reader/status/123/video/2', video: {...context.video!, platform: 'x'}});
         expect(x).toContain('href="https://x.com/reader/status/123/video/2#fluentread-video=1250,4600"');
-        expect(x).toContain('片段定位需要启用 FluentRead 视频字幕');
+        expect(x).toContain('片段定位需要启用 万能说客（Wild Talker） 视频字幕');
         const local = await render({...context, sourceUrl: 'blob:local'});
         expect(local).not.toContain('<a'); expect(local).toContain('00:01–00:04'); expect(local).toContain('可按材料标题找回视频');
         const unnamed = await render({...context, sourceUrl: undefined, pageTitle: undefined});

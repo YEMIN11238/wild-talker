@@ -1,5 +1,6 @@
 /**
  * @file tests/selectionTranslatorLifecycle.test.ts
+ * 选区语境回归：真实净化捕获与篇章协议覆盖长文后半部重复歧义词、500 字符本段范围、授权与模型门禁，以及段落改写、断开和同词换区后的迟到隔离。
  * 文件职责：执行划词组件的实际挂载与卸载回调，验证扩展消息端口撤销不会留下宿主页面资源。
  * 主要内容：覆盖注销清理、原生右键菜单选区恢复与重复翻译复用、免费讲解明确启用及保存确认、用户 AI 偏好保护、关闭/换区/卸载后的迟到保存隔离、朗读生成与降级、取消、迟到响应、进度隔离和富文本 trim 后的 UTF-16 跟读偏移、顶栏菜单外点/焦点关闭边界、导航空白拖动、按配置与显式反向请求确定翻译语言和窗口尺寸变化清理、鉴权配置动作归属；可选真实 SFC 模板模式验证两处错误入口。
  * 模块边界：默认编译真实 Vue setup 并使用原有空渲染；新增入口可选官方模板和独立 Linkedom 节点树，浏览器、子组件与语言是受控 ports，不声称 CSS、原生焦点或真实浏览器验证。
@@ -17,7 +18,9 @@ import {Config} from '@/src/core/config/model';
 import * as selectionCore from '@/src/features/selection-translation/core';
 import * as translationErrors from '@/src/services/translation/errors';
 import * as harness from '@/src/core/config/harness';
-import {services} from '@/src/core/config/catalog';
+import {services, servicesType, resolveConfiguredModel} from '@/src/core/config/catalog';
+import {captureReadingSelection} from '@/src/features/reading-assistant/selectionContext';
+import {createDiscourseContext, discourseContextLimits} from '@/src/services/translation/context/discourse';
 import * as runtimeMessages from '@/src/platform/browser/runtimeMessages';
 import * as detect from '@/src/core/language/detect';
 import * as partOfSpeech from '@/src/core/language/partOfSpeech';
@@ -174,7 +177,8 @@ function mountSelection(privateContext = false, selectionAdapter?: Record<string
     const modules: Record<string, unknown> = {
         './SpeechFollowText.vue': renderTemplate
             ? {props: ['text'], setup: (props: {text: string}) => () => Vue.h('span', props.text)} : {},
-        '@/src/features/reading-assistant/public': {createReadingEvidenceAnchor: () => ({locate: () => 'unavailable', check: () => 'unavailable', suspend: vi.fn(), clear: vi.fn(), dispose: vi.fn()})},
+        '@/src/features/reading-assistant/public': {captureReadingSelection, createReadingEvidenceAnchor: () => ({locate: () => 'unavailable', check: () => 'unavailable', suspend: vi.fn(), clear: vi.fn(), dispose: vi.fn()})},
+        '@/src/services/translation/context/discourse': {createDiscourseContext, discourseContextLimits},
         '@/src/core/tts/speechProgress': speechProgress,
         '@/src/core/translation/result': {hasDistinctTranslation},
         vue: {...Vue, useTemplateRef: () => Vue.ref(null)},
@@ -186,7 +190,7 @@ function mountSelection(privateContext = false, selectionAdapter?: Record<string
         '@/src/services/translation/errors': translationErrors,
         '@/src/features/selection-translation/services/wordNormalization': wordNormalization,
         '@/src/core/config/harness': harness,
-        '@/src/core/config/catalog': {services},
+        '@/src/core/config/catalog': {services, servicesType, resolveConfiguredModel},
         '@/src/core/language/detect': detect,
         '@/src/core/language/partOfSpeech': partOfSpeech,
         '@/src/features/vocabulary/protocol': vocabularyProtocol,
@@ -236,6 +240,166 @@ function mountSelection(privateContext = false, selectionAdapter?: Record<string
         registerContextMenu, get contextMenuHandler() {return contextMenuHandler;},
         lifecycleErrors, renderPort, unmount: () => { currentApp.unmount(); app = undefined; }};
 }
+
+describe('ordinary selection paragraph evidence', () => {
+    async function prepare() {
+        const fixture = mountSelection();
+        fixture.config.service = services.openai;
+        fixture.config.enableAIContext = true;
+        fixture.state.selectionConfigVersion += 1;
+        await Vue.nextTick();
+        const {document} = parseHTML('<html><body><article><p id="earlier"></p><p id="selected"></p></article></body></html>');
+        document.querySelector('#earlier')!.textContent = 'EARLY_FINANCIAL_CONTEXT: the bank approved a mortgage. '.repeat(150);
+        const paragraph = document.querySelector('#selected')!;
+        const source = 'Earlier the bank approved a mortgage. ' + 'The walk continued past trees and old bridges. '.repeat(70)
+            + 'At the end of the walk we sat on the bank of the river beside the water.';
+        const node = document.createTextNode(source);
+        paragraph.append(node);
+        const offset = source.lastIndexOf('bank');
+        const range = Vue.markRaw({startContainer: node, endContainer: node, startOffset: offset, endOffset: offset + 4,
+            toString: () => node.textContent!.slice(offset, offset + 4)} as unknown as Range);
+        fixture.state.snapshot = {text: 'bank', range, parts: [{kind: 'text', text: 'bank'}]};
+        fixture.state.selectedText = 'bank';
+        const request = fixture.state.beginSelectionContentRequest('bank');
+        return {...fixture, paragraph, node, range, request};
+    }
+
+    it('uses the selected later occurrence and only its bounded local paragraph, while leaving page capture to the client', async () => {
+        const fixture = await prepare();
+        fixture.paragraph.append(Object.assign(fixture.node.ownerDocument!.createElement('span'), {textContent: 'HIDDEN_CONTEXT'}));
+        fixture.paragraph.lastElementChild!.setAttribute('hidden', '');
+        await fixture.state.requestTranslation(fixture.request);
+        const options = fixture.translateText.mock.calls[0][2];
+        const reference = JSON.parse(options.discourseContext);
+        expect(reference).toMatchObject({version: 1, section: 'selected paragraph', evidence: expect.any(Array)});
+        expect(reference.evidence).toEqual(expect.arrayContaining([expect.objectContaining({source: expect.stringContaining('bank of the river')})]));
+        expect(options.discourseContext).not.toContain('mortgage');
+        expect(options.discourseContext).not.toContain('EARLY_FINANCIAL_CONTEXT');
+        expect(options.discourseContext).not.toContain('HIDDEN_CONTEXT');
+        expect(reference.evidence[0].source).toContain('At the end of the walk we sat on the bank of the river beside the water.');
+        expect(reference.evidence.every((item: {source: string}) => item.source.length <= 500)).toBe(true);
+        expect(options.discourseContext.length).toBeLessThanOrEqual(2400);
+        expect(options).not.toHaveProperty('pageContext');
+        expect(fixture.state.translationResult).toBe('这是译文');
+    });
+
+    it.each(['disabled', 'machine', 'translation-model'] as const)('does not capture paragraph evidence under the existing %s context policy', async policy => {
+        const fixture = await prepare();
+        if (policy === 'disabled') fixture.config.enableAIContext = false;
+        if (policy === 'machine') fixture.config.service = services.microsoft;
+        if (policy === 'translation-model') {
+            fixture.config.service = services.tongyi;
+            fixture.config.model[services.tongyi] = 'qwen-mt-turbo';
+        }
+        fixture.state.selectionConfigVersion += 1;
+        await fixture.state.requestTranslation(fixture.request);
+        expect(fixture.translateText.mock.calls[0][2]).not.toHaveProperty('discourseContext');
+    });
+
+    it('preserves document adapter context instead of collecting the surrounding webpage', async () => {
+        const context = vi.fn(() => ({text: 'Document-owned context', title: 'Document title', sourceUrl: ''}));
+        const fixture = mountSelection(false, {acceptsRange: () => true, context});
+        fixture.config.service = services.openai;
+        fixture.config.enableAIContext = true;
+        fixture.state.selectionConfigVersion += 1;
+        fixture.state.snapshot = {text: 'bank', range: {}, parts: [{kind: 'text', text: 'bank'}]};
+        fixture.state.selectedText = 'bank';
+        await fixture.state.requestTranslation(fixture.state.beginSelectionContentRequest('bank'));
+        expect(context).toHaveBeenCalledWith(expect.anything(), 'bank', 4000);
+        expect(fixture.translateText).toHaveBeenCalledWith('bank', 'Document title', expect.objectContaining({pageContext: 'Document-owned context'}));
+        expect(fixture.translateText.mock.calls[0][2]).not.toHaveProperty('discourseContext');
+    });
+
+    const sourceChanges = ['rewrite', 'disconnect', 'selection-change', 'ancestor-display', 'ancestor-hidden', 'ancestor-collapse'] as const;
+    function changeSource(fixture: Awaited<ReturnType<typeof prepare>>, change: typeof sourceChanges[number]) {
+        if (change === 'rewrite') fixture.node.textContent = fixture.node.textContent!.replace('river', 'loan counter');
+        if (change === 'disconnect') fixture.paragraph.remove();
+        if (change === 'selection-change') fixture.state.snapshot = {...fixture.state.snapshot, range: {...fixture.range}};
+        if (change === 'ancestor-display') fixture.paragraph.parentElement!.style.display = 'none';
+        if (change === 'ancestor-hidden') fixture.paragraph.parentElement!.style.visibility = 'hidden';
+        if (change === 'ancestor-collapse') fixture.paragraph.parentElement!.style.visibility = 'collapse';
+    }
+
+    it.each(sourceChanges)('rejects the late result when its local evidence has a %s', async change => {
+        const fixture = await prepare();
+        let finish!: (text: string) => void;
+        fixture.translateText.mockImplementation(() => new Promise(resolve => {finish = resolve;}));
+        const pending = fixture.state.requestTranslation(fixture.request);
+        expect(fixture.translateText).toHaveBeenCalledOnce();
+        changeSource(fixture, change);
+        finish('旧语境的迟到译文');
+        await pending;
+        expect(fixture.state.translationResult).toBe('');
+        expect(fixture.state.isLoading).toBe(false);
+    });
+
+    it.each(sourceChanges.flatMap(change => (['authentication', 'network'] as const).map(kind => [change, kind] as const)))
+    ('rejects the late %s source failure (%s) without showing an old error or settings action', async (change, kind) => {
+        const fixture = await prepare();
+        let fail!: (reason: Error) => void;
+        fixture.translateText.mockImplementation(() => new Promise((_resolve, reject) => {fail = reject;}));
+        const pending = fixture.state.requestTranslation(fixture.request);
+        changeSource(fixture, change);
+        const cause = new translationErrors.TranslationRequestError(translationErrors.serializeTranslationError({
+            kind, message: kind === 'authentication' ? 'controlled invalid credential' : 'controlled network failure',
+        }));
+        expect(cause.kind).toBe(kind);
+        fail(cause);
+        await pending;
+        expect(fixture.state.translationResult).toBe('');
+        expect(fixture.state.error).toBe('');
+        expect(fixture.state.authenticationError).toBeNull();
+        expect(fixture.state.openingAuthenticationSettings).toBeNull();
+        expect(fixture.state.isLoading).toBe(false);
+    });
+
+    it.each(['display:none', 'visibility:hidden', 'visibility:collapse'])('omits initial paragraph evidence beneath an ancestor with %s', async style => {
+        const fixture = await prepare();
+        fixture.paragraph.parentElement!.setAttribute('style', style);
+        await fixture.state.requestTranslation(fixture.request);
+        expect(fixture.translateText.mock.calls[0][2]).not.toHaveProperty('discourseContext');
+    });
+
+    it.each(['resolve', 'reject'] as const)('discards a canceled %s after the source becomes visible again, then allows a new request', async result => {
+        const fixture = await prepare();
+        let finish!: (value: string) => void, fail!: (reason: Error) => void;
+        fixture.translateText.mockImplementationOnce(() => new Promise((resolve, reject) => {finish = resolve; fail = reject;}));
+        const pending = fixture.state.requestTranslation(fixture.request);
+        const signal = fixture.translateText.mock.calls[0][2].signal as AbortSignal;
+        fixture.paragraph.parentElement!.style.display = 'none';
+        fixture.state.resetSelectionContentState();
+        fixture.paragraph.parentElement!.style.display = '';
+        expect(signal.aborted).toBe(true);
+        if (result === 'resolve') finish('旧请求不应恢复');
+        else fail(new translationErrors.TranslationRequestError(translationErrors.serializeTranslationError({kind: 'authentication', message: 'controlled late failure'})));
+        await pending;
+        expect(fixture.state.translationResult).toBe('');
+        expect(fixture.state.error).toBe('');
+        expect(fixture.state.authenticationError).toBeNull();
+        expect(fixture.state.isLoading).toBe(false);
+        await fixture.state.requestTranslation(fixture.state.beginSelectionContentRequest('bank'));
+        expect(fixture.state.translationResult).toBe('这是译文');
+        expect(fixture.translateText.mock.calls[1][2].signal.aborted).toBe(false);
+    });
+
+    it('omits evidence when the selected text is the whole paragraph', async () => {
+        const fixture = await prepare();
+        fixture.node.textContent = 'bank';
+        Object.assign(fixture.range, {startOffset: 0, endOffset: 4});
+        await fixture.state.requestTranslation(fixture.request);
+        expect(fixture.translateText.mock.calls[0][2]).not.toHaveProperty('discourseContext');
+    });
+
+    it('omits an oversized escaped reference rather than cutting the selected sentence or emitting invalid JSON', async () => {
+        const fixture = await prepare();
+        fixture.node.textContent = '<'.repeat(420) + 'The bank of the river is beside the water.';
+        const offset = fixture.node.textContent.indexOf('bank');
+        Object.assign(fixture.range, {startOffset: offset, endOffset: offset + 4});
+        await fixture.state.requestTranslation(fixture.request);
+        expect(fixture.translateText.mock.calls[0][2]).not.toHaveProperty('discourseContext');
+        expect(fixture.state.translationResult).toBe('这是译文');
+    });
+});
 
 describe('explicit free selection explanation', () => {
     function prepare(configReady?: Promise<void>, browserTarget: SelectionBuildTarget = 'chrome') {

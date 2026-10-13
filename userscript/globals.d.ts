@@ -61,11 +61,11 @@ declare global {
     var GM_addStyle: undefined | ((css: string) => unknown);
     var unsafeWindow: Window | undefined;
     var __FLUENTREAD_ICON_DATA__: string | undefined;
-    var __FLUENTREAD_APPROVE_DATA__: string | undefined;
     var __fluentReadUserscriptCss: string | undefined;
     var __fluentReadUserscriptCssCompressed: string | undefined;
     var __FLUENTREAD_USERSCRIPT_DATA__: {
         english: UiLanguageBundle;
+        languageBundles?: Readonly<Record<string, UiLanguageBundle>>;
         zhCNMessages: Record<string, unknown>;
         siteCatalogs: Record<string, unknown>;
         css: string;
@@ -73,6 +73,7 @@ declare global {
     var pako: {ungzip(data: Uint8Array, options?: {to?: string}): string | Uint8Array} | undefined;
     const __FLUENTREAD_USERSCRIPT_LANGUAGE_BUNDLES__: Readonly<Record<string, string>>;
     const __FLUENTREAD_USERSCRIPT_REMOTE_LANGUAGES__: Readonly<Record<string, string>>;
+    const __FLUENTREAD_USERSCRIPT_LANGUAGE_PATCHES__: string;
     const __FLUENTREAD_USERSCRIPT_RESOURCE_COMMIT__: string;
     const __FLUENTREAD_FULL_OPTIONS__: boolean;
     var browser: any;

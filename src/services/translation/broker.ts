@@ -823,7 +823,7 @@ export function createTranslationBroker(deps: TranslationBrokerDependencies): Tr
                 )
                     ? await callSingleProviderWithoutPageContext(execution, slotMessage, requestDeadline, validationPageContext)
                     : await recoverInvalidResult(execution, slotMessage, translation, requestDeadline, context, validationPageContext);
-                if (!hasTranslationContent(parsed[index]!)) throw new TranslationSlotResponseError();
+                // 两个单槽恢复出口均已拒绝不可见译文；这里只组装其完成校验后的字符串。
             }
             return parsed.map((translation, index) =>
                 `${protocol.packet.starts[index]}${translation}${protocol.packet.ends[index]}`).join('\n');
@@ -906,7 +906,8 @@ export function createTranslationBroker(deps: TranslationBrokerDependencies): Tr
         startWithoutPageContext: boolean,
     ): Promise<string[]> {
         if (message.origin.length === 1) {
-            const singleMessage = {...message, origin: message.origin[0] ?? ''};
+            // 上游已剔除空/缺失来源；单元素批次必然持有可翻译字符串。
+            const singleMessage = {...message, origin: message.origin[0]!};
             return [startWithoutPageContext
                 ? await callSingleProviderWithoutPageContext(
                     execution,
@@ -1470,11 +1471,13 @@ export function createTranslationBroker(deps: TranslationBrokerDependencies): Tr
             );
             const leakedCachedIndexes = new Set<number>();
             const validatedCached = cached.map((value, index) => {
-                if (!hasTranslationContent(message.origin[index] ?? '')) return message.origin[index] ?? '';
-                if (value === null || !isCacheableResult(message.origin[index] ?? '', value, execution.targetLanguage, execution.config)) return null;
+                // 同一次缓存校验只读取一次来源；缺失槽保持为空，后续判断复用已校验的字符串。
+                const origin = message.origin[index] ?? '';
+                if (!hasTranslationContent(origin)) return origin;
+                if (value === null || !isCacheableResult(origin, value, execution.targetLanguage, execution.config)) return null;
                 if (!isDefiniteRecoveryPageContextLeak(
                     execution,
-                    message.origin[index] ?? '',
+                    origin,
                     value,
                     pageContext,
                     message.modelOverride,

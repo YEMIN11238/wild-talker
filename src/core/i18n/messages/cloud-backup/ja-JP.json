@@ -72,7 +72,7 @@
     "settings.webdav.error.decrypt": "バックアップを復号できないか破損しています。端末の設定は変更されていません。",
     "settings.webdav.error.failure": "操作が完了しませんでした。ネットワークとローカルストレージを確認して再試行してください。",
     "settings.cloud.privacyEncryption": "設定は端末で暗号化してから送信します。アプリの合言葉は公開されているため、主な保護はアカウント、フォルダー権限、端末の安全性によります。",
-    "settings.cloud.privacyWebDavStorage": "指定したサーバーのフォルダー内にある FluentRead のバックアップのみアクセスします。",
+    "settings.cloud.privacyWebDavStorage": "指定したサーバーのフォルダー内にある 万能说客（Wild Talker） のバックアップのみアクセスします。",
     "settings.cloud.privacyWebDavConnection": "接続パスワードはこの端末にのみ保存され、手動操作時にだけサーバーへアクセスします。",
     "settings.cloud.currentAccount": "バックアップアカウント：{email}",
     "settings.cloud.changed.credentials": "API キー、OAuth トークンと認証情報",

@@ -1,4 +1,4 @@
-import {readFileSync, realpathSync, mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
+import {existsSync, readFileSync, realpathSync, mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {tmpdir} from 'node:os';
 import {createHash, createHmac, createCipheriv} from 'node:crypto';
@@ -18,11 +18,8 @@ import * as functionWordData from '@/src/core/language/functionWordData';
 import {createUserscriptCharacterDataCompressionPlugin} from '@/userscript/characterDataPlugin';
 import {createUserscriptFrancDataCompressionPlugin} from '@/userscript/francDataPlugin';
 import {createUserscriptTldtsDataCompressionPlugin} from '@/userscript/tldtsDataPlugin';
-import {createUserscriptAboutImagesCompressionPlugin} from '@/userscript/aboutImagesPlugin';
 import {createUserscriptServiceBrandIconsCompressionPlugin} from '@/userscript/serviceBrandIconsPlugin';
 import originalServiceBrandPaths from '@/src/ui/assets/serviceBrandPaths.json';
-import {getSupportImageUrl as getNormalSupportImageUrl, getContactImageUrl as getNormalContactImageUrl} from '@/src/app/options/aboutImages';
-import ordinaryContactAsset from '@/src/app/options/assets/wechat-contact.jpg';
 import {inflateWithPako as inflateBundledFrancData} from '@/userscript/pakoBundled';
 import {inflateBytesWithPako as inflateBundledTldtsData, decodeUtf8WithPako as decodeBundledTldtsLabels} from '@/userscript/pakoBundled';
 import {data as lockedFrancData} from 'franc-min/data.js';
@@ -197,7 +194,40 @@ describe('userscript inline CSS compression', () => {
 });
 
 describe('authoritative site catalogs with an external pinned data asset', () => {
-    it.each(['unchanged', 'old-asset', 'reordered', 'removed-rule', 'missing-runtime-rule'] as const)
+    it.each(['unchanged', 'missing-runtime-profile'] as const)('checks dictionary profile IDs in the %s runtime while preserving valid data identity', async variant => {
+        const vm = await vi.importActual<typeof import('node:vm')>('node:vm');
+        const authoritative = JSON.parse(readFileSync(resolve(process.cwd(), 'src/core/site-adaptation/catalog/profiles.json'), 'utf8'));
+        const data = vm.runInNewContext(readFileSync(resolve(process.cwd(), 'userscript/resources/fluentread-data.v1.js'), 'utf8'), {}, {timeout: 5000});
+        data.siteCatalogs.profiles = structuredClone(authoritative);
+        vi.doMock('node:vm', () => ({...vm, runInNewContext: () => data}));
+        vi.stubEnv('FLUENTREAD_USERSCRIPT_GREASYFORK_SOURCE', '1');
+        vi.stubEnv('FLUENTREAD_USERSCRIPT_VENDOR_URL', 'https://fixture.invalid/vendor.js');
+        vi.stubEnv('FLUENTREAD_USERSCRIPT_DATA_URL', 'https://fixture.invalid/data.js');
+        try {
+            vi.resetModules();
+            const {createUserscriptCatalogCompressionPlugin: createPlugin} = await import('@/userscript/vite.config');
+            const {transformWithEsbuild} = await import('vite');
+            const plugin = createPlugin();
+            const resolveId = typeof plugin.resolveId === 'function' ? plugin.resolveId : plugin.resolveId!.handler;
+            const load = typeof plugin.load === 'function' ? plugin.load : plugin.load!.handler;
+            const id = await Reflect.apply(resolveId, {}, ['./catalog/profiles.json', resolve(process.cwd(), 'src/core/site-adaptation/pack.ts')]);
+            const source = await Reflect.apply(load, {}, [id]);
+            const compiled = await transformWithEsbuild(source, 'pinned-profiles.js', {format: 'cjs', target: 'es2018'});
+            if (variant === 'missing-runtime-profile') delete data.siteCatalogs.profiles.documentation;
+            const before = JSON.stringify(data), original = data.siteCatalogs.profiles;
+            const realm = {module: {exports: {} as any}, __FLUENTREAD_USERSCRIPT_DATA__: data};
+            if (variant === 'missing-runtime-profile') {
+                expect(() => vm.runInNewContext(compiled.code, realm, {timeout: 5000})).toThrow('Missing pinned userscript site rule: documentation');
+            } else {
+                vm.runInNewContext(compiled.code, realm, {timeout: 5000});
+                expect(realm.module.exports.default).toEqual(authoritative);
+                expect(realm.module.exports.default).toBe(original);
+            }
+            expect(JSON.stringify(data)).toBe(before);
+        } finally {vi.doUnmock('node:vm');vi.unstubAllEnvs();vi.resetModules();}
+    });
+
+    it.each(['unchanged', 'old-asset', 'reordered', 'removed-rule', 'missing-runtime-rule', 'runtime-reordered', 'runtime-extra-rule', 'missing-runtime-catalog'] as const)
     ('reconciles %s without mutating the external asset', async variant => {
         const vm = await vi.importActual<typeof import('node:vm')>('node:vm');
         const authoritative = JSON.parse(readFileSync(resolve(process.cwd(), 'src/core/site-adaptation/catalog/established.json'), 'utf8'));
@@ -207,6 +237,11 @@ describe('authoritative site catalogs with an external pinned data asset', () =>
         }
         if (variant === 'reordered') data.siteCatalogs.established.reverse();
         if (variant === 'removed-rule') data.siteCatalogs.established.push({id: 'removed-pinned-rule', match: {hosts: ['removed.invalid']}});
+        if (variant === 'old-asset') {
+            // 资源重新准备后也保留旧资源分支：模拟缺少新规则并含一条旧定义的已发布数据。
+            data.siteCatalogs.established = structuredClone(authoritative).filter((rule: {id: string}) => rule.id !== 'openrouter');
+            data.siteCatalogs.established[0].name = 'Synthetic older rule';
+        }
         vi.doMock('node:vm', () => ({...vm, runInNewContext: () => data}));
         vi.stubEnv('FLUENTREAD_USERSCRIPT_GREASYFORK_SOURCE', '1');
         vi.stubEnv('FLUENTREAD_USERSCRIPT_VENDOR_URL', 'https://fixture.invalid/vendor.js');
@@ -222,10 +257,15 @@ describe('authoritative site catalogs with an external pinned data asset', () =>
             const source = await Reflect.apply(load, {}, [id]);
             const compiled = await transformWithEsbuild(source, 'pinned-catalog.js', {format: 'cjs', target: 'es2018'});
             if (variant === 'missing-runtime-rule') data.siteCatalogs.established = data.siteCatalogs.established.filter((rule: {id: string}) => rule.id !== 'openrouter');
+            if (variant === 'runtime-reordered') data.siteCatalogs.established.reverse();
+            if (variant === 'runtime-extra-rule') data.siteCatalogs.established.push({id: 'runtime-extra-rule', match: {hosts: ['extra.invalid']}});
+            if (variant === 'missing-runtime-catalog') delete data.siteCatalogs.established;
             const before = JSON.stringify(data), original = data.siteCatalogs.established;
             const realm = {module: {exports: {} as any}, __FLUENTREAD_USERSCRIPT_DATA__: data};
             if (variant === 'missing-runtime-rule') {
                 expect(() => vm.runInNewContext(compiled.code, realm, {timeout: 5000})).toThrow('Missing pinned userscript site rule: openrouter');
+            } else if (variant === 'missing-runtime-catalog') {
+                expect(() => vm.runInNewContext(compiled.code, realm, {timeout: 5000})).toThrow('Invalid pinned userscript site catalog: established');
             } else {
                 vm.runInNewContext(compiled.code, realm, {timeout: 5000});
                 const result = realm.module.exports.default;
@@ -260,27 +300,25 @@ describe('userscript browser shim injection', () => {
             expect(original.messages['learning.reloadPage']).toBeTruthy();
         }
     });
-    it.each(['standard', 'standalone'] as const)('keeps %s runtime icon inline and pins only the standard manager icon', async mode => {
+    it.each(['standard', 'standalone', 'greasyfork'] as const)('keeps %s metadata and runtime icons equal to the actual local PNG without a stale remote brand', async mode => {
         vi.stubEnv('FLUENTREAD_USERSCRIPT_STANDALONE', mode === 'standalone' ? '1' : '');
-        vi.stubEnv('FLUENTREAD_USERSCRIPT_GREASYFORK_SOURCE', '');
+        vi.stubEnv('FLUENTREAD_USERSCRIPT_GREASYFORK_SOURCE', mode === 'greasyfork' ? '1' : '');
+        vi.stubEnv('FLUENTREAD_USERSCRIPT_VENDOR_URL', 'https://example.test/fluentread-vendor.v1.js');
+        vi.stubEnv('FLUENTREAD_USERSCRIPT_DATA_URL', 'https://example.test/fluentread-data.v1.js');
         try {
             vi.resetModules();
             const {default: config} = await import('@/userscript/vite.config');
             const plugins = (config as {plugins: Array<{name: string; generateBundle?: {handler: Function}}>}).plugins;
             const plugin = plugins.find(item => item.name === 'bundle-userscript-css')!;
             const entry = {type: 'chunk', isEntry: true, code: 'var fixture = 1;', moduleIds: []};
-            await Reflect.apply(plugin.generateBundle!.handler, {}, [{}, {'entry.js': entry}]);
+            await Reflect.apply(plugin.generateBundle!.handler, {emitFile: vi.fn()}, [{}, {'entry.js': entry}]);
             const iconBytes = readFileSync(resolve(process.cwd(), 'public/icon/64.png'));
             const runtimeIcon = JSON.parse(entry.code.match(/globalThis\.__FLUENTREAD_ICON_DATA__=("[^"]+");/u)![1]) as string;
-            expect(Buffer.from(runtimeIcon.split(',')[1], 'base64')).toEqual(iconBytes);
             const metadataIcon = entry.code.match(/^\/\/ @icon\s+(.+)$/mu)![1];
-            if (mode === 'standalone') expect(metadataIcon).toBe(runtimeIcon);
-            else {
-                const pinned = metadataIcon.match(/^https:\/\/cdn\.jsdelivr\.net\/gh\/FluentRead\/FluentRead@([a-f0-9]{40})\/public\/icon\/64\.png$/u);
-                expect(pinned).not.toBeNull();
-                expect(execFileSync('git', ['show', `${pinned![1]}:public/icon/64.png`], {cwd: process.cwd()})).toEqual(iconBytes);
-                expect(metadataIcon).not.toBe(runtimeIcon);
-            }
+            expect(runtimeIcon).toMatch(/^data:image\/png;base64,/u);
+            expect(metadataIcon).toBe(runtimeIcon);
+            expect(Buffer.from(runtimeIcon.split(',')[1], 'base64')).toEqual(iconBytes);
+            expect(Buffer.from(metadataIcon.split(',')[1], 'base64')).toEqual(iconBytes);
         } finally {vi.unstubAllEnvs();vi.resetModules();}
     });
     it.each<readonly [string, Record<string, string>, Record<string, string>]>([
@@ -323,16 +361,24 @@ describe('userscript browser shim injection', () => {
         controller.refresh();controller.dispose();expect(controller.getState().enabled).toBe(false);
         expect(userscriptAliases.find(alias => alias.find === '@/src/features/information-highlight/public')?.replacement).toMatch(/userscript\/informationHighlight\.ts$/u);
     });
-    it('pins each remote language file to a commit containing exactly its built contents', () => {
+    it('pins five published language baselines and ships current changes without declaring unpublished resource URLs', () => {
         const defines = (userscriptConfig as {define: Record<string, string>}).define;
+        const remote = JSON.parse(defines.__FLUENTREAD_USERSCRIPT_REMOTE_LANGUAGES__);
+        const embedded = JSON.parse(defines.__FLUENTREAD_USERSCRIPT_LANGUAGE_BUNDLES__) as Record<string, string>;
         const commit = JSON.parse(defines.__FLUENTREAD_USERSCRIPT_RESOURCE_COMMIT__);
-        const bundles = JSON.parse(defines.__FLUENTREAD_USERSCRIPT_REMOTE_LANGUAGES__) as Record<string, string>;
-        expect(commit).toMatch(/^[a-f0-9]{40}$/u);
-        expect(Object.keys(bundles)).toHaveLength(5);
-        for (const file of Object.values(bundles)) {
-            const path = `userscript/languages/${file}`;
-            const committed = execFileSync('git', ['show', `${commit}:${path}`], {cwd: process.cwd(), encoding: 'utf8'});
-            expect(committed).toBe(readFileSync(resolve(process.cwd(), path), 'utf8'));
+        const patches = JSON.parse(gunzipSync(Buffer.from(JSON.parse(defines.__FLUENTREAD_USERSCRIPT_LANGUAGE_PATCHES__), 'base64')).toString('utf8'));
+        expect(commit).toBe('240cbc42de9d1141c679fb595afea055397ac656');
+        expect(Object.keys(embedded)).toEqual(['en-US']);
+        expect(Object.keys(remote).sort()).toEqual(['es-ES', 'fr-FR', 'ja-JP', 'ko-KR', 'ru-RU']);
+        expect(Object.keys(patches).sort()).toEqual(Object.keys(remote).sort());
+        for (const [language, fileName] of Object.entries(remote)) {
+            const path = `userscript/languages/${fileName}`;
+            expect(execFileSync('git', ['ls-tree', '--name-only', commit, path], {encoding: 'utf8'}).trim()).toBe(path);
+            const published = execFileSync('git', ['show', `${commit}:${path}`], {encoding: 'utf8'});
+            expect(readFileSync(resolve(process.cwd(), path), 'utf8')).toBe(published);
+            expect(fileName).toBe(`${language}.${createHash('sha256').update(published.trimEnd()).digest('hex').slice(0, 16)}.json`);
+            expect(patches[language].messages.set['settings.services.prompts.presetNatural']).toBe(UI_LANGUAGE_BUNDLES[language as keyof typeof UI_LANGUAGE_BUNDLES].messages['settings.services.prompts.presetNatural']);
+            expect(patches[language].messages.remove.some((key: string) => key.startsWith('document.'))).toBe(true);
         }
     });
     it('embeds the Chinese fallback catalog, minus the reader-only keys of the extension document page, as lossless static data', () => {
@@ -1087,156 +1133,32 @@ describe('standalone locked public and private suffix pure-data encoding', () =>
     });
 });
 
-describe('standalone About images at explicit use boundaries', () => {
-    const root = process.cwd();
-    const helperId = realpathSync(resolve(root, 'src/app/options/aboutImages.ts'));
-    const originalImage = (relative: string) => readFileSync(resolve(root, relative));
-    const originals = {
-        support: originalImage('public/misc/approve.jpg'),
-        contact: originalImage('src/app/options/assets/wechat-contact.jpg'),
-    };
-    const expectedUrl = (kind: keyof typeof originals) => 'data:image/jpeg;base64,' + originals[kind].toString('base64');
-    const createPlugin = (enabled = true, fixtureRoot = root) => createUserscriptAboutImagesCompressionPlugin(fixtureRoot, enabled) as unknown as {
-        name: string; load(id: string): string | null;
-    };
-    async function loadAccessors(decoder = vi.fn(inflateBundledFrancData)) {
-        const source = createPlugin().load(helperId)!;
-        const {transformWithEsbuild} = await import('vite');
-        const compiled = await transformWithEsbuild(source, 'about-images-owner.js', {format: 'cjs', target: 'es2018'});
-        const module = {exports: {} as {getSupportImageUrl(normal: string): string; getContactImageUrl(): string}};
-        const decode = vi.fn(atob);
-        const hostImage = {controlledHostImage: true};
-        const realm = {module, exports: module.exports, Uint8Array, atob: decode,
-            __FLUENTREAD_APPROVE_DATA__: hostImage,
-            require: (id: string) => {
-                expect(id).toBe('@/userscript/pakoRuntime');
-                return {inflateWithPako: decoder};
-            }};
-        runInNewContext(compiled.code, realm, {timeout: 5_000});
-        expect(decoder).not.toHaveBeenCalled();
-        expect(decode).not.toHaveBeenCalled();
-        expect(realm.__FLUENTREAD_APPROVE_DATA__).toBe(hostImage);
-        return {api: module.exports, decoder, decode, realm, hostImage, source};
-    }
-    function assertImage(actual: string, kind: keyof typeof originals) {
-        expect(actual).toBe(expectedUrl(kind));
-        expect(Buffer.from(actual.slice('data:image/jpeg;base64,'.length), 'base64')).toEqual(originals[kind]);
-    }
-
-    it('keeps the ordinary caller snapshot and existing contact asset route', () => {
-        for (const normal of ['/misc/approve.jpg', 'controlled-captured-data-url', '']) {
-            expect(getNormalSupportImageUrl(normal)).toBe(normal);
-        }
-        expect(getNormalContactImageUrl()).toBe(ordinaryContactAsset);
-    });
-
-    it.each(['support-first', 'contact-first'] as const)('keeps import lazy and restores complete original JPEGs independently with %s', async order => {
-        const h = await loadAccessors();
-        const support = () => h.api.getSupportImageUrl('controlled-normal-url');
-        const contact = () => h.api.getContactImageUrl();
-        const first = order === 'support-first' ? support : contact;
-        const second = order === 'support-first' ? contact : support;
-        assertImage(first(), order === 'support-first' ? 'support' : 'contact');
-        expect(h.decoder).toHaveBeenCalledTimes(1);expect(h.decode).toHaveBeenCalledTimes(1);
-        first();first();expect(h.decoder).toHaveBeenCalledTimes(1);
-        assertImage(second(), order === 'support-first' ? 'contact' : 'support');
-        expect(h.decoder).toHaveBeenCalledTimes(2);expect(h.decode).toHaveBeenCalledTimes(2);
-        assertImage(support(), 'support');assertImage(contact(), 'contact');
-        expect(h.decoder).toHaveBeenCalledTimes(2);
-        expect(h.realm.__FLUENTREAD_APPROVE_DATA__).toBe(h.hostImage);
-    });
-
-    it.each(['support', 'contact'] as const)('does not publish a failed %s restoration or affect the other successful cache', async kind => {
-        const decoder = vi.fn(inflateBundledFrancData).mockImplementationOnce(() => {throw new Error('controlled restore failure');});
-        const h = await loadAccessors(decoder);
-        const selected = () => kind === 'support' ? h.api.getSupportImageUrl('normal') : h.api.getContactImageUrl();
-        const other = () => kind === 'support' ? h.api.getContactImageUrl() : h.api.getSupportImageUrl('normal');
-        expect(selected).toThrow('controlled restore failure');expect(decoder).toHaveBeenCalledTimes(1);
-        assertImage(other(), kind === 'support' ? 'contact' : 'support');
-        other();expect(decoder).toHaveBeenCalledTimes(2);
-        assertImage(selected(), kind);expect(decoder).toHaveBeenCalledTimes(3);
-        selected();other();expect(decoder).toHaveBeenCalledTimes(3);
-        expect(h.decode).toHaveBeenCalledTimes(3);
-    });
-
-    it('defaults to disabled without reading nonexistent helper or image files', () => {
-        const plugin = createUserscriptAboutImagesCompressionPlugin('/unavailable-about-images-root');
-        if (typeof plugin.load !== 'function') throw new Error('Expected image load hook');
-        expect(Reflect.apply(plugin.load, plugin, [helperId])).toBeNull();
-        expect(createPlugin(false, '/unavailable-about-images-root').load(helperId)).toBeNull();
-    });
-
-    it.each([
-        ['raw', helperId + '?raw'], ['proxy', helperId + '?commonjs-proxy'],
-        ['virtual', '\0' + helperId], ['another-module', resolve(root, 'src/app/options/other.ts')],
-        ['similar-path', resolve(root, 'fake-src/app/options/aboutImages.ts')],
-    ])('leaves the %s route and disabled module untouched', (_label, id) => {
-        expect(createPlugin().load(id)).toBeNull();
-        expect(createPlugin(false).load(id)).toBeNull();
-    });
-
-    it.each([
-        ['ordinary', '0', '0', false], ['standalone', '1', '0', true],
-        ['greasy-fork', '0', '1', false], ['standalone-and-greasy', '1', '1', false],
-    ] as const)('uses the actual %s config plugin, Vite alias resolution and asset path', async (_label, standalone, greasy, enabled) => {
-        vi.stubEnv('FLUENTREAD_USERSCRIPT_STANDALONE', standalone);
-        vi.stubEnv('FLUENTREAD_USERSCRIPT_GREASYFORK_SOURCE', greasy);
-        vi.stubEnv('FLUENTREAD_USERSCRIPT_VENDOR_URL', 'https://fixture.invalid/vendor.js');
-        vi.stubEnv('FLUENTREAD_USERSCRIPT_DATA_URL', 'https://fixture.invalid/data.js');
-        const fixture = mkdtempSync(resolve(tmpdir(), 'fluentread-about-images-owner-'));
+describe('retired About QR assets are absent from every userscript build mode', () => {
+    it.each(['standard', 'standalone', 'greasyfork'] as const)('keeps %s project provenance while excluding the retired QR compressor and assets', async mode => {
         try {
+            vi.stubEnv('FLUENTREAD_USERSCRIPT_STANDALONE', mode === 'standalone' ? '1' : '');
+            vi.stubEnv('FLUENTREAD_USERSCRIPT_GREASYFORK_SOURCE', mode === 'greasyfork' ? '1' : '');
+            vi.stubEnv('FLUENTREAD_USERSCRIPT_VENDOR_URL', 'https://example.test/fluentread-vendor.v1.js');
+            vi.stubEnv('FLUENTREAD_USERSCRIPT_DATA_URL', 'https://example.test/fluentread-data.v1.js');
             vi.resetModules();
-            const {default: configuration} = await import('@/userscript/vite.config');
-            const config = configuration as import('vite').UserConfig;
-            const plugin = (config.plugins as import('vite').Plugin[]).find(item => item.name === 'compress-standalone-about-images');
-            expect(plugin).toBeDefined();
-            const entryPath = resolve(fixture, 'entry.mjs');
-            writeFileSync(entryPath, 'import {getSupportImageUrl,getContactImageUrl} from "@/src/app/options/aboutImages"; globalThis.aboutImagesOwner={getSupportImageUrl,getContactImageUrl};');
-            const {build} = await import('vite');
-            const result = await build({root, configFile: false, publicDir: false, logLevel: 'silent',
-                plugins: [plugin!], resolve: config.resolve,
-                build: {...config.build, write: false, outDir: resolve(fixture, 'unused-output'),
-                    lib: {entry: entryPath, name: 'AboutImagesOwner', formats: ['iife']},
-                    rollupOptions: {output: {inlineDynamicImports: true}}}});
-            const outputs = Array.isArray(result) ? result : [result];
-            expect(outputs).toHaveLength(1);
-            if (!('output' in outputs[0])) throw new Error('Expected actual Rollup output');
-            expect(outputs[0].output).toHaveLength(1);
-            const chunk = outputs[0].output[0];
-            if (chunk.type !== 'chunk') throw new Error('Expected complete image owner entry');
-            expect(chunk.imports).toEqual([]);expect(chunk.dynamicImports).toEqual([]);
-            const decode = vi.fn(atob);
-            const realm = {aboutImagesOwner: undefined as any, atob: decode, Uint8Array, ArrayBuffer};
-            runInNewContext(chunk.code, realm, {timeout: 5_000});
-            expect(decode).not.toHaveBeenCalled();
-            const api = realm.aboutImagesOwner;
-            const normalUrl = 'controlled-captured-normal-url';
-            const support = api.getSupportImageUrl(normalUrl);
-            assertImage(api.getContactImageUrl(), 'contact');
-            if (enabled) {
-                assertImage(support, 'support');expect(decode).toHaveBeenCalledTimes(2);
-                expect(chunk.code).not.toContain(expectedUrl('support'));
-                expect(chunk.code).not.toContain(expectedUrl('contact'));
-                expect(chunk.moduleIds).not.toContain(resolve(root, 'src/app/options/assets/wechat-contact.jpg'));
-            } else {
-                expect(support).toBe(normalUrl);expect(decode).not.toHaveBeenCalled();
-                expect(chunk.moduleIds).toContain(resolve(root, 'src/app/options/assets/wechat-contact.jpg'));
+            const {default: config} = await import('@/userscript/vite.config');
+            expect((config.plugins as import('vite').Plugin[]).map(plugin => plugin.name)).not.toContain('compress-standalone-about-images');
+            for (const path of ['src/app/options/aboutImages.ts', 'userscript/aboutImagesPlugin.ts', 'public/misc/approve.jpg', 'src/app/options/assets/wechat-contact.jpg']) {
+                expect(existsSync(resolve(process.cwd(), path)), path).toBe(false);
             }
-            api.getSupportImageUrl('other-normal-url');api.getContactImageUrl();
-            expect(decode).toHaveBeenCalledTimes(enabled ? 2 : 0);
-            const bootstrapPlugin = (config.plugins as import('vite').Plugin[]).find(item => item.name === 'bundle-userscript-css') as unknown as {
-                generateBundle: {handler: Function};
-            };
-            await Reflect.apply(bootstrapPlugin.generateBundle.handler, {emitFile: vi.fn()}, [{}, {'entry.js': chunk}]);
-            expect(chunk.code).not.toMatch(/globalThis\.__FLUENTREAD_APPROVE_DATA__\s*=/u);
-            if (enabled) {
-                expect(chunk.code).not.toContain(expectedUrl('support'));
-                expect(chunk.code).not.toContain(expectedUrl('contact'));
-            }
-        } finally {
-            rmSync(fixture, {recursive: true, force: true});
-            vi.unstubAllEnvs();vi.resetModules();
-        }
+            const about = readFileSync(resolve(process.cwd(), 'src/app/options/OptionsApp.vue'), 'utf8');
+            expect(about).not.toMatch(/aboutImages|APPROVE_DATA|approve\.jpg|wechat-contact\.jpg|ko-fi\.com/u);
+            expect(about).not.toContain('https://github.com/Bistutu/FluentRead');
+            expect(about).toContain('<code class="about-source-url" data-i18n-ignore>https://github.com/FluentRead/FluentRead</code>');
+            expect(about).toContain("t('options.aboutLocalSourceDescription')");
+            expect(about).toContain('about-license-details');
+            expect(about).toContain("import upstreamLicense from '@/src/app/options/upstreamLicense.json'");
+            const license = JSON.parse(readFileSync(resolve(process.cwd(), 'src/app/options/upstreamLicense.json'), 'utf8'));
+            expect(license.text).toBe(readFileSync(resolve(process.cwd(), 'LICENSE'), 'utf8'));
+            const metadata = readFileSync(resolve(process.cwd(), 'userscript/metadata.ts'), 'utf8');
+            expect(metadata).toContain('// @homepageURL  https://github.com/FluentRead/FluentRead');
+            expect(metadata).toContain('// @license      GPL-3.0-only');
+        } finally {vi.unstubAllEnvs();vi.resetModules();}
     });
 });
 

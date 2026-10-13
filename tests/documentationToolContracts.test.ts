@@ -1,7 +1,7 @@
 /**
  * @file tests/documentationToolContracts.test.ts
  * 文件职责：执行完整文档交付脚本，验证本地化品牌契约、产物归属与截图资源释放。
- * 主要内容：隔离文件夹中的真实 MJS CLI；独立子进程执行完整 CJS，替换浏览器、图像和文件端口。
+ * 主要内容：隔离文件夹中的真实 MJS CLI，页面夹具保留中文与英文产品名、导航品牌及分享元数据；验证缺失和错语言的品牌仍被拒绝；独立子进程执行完整 CJS，替换浏览器、图像和文件端口。
  * 模块边界：不启动浏览器，不写项目文案或产物，不读取用户配置；baseline 使用同一用例。
  */
 import {afterEach, describe, expect, it} from 'vitest';
@@ -86,7 +86,8 @@ function brandFixture(bilingual = false) {
 const workflow = '<ol class="ds"><li class="ds-current"><button type="button" aria-label="First" aria-current="step">1</button></li><li><button type="button" aria-label="Second">2</button></li><li><button type="button" aria-label="Third">3</button></li></ol>';
 function page(route: string, body: string) {
     const alternate = (route.startsWith('en/') ? route.slice(3) : 'en/' + route).replace(/index\.html$/, '').replace(/\.html$/, '');
-    return `<!doctype html><html><head><link rel="canonical" href="https://read.thinkstu.com/${route}"><link rel="alternate" hreflang="en" href="/${alternate}"></head><body><a class="bv-language" href="/${alternate}">Language</a>${body}</body></html>`;
+    const productName = route.startsWith('en/') ? 'FluentRead' : '流畅阅读';
+    return `<!doctype html><html><head><title>${productName} fixture</title><meta property="og:site_name" content="${productName}"><link rel="canonical" href="https://read.thinkstu.com/${route}"><link rel="alternate" hreflang="en" href="/${alternate}"></head><body><a class="bv-language" href="/${alternate}">Language</a>${body}</body></html>`;
 }
 function home(prefix: string) {
     const english = Boolean(prefix), slogan = taglines[english ? 'en-US' : 'zh-CN'];
@@ -103,7 +104,7 @@ function docsFixture(extra = '') {
     write(root, 'src/core/i18n/messages/brand-taglines.json', JSON.stringify(taglines));
     for (const prefix of ['', 'en/']) {
         write(root, `${dist}/${prefix}index.html`, page(`${prefix}index.html`, home(prefix ? '/en' : '') + extra));
-        write(root, `${dist}/${prefix}docs/index.html`, page(`${prefix}docs/index.html`, `<h1>Documentation</h1><div class="VPNavBarTitle"><div class="title">流畅阅读 FluentRead</div></div><div class="fr-docs-start"><a href="/docs/">Start</a></div><div class="fr-docs-links">${'<a href="/docs/">Guide</a>'.repeat(20)}</div>`));
+        write(root, `${dist}/${prefix}docs/index.html`, page(`${prefix}docs/index.html`, `<h1>Documentation</h1><div class="VPNavBarTitle"><div class="title"><strong>${prefix ? 'FluentRead' : '流畅阅读'}</strong></div></div><div class="fr-docs-start"><a href="/docs/">Start</a></div><div class="fr-docs-links">${'<a href="/docs/">Guide</a>'.repeat(20)}</div>`));
         write(root, `${dist}/${prefix}config/translation-engines.html`, page(`${prefix}config/translation-engines.html`, '<h1>Engines</h1><div class="vp-doc">{{apiKey}}</div>'));
         write(root, `${dist}/${prefix}guide/input-translation.html`, page(`${prefix}guide/input-translation.html`, '<h1>Input</h1><div class="vp-doc">{{origin}} {{to}}</div>'));
         write(root, `docs/${prefix}guide/input-translation.md`, 'Fixture');
@@ -250,6 +251,26 @@ describe('documentation delivery CLI contracts', () => {
         const result = await checker(root, 'verify-docs-build.mjs');
         expect(result.code, result.err).toBe(0);
         expect(JSON.parse(result.out).pages).toBe(9);
+    });
+    it.each(['index.html', 'docs/index.html', 'en/index.html', 'en/docs/index.html'])('rejects product metadata belonging to the other locale at %s', async route => {
+        const root = docsFixture(), file = path.join(root, 'docs/.vitepress/dist', route);
+        const productName = route.startsWith('en/') ? 'FluentRead' : '流畅阅读';
+        const wrongName = route.startsWith('en/') ? '流畅阅读' : 'FluentRead';
+        fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(`property="og:site_name" content="${productName}"`, `property="og:site_name" content="${wrongName}"`));
+        const result = await checker(root, 'verify-docs-build.mjs');
+        expect(result.code).toBe(1);expect(result.err).toContain('AssertionError');
+    });
+    it.each(['docs/index.html', 'en/docs/index.html'])('rejects documentation navigation without its product strong element at %s', async route => {
+        const root = docsFixture(), file = path.join(root, 'docs/.vitepress/dist', route);
+        fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(/<strong>(.*?)<\/strong>/u, '$1'));
+        const result = await checker(root, 'verify-docs-build.mjs');
+        expect(result.code).toBe(1);expect(result.err).toContain('undefined');
+    });
+    it.each(['index.html', 'en/index.html'])('rejects a homepage title without its localized product name at %s', async route => {
+        const root = docsFixture(), file = path.join(root, 'docs/.vitepress/dist', route);
+        fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(/<title>.*?<\/title>/u, '<title>Unrelated fixture</title>'));
+        const result = await checker(root, 'verify-docs-build.mjs');
+        expect(result.code).toBe(1);expect(result.err).toContain('Page title needs its locale product name');
     });
     it('validates the Storybook index and relative assets in the combined shipped artifact', async () => {
         const result = await checker(storybookFixture(), 'verify-storybook-build.mjs');

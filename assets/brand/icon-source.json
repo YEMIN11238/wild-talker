@@ -1,0 +1,23 @@
+{
+  "source": "source/user-provided-icon.jpg",
+  "original_filename": "6a72dd4dab3f588c863fd4051da3fd0d.jpg",
+  "sha256": "ef99083be5e66694ccd5179f79d1796bf51958d0f48733ea4795e17ecee9c5d9",
+  "source_dimensions": [
+    512,
+    512
+  ],
+  "origin": "User-provided image for this personal browser extension. Existing project and third-party licenses are retained.",
+  "transforms": "PNG format conversion and full-frame proportional resizing with macOS sips. White background and all source image content preserved; no AI generation, cropping or semantic editing.",
+  "outputs": {
+    "16": "public/icon/16.png",
+    "32": "public/icon/32.png",
+    "48": "public/icon/48.png",
+    "64": "public/icon/64.png",
+    "96": "public/icon/96.png",
+    "128": "public/icon/128.png"
+  },
+  "brand_outputs": [
+    "assets/brand/icon-256.png",
+    "assets/brand/icon-512.png"
+  ]
+}

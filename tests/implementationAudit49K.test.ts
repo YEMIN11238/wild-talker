@@ -281,10 +281,25 @@ describe('audit49K product OCR public entry consumes SDK job rejection', () => {
             }
             terminate() {this.terminateCalls++; this.terminated = true;}
         }
+        // VM 仍执行真实预处理与 SDK；外部 Canvas 端口提供借用 PNG 的完整不透明像素。
+        const canvases: Array<{width: number; height: number; drawImage: ReturnType<typeof vi.fn>; putImageData: ReturnType<typeof vi.fn>; toBlob: ReturnType<typeof vi.fn>}> = [];
+        const documentPort = {createElement: (tag: string) => {
+            expect(tag).toBe('canvas');
+            const canvas = {width: 0, height: 0, drawImage: vi.fn(), putImageData: vi.fn(),
+                toBlob: vi.fn(() => {throw new Error('Opaque original PNG must not be re-encoded');})};
+            const pixels = {drawImage: canvas.drawImage, putImageData: canvas.putImageData, getImageData: () => {
+                const data = new Uint8ClampedArray(canvas.width * canvas.height * 4);
+                for (let index = 3; index < data.length; index += 4) data[index] = 255;
+                return {data};
+            }};
+            canvases.push(canvas);
+            return {...canvas, get width() {return canvas.width;}, set width(value: number) {canvas.width = value;},
+                get height() {return canvas.height;}, set height(value: number) {canvas.height = value;}, getContext: () => pixels};
+        }};
         const context = createContext({Worker: WorkerPort, Blob, File, URL, Uint8Array, ArrayBuffer, AbortController, TextEncoder, TextDecoder, atob, btoa,
             console: {log: vi.fn(), warn: vi.fn(), error: vi.fn()}, setTimeout, clearTimeout,
             chrome: {runtime: {getURL: (path: string) => `chrome-extension://controlled${path}`}},
-            document: {}, window: {location: {href: 'chrome-extension://controlled/offscreen.html'}}});
+            document: documentPort, window: {location: {href: 'chrome-extension://controlled/offscreen.html'}}});
         context.self = context;
         runInContext(built.outputFiles[0].text, context, {filename: 'actual-product-ocr-and-browser-sdk.js', timeout: 5000});
         const product = context.ActualProductOcr;
@@ -305,6 +320,9 @@ describe('audit49K product OCR public entry consumes SDK job rejection', () => {
             expect(sent.filter(packet => packet.action === 'setParameters')).toHaveLength(1);
             expect(progress).toEqual([50, 50]); expect(borrowedImage.src).toBe('borrowed-image');
             expect(rejectionCount).toBe(1); expect(caughtReason).toBe(reason);
+            expect(canvases).toHaveLength(2);
+            expect(canvases.every(canvas => canvas.width === 0 && canvas.height === 0)).toBe(true);
+            expect(canvases.every(canvas => canvas.drawImage.mock.calls[0][0] === borrowedImage && !canvas.putImageData.mock.calls.length && !canvas.toBlob.mock.calls.length)).toBe(true);
             const observationDirectory = process.env.FLUENTREAD_AUDIT49K_OBSERVATION_DIR;
             if (observationDirectory) {
                 if (!existsSync(observationDirectory) || !require('node:fs').statSync(observationDirectory).isDirectory()) throw new Error('OCR observation directory must already exist');

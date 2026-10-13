@@ -82,7 +82,7 @@ describe('界面皮肤与栏目配置', () => {
       expect(preview.backdrop).toMatch(fill)
       expect(preview.action).toMatch(fill)
       expect(preview.radius).toBeGreaterThanOrEqual(0)
-      expect(preview.radius).toBeLessThanOrEqual(10)
+      expect(preview.radius).toBeLessThanOrEqual(kind === 'default' ? 14 : 10)
       // 传统色风格全部平涂：缩略图里的版面与主按钮也只能是纯色。
       if (kind === 'palette') {
         expect(preview.backdrop).toBe(preview.canvas)
@@ -107,7 +107,7 @@ describe('界面皮肤与栏目配置', () => {
     expect(normalizeConfig({interfaceSkin: 'shuimo'}).interfaceSkin).toBe('shuimo')
     expect(normalizeConfig({interfaceFont: 'noto-sans-sc'}).interfaceFont).toBe('noto-sans-sc')
     expect(interfaceSkinOptions.every((item) => interfaceSkinUsesContentHeight(item.value))).toBe(true)
-    expect(interfaceSkinOptions.filter((item) => !['minimal', 'compact'].includes(item.value)).every((item) => item.popupWidth === 320)).toBe(true)
+    expect(interfaceSkinOptions.filter((item) => !['default', 'minimal', 'compact'].includes(item.value)).every((item) => item.popupWidth === 320)).toBe(true)
     expect(getInterfaceSkinOption('minimal').popupWidth).toBe(310)
     expect(getInterfaceSkinOption('compact').popupWidth).toBe(300)
     expect(interfaceVisibilityOptions.map((item) => item.key)).toEqual([
@@ -267,10 +267,10 @@ describe('界面皮肤与栏目配置', () => {
     expect(interfaceSkinUsesContentHeight('minimal')).toBe(true)
     expect(interfaceSkinUsesContentHeight('shuimo')).toBe(true)
     expect(interfaceSkinUsesContentHeight('unknown')).toBe(true)
-    expect(getInterfaceSkinOption('default').popupWidth).toBe(320)
+    expect(getInterfaceSkinOption('default').popupWidth).toBe(360)
     expect(getInterfaceSkinOption('minimal').popupWidth).toBe(310)
     expect(getInterfaceSkinOption('compact').popupWidth).toBe(300)
-    expect(getInterfaceSkinOption('unknown').popupWidth).toBe(320)
+    expect(getInterfaceSkinOption('unknown').popupWidth).toBe(360)
 
     expect(normalizeInterfaceVisibility({popupQuickFeatures: false})).toEqual({
       popupQuickFeatures: false,

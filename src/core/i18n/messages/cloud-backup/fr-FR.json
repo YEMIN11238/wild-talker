@@ -72,7 +72,7 @@
     "settings.webdav.error.decrypt": "Sauvegarde indéchiffrable ou endommagée. La configuration locale n’a pas été modifiée.",
     "settings.webdav.error.failure": "Opération inachevée. Vérifiez le réseau et le stockage local, puis réessayez.",
     "settings.cloud.privacyEncryption": "La configuration est chiffrée avant l’envoi. La phrase secrète de l’application est publique ; la protection repose surtout sur le compte, les droits du dossier et l’appareil.",
-    "settings.cloud.privacyWebDavStorage": "Accède uniquement à la sauvegarde FluentRead dans le dossier de votre serveur.",
+    "settings.cloud.privacyWebDavStorage": "Accède uniquement à la sauvegarde 万能说客（Wild Talker） dans le dossier de votre serveur.",
     "settings.cloud.privacyWebDavConnection": "Le mot de passe reste sur cet appareil. L’accès au serveur nécessite une action manuelle.",
     "settings.cloud.currentAccount": "Compte de sauvegarde : {email}",
     "settings.cloud.changed.credentials": "Clés API, jetons OAuth et authentification",

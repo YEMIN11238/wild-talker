@@ -275,6 +275,27 @@ describe.each(nativeCloudProviders)('$label 原生数组完整性', ({translate,
         await expect(translate({origin: ['first', 'second']})).rejects.toMatchObject({message: '翻译响应读取失败'});
         expect(fetchMock).toHaveBeenCalledOnce();
     });
+
+    it('响应正文读取成功时发生取消，保留取消原因且不返回译文或继续后续分包', async () => {
+        const controller = new AbortController();
+        const reason = new DOMException('Cancelled after reading the response body', 'AbortError');
+        fetchMock.mockImplementation(async (_url, init) => {
+            const sources = bodySources(JSON.parse(String(init?.body))) as string[];
+            const response = json(success(sources.map(source => `译:${source}`)));
+            const read = response.json.bind(response);
+            response.json = async () => {
+                const value = await read();
+                controller.abort(reason);
+                return value;
+            };
+            return response;
+        });
+        await expect(translate({origin: Array.from({length: 33}, (_, index) => `source ${index}`), abortSignal: controller.signal}))
+            .rejects.toBe(reason);
+        expect(controller.signal.aborted).toBe(true);
+        expect(fetchMock).toHaveBeenCalledOnce();
+        expect(bodySources(JSON.parse(lastCall().body))).toHaveLength(32);
+    });
 });
 
 describe('阿里云机器翻译', () => {

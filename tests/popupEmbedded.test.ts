@@ -181,7 +181,7 @@ describe('页内 popup 内容尺寸', () => {
         const f = fixture(); const port = await authorizeFrame(f); f.shell.offsetHeight = 180; f.shell.scrollHeight = 800;
         popup.observeEmbeddedPopupSize(); popup.observeEmbeddedPopupSize();
         f.observers[0].callback(); expect(port.postMessage).toHaveBeenCalledOnce(); placeFrame(f, port);
-        expect(f.doc.createElement).toHaveBeenCalledOnce(); expect(f.probe.style.cssText).toContain('width:var(--fluentread-localized-popup-width,var(--interface-popup-width,320px))');
+        expect(f.doc.createElement).toHaveBeenCalledOnce(); expect(f.probe.style.cssText).toContain('width:var(--fluentread-localized-popup-width,var(--interface-popup-width,360px))');
         expect(f.observers[0].observe.mock.calls.map(([element]) => element)).toEqual([f.doc.documentElement, f.doc.body, f.probe, f.shell]);
         expect(port.postMessage).toHaveBeenLastCalledWith({type: 'ready', width: 380, height: 560, actualWidth: 380});
         f.observers[0].callback(); expect(port.postMessage).toHaveBeenCalledTimes(2);

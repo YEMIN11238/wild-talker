@@ -9,13 +9,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>流畅阅读</title>
+    <title>万能说客（Wild Talker）</title>
     <meta name="manifest.type" content="browser_action" />
     <meta name="manifest.title" content="__MSG_extensionName__" />
     <style>
       /* 工具栏先按文档内容定尺寸；关键样式必须早于后台唤醒及外部 CSS。 */
-      html { width: var(--interface-popup-width, 320px); min-height: 460px; background: #fff; }
-      body, #app { width: var(--fluentread-localized-popup-width, var(--interface-popup-width, 320px)); margin: 0; }
+      html { width: var(--interface-popup-width, 360px); min-height: 460px; background: #fffefb; }
+      body, #app { width: var(--fluentread-localized-popup-width, var(--interface-popup-width, 360px)); margin: 0; }
       .popup-startup { box-sizing: border-box; min-height: 460px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px; }
       .popup-startup i { width: 12px; height: 12px; border: 1.5px solid #d4d8e1; border-top-color: #737c8f; border-radius: 50%; }
     </style>
@@ -23,7 +23,7 @@
   </head>
   <body class="popup-page" style="margin: 0;">
     <div id="app">
-      <div class="popup-startup" role="status" aria-busy="true" aria-label="流畅阅读">
+      <div class="popup-startup" role="status" aria-busy="true" aria-label="万能说客（Wild Talker）">
         <img src="/icon/128.png" alt="" width="24" height="24" />
         <i aria-hidden="true"></i>
       </div>

@@ -228,7 +228,7 @@
 /* 翻译提示弹窗样式 - 柔和低调设计 */
 .fluent-input-tooltip {
     position: fixed;
-    background: rgba(0, 0, 0, 0.75);
+    background: #262d25;
     color: white;
     padding: 8px 12px;
     border-radius: 6px;
@@ -237,7 +237,7 @@
     z-index: 10000;
     pointer-events: none;
     transition: all 0.2s ease;
-    backdrop-filter: blur(8px);
+    backdrop-filter: none;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(3px);
 }
@@ -253,11 +253,11 @@
 }
 
 .fluent-input-tooltip.translating {
-    background: rgba(59, 130, 246, 0.85);
+    background: #456021;
 }
 
 .fluent-input-tooltip.success {
-    background: rgba(34, 197, 94, 0.85);
+    background: #267260;
 }
 
 .fluent-input-tooltip.error {
