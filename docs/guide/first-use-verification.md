@@ -2,7 +2,9 @@
 
 本页区分真实网络与模型调用、发布包 UI 操作，以及受控故障回放。截图和短动图均来自公开 Release 的 `v0.0.37-wild-talker.1` ZIP，扩展管理页版本为 `0.0.37`；测试使用独立临时浏览器配置和可公开例文，不读取日常浏览器设置或真实密钥。
 
-[下载安装包](https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip) · [安装教程](./getting-started)
+[下载本页实测的 0.0.37 安装包](https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip) · [安装教程](./getting-started)
+
+**当前下载为 [0.0.38 Chrome / Edge ZIP](https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip)。** 新版修正新安装默认亮色，保留已存的暗色/跟随系统选择；旧用户需要时在通用设置中主动选择亮色主题。[新版主题修复与单独验证范围](./theme-default-fix)。本页以下记录、截图、模型输出和 SHA-256 仍属于 **0.0.37**，未改称新版验收。
 
 ## 服务与启用条件
 

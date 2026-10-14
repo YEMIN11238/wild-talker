@@ -960,7 +960,7 @@ describe('configstoreAudit persistence timing and permissions', () => {
             synchronouslySent = true;
             expect(message.patches).toHaveLength(2);
             expect(message.patches[0].expected.to).toBe('en');
-            expect(message.patches[1].expected.theme).toBe('auto');
+            expect(message.patches[1].expected.theme).toBe('light');
             return {success: true, revision: 12};
         });
         expect(synchronouslySent).toBe(true);

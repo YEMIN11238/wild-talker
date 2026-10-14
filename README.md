@@ -4,9 +4,9 @@
 
 ![从选中文字到获得译文的真实操作](./docs/public/showcase/selection-demo.gif)
 
-*实际发布包的操作录制；场景、模型与验证范围见[实测说明](./docs/guide/first-use-verification.md)。*
+*截图与动图录于 `0.0.37` 发布包，界面布局沿用至 `0.0.38`；新版修正新安装的默认主题。翻译服务、模型与原验证范围见[0.0.37 实测说明](./docs/guide/first-use-verification.md)，新版主题说明见[默认亮色修复](./docs/guide/theme-default-fix.md)。*
 
-## [⬇ 下载 Chrome / Edge 安装包](https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip)
+## [⬇ 下载 Chrome / Edge 安装包](https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip)
 
 [发布说明与校验文件](https://github.com/YEMIN11238/wild-talker/releases/latest) · [产品演示与安装教程](https://yemin11238.github.io/wild-talker/) · [问题反馈](https://github.com/YEMIN11238/wild-talker/issues)
 
@@ -69,9 +69,9 @@
 
 | GitHub 发布标签 | 扩展管理页版本 | 安装包 |
 | --- | --- | --- |
-| `v0.0.37-wild-talker.1` | `0.0.37` | `wild-talker-0.0.37-chrome-edge.zip` |
+| `v0.0.38-wild-talker.1` | `0.0.38` | `wild-talker-0.0.38-chrome-edge.zip` |
 
-标签中的 `wild-talker.1` 区分本仓改进版。检查名称 **万能说客（Wild Talker）**、本仓图标和下载来源，不能凭相同的 `0.0.37` 把上游包当成本仓包。本次展示改进没有改动扩展代码与安装包。
+标签中的 `wild-talker.1` 区分本仓改进版。一起核对名称 **万能说客（Wild Talker）**、本仓图标、下载来源和完整发布标签，确认安装的是本分支。**0.0.38 修复新安装默认主题为亮色**：没有保存主题的新安装不再跟随系统深色。已有 `dark` / `auto` 设置保持不变；旧安装仍显示深色时，到 **设置 → 通用设置 → 界面主题 → 亮色主题** 选择一次。[修复与升级说明](./docs/guide/theme-default-fix.md)
 
 ### 2. 加载扩展
 
@@ -81,7 +81,7 @@ Chrome 打开 `chrome://extensions`，Edge 打开 `edge://extensions`，开启 *
 | --- | --- |
 | ![Chrome 实际加载已解压扩展](./docs/public/showcase/install-chrome.png) | ![Edge 实际加载已解压扩展](./docs/public/showcase/install-edge.png) |
 
-固定工具栏图标，刷新已经打开的网页。浏览器内部页、扩展商店等受限页面不能执行网页翻译。
+上面安装截图取自 `0.0.37`，加载步骤相同；当前下载的扩展卡片应显示 **0.0.38**。固定工具栏图标，刷新已经打开的网页。浏览器内部页、扩展商店等受限页面不能执行网页翻译。
 
 ### 3. 选择服务
 
@@ -97,7 +97,7 @@ Chrome 打开 `chrome://extensions`，Edge 打开 `edge://extensions`，开启 *
 
 ## 升级
 
-先按需导出备份，将新版 ZIP 解压后的内容放到**原来的扩展目录**，在扩展管理页点击 **重新加载**，再刷新网页。保持扩展目录与 ID，避免先卸载导致本地设置和学习记录丢失。不要把个人备份或 API Key 放进源码仓库。
+先按需导出备份，将新版 ZIP 解压后的内容放到**原来的扩展目录**，在扩展管理页点击 **重新加载**，核对版本 **0.0.38**，再刷新网页。已保存的暗色或跟随系统设置不会被升级强制覆盖；希望一直亮色时，到 **通用设置 → 界面主题 → 亮色主题** 选择一次。**跟随操作系统**仍可主动选择。保持扩展目录与 ID，避免先卸载导致本地设置和学习记录丢失。不要把个人备份或 API Key 放进源码仓库。
 
 ## 来源、维护与参与
 

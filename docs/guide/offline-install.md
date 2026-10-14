@@ -5,7 +5,7 @@ description: 下载 Wild Talker 的 Chrome / Edge ZIP，解压加载并安全升
 
 # ZIP 安装与升级
 
-**[下载 Chrome / Edge ZIP](https://github.com/YEMIN11238/wild-talker/releases/latest)**，安装步骤见[第一次使用教程](/guide/getting-started)。当前独立发行入口只有本仓库 Release；FluentRead 的扩展商店、CRX 镜像和脚本商店条目安装的是上游版本。
+**[下载 Chrome / Edge ZIP](https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip)**，安装步骤见[第一次使用教程](/guide/getting-started)。当前独立发行入口只有本仓库 Release；FluentRead 的扩展商店、CRX 镜像和脚本商店条目安装的是上游版本。
 
 ## 选对目录
 
@@ -35,8 +35,10 @@ description: 下载 Wild Talker 的 Chrome / Edge ZIP，解压加载并安全升
 | 项目 | 当前发行 |
 | --- | --- |
 | 名称 | 万能说客（Wild Talker） |
-| 扩展管理页 / manifest 版本 | `0.0.37` |
-| GitHub 发布标签 | `v0.0.37-wild-talker.1` |
+| 扩展管理页 / manifest 版本 | `0.0.38` |
+| GitHub 发布标签 | `v0.0.38-wild-talker.1` |
 | 包类型 | Chrome / Edge MV3 ZIP |
 
-本次展示与文档更新没有改变扩展运行代码或 ZIP。后续安装包发生变化时，会在 Release 同步列出数字版本、标签和校验值，不只靠文件名区分。
+**0.0.38** 将新安装默认主题修正为亮色。升级保留旧 `dark` / `auto` 设置，不强制覆盖；旧安装希望固定亮色时，到 **设置 → 通用设置 → 界面主题 → 亮色主题** 选择一次。仍可主动选择 **跟随操作系统**。重新加载扩展及原来打开的页面后核对版本。[主题修复与验证范围](/guide/theme-default-fix)
+
+此前 0.0.37 的截图、动图和模型样例保留原版本标注，不作为新版翻译质量验收。

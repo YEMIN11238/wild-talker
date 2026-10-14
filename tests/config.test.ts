@@ -1886,7 +1886,7 @@ describe('统一配置存储', () => {
             normalize.mockRestore();
             await expect(request).rejects.toThrow('fixture-patch-rejected');
         }
-        expect(configStore.config.theme).toBe('auto');
+        expect(configStore.config.theme).toBe('light');
         expect(configStore.getConfigRevision()).toBe(4);
     });
 
@@ -2686,7 +2686,7 @@ describe('统一配置存储', () => {
             patches: [
                 {sequence: 1, config: {to: 'en'}, expected: {to: 'zh-Hans'}},
                 {sequence: 2, config: {to: 'ja'}, expected: {to: 'en'}},
-                {sequence: 3, config: {theme: 'dark'}, expected: {theme: 'auto'}},
+                {sequence: 3, config: {theme: 'dark'}, expected: {theme: 'light'}},
             ],
         });
         await handoff;

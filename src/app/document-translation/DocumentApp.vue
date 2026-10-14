@@ -615,7 +615,7 @@ const epubChapterIndex = ref(0);
 const docxPartIndex = ref(0);
 const hydrated = ref(false);
 const colorSchemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
-const isDark = ref(config.theme === 'dark' || ((!config.theme || config.theme === 'auto') && colorSchemeMedia.matches));
+const isDark = ref(config.theme === 'dark' || (config.theme === 'auto' && colorSchemeMedia.matches));
 let abortController: AbortController | null = null;
 const documentFileLoads = createDocumentFileLoadGuard();
 let translationRequestId = 0;
@@ -1366,7 +1366,7 @@ function readerSourceClass(value: string): string {
 }
 
 function applyTheme(): void {
-  isDark.value = config.theme === 'dark' || ((!config.theme || config.theme === 'auto') && colorSchemeMedia.matches);
+  isDark.value = config.theme === 'dark' || (config.theme === 'auto' && colorSchemeMedia.matches);
 }
 // 文档页使用与 Popup/设置页同一份主题偏好，外部配置更新和系统变化均沿用此派生。
 watch(() => config.theme, applyTheme, {immediate: true});

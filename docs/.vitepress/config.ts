@@ -22,6 +22,7 @@ const guide = (en = false): DefaultTheme.SidebarItem[] => {
         item('本次实测与 API 配置', 'Verification & API setup', '/guide/first-use-verification'),
         item('快速开始', 'Quick start', '/guide/getting-started'),
         item('离线下载与安装', 'Offline download & installation', '/guide/offline-install'),
+        item('默认亮色与升级', 'Light default & upgrades', '/guide/theme-default-fix'),
         item('功能概览', 'Feature overview', '/guide/features'),
       ],
     },

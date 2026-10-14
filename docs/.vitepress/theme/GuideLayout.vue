@@ -6,7 +6,7 @@ import LandingHeader from './LandingHeader.vue'
 const route = useRoute()
 const { lang, page } = useData()
 const english = computed(() => lang.value.startsWith('en'))
-const inheritedGuide = computed(() => /^(en\/)?(guide|config)\//.test(page.value.relativePath) && !/\/(getting-started|offline-install|why-wild-talker|oauth-and-source|first-use-verification|support|privacy)\.md$/.test(page.value.relativePath))
+const inheritedGuide = computed(() => /^(en\/)?(guide|config)\//.test(page.value.relativePath) && !/\/(getting-started|offline-install|why-wild-talker|oauth-and-source|first-use-verification|theme-default-fix|support|privacy)\.md$/.test(page.value.relativePath))
 const landing = computed(() => /^(en\/)?index\.md$/.test(page.value.relativePath))
 // Headings differ between languages. Keep the corresponding page, without carrying its hash.
 const languageLink = computed(() => {

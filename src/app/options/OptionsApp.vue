@@ -233,7 +233,7 @@ const mobileNavigationMedia = window.matchMedia('(max-width: 700px)')
 const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)')
 function syncInterfaceTheme(theme: string | undefined): void {
   if (disposed) return
-  applyInterfaceTheme(theme === 'dark' || ((!theme || theme === 'auto') && systemThemeMedia.matches), props.appearanceRoot)
+  applyInterfaceTheme(theme === 'dark' || (theme === 'auto' && systemThemeMedia.matches), props.appearanceRoot)
 }
 function handleSystemThemeChange(): void {
   syncInterfaceTheme(runtimeConfig.theme)
@@ -304,7 +304,7 @@ void configReady
   })
   .catch(() => {
     if (disposed) return
-    syncInterfaceTheme('auto')
+    syncInterfaceTheme(runtimeConfig.theme)
     applyInterfaceSkin('default', props.appearanceRoot)
     applyInterfaceFont('system', props.appearanceRoot)
   })

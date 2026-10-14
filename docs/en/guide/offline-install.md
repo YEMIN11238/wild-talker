@@ -5,7 +5,7 @@ description: Install the Wild Talker Chrome / Edge ZIP and update the same direc
 
 # ZIP installation & upgrades
 
-**[Download the Chrome / Edge ZIP](https://github.com/YEMIN11238/wild-talker/releases/latest)** and follow [the first-use guide](/en/guide/getting-started). This repository's Release is the current independent distribution. FluentRead store, CRX mirror and script-store listings install the upstream product.
+**[Download the Chrome / Edge ZIP](https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip)** and follow [the first-use guide](/en/guide/getting-started). This repository's Release is the current independent distribution. FluentRead store, CRX mirror and script-store listings install the upstream product.
 
 ## Choose the correct folder
 
@@ -35,8 +35,10 @@ Unpacked installations do not receive automatic store updates. Keeping the direc
 | Item | Current release |
 | --- | --- |
 | Product | Wild Talker |
-| Extension manager / manifest version | `0.0.37` |
-| GitHub release tag | `v0.0.37-wild-talker.1` |
+| Extension manager / manifest version | `0.0.38` |
+| GitHub release tag | `v0.0.38-wild-talker.1` |
 | Package | Chrome / Edge MV3 ZIP |
 
-This presentation/documentation update does not change the runtime or ZIP. Future changed packages will list the numeric version, tag and checksum in their Release rather than relying on filenames alone.
+Version **0.0.38** changes the fresh-install default to light. Saved `dark` / `auto` preferences are preserved during upgrades. To keep an old installation light, choose **Settings → General settings → Interface theme → Light** once; you can still manually choose **Follow operating system**. Reload the extension and existing tabs, then check the version. See [the theme fix and its verification scope](/en/guide/theme-default-fix).
+
+Earlier 0.0.37 screenshots and model examples remain labeled with their original version; they are not new translation evidence for 0.0.38.

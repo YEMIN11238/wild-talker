@@ -176,15 +176,16 @@ describe('public docs client lifecycle', () => {
     await click(root, '[data-grammar-index]', 1); expect(root.querySelector('[data-step]')?.getAttribute('data-playing')).toBe('false');
   });
 
-  it('installation details handle outside clicks, Escape focus and listener removal', async () => {
-    const view = await mount(BrowserInstall, {en: true, showDocs: true});
-    const details = view.root.querySelector('details') as HTMLDetailsElement; details.open = true;
-    await click(view.root, 'summary'); expect(details.open).toBe(true);
-    const escape = new Event('keydown', {bubbles: true}); Object.defineProperty(escape, 'key', {value: 'Escape'});
-    details.dispatchEvent(escape); expect(details.open).toBe(false); expect(document.activeElement).toBe(details.querySelector('summary'));
-    details.open = true; document.body.click(); expect(details.open).toBe(false);
-    details.open = true; view.unmount(); document.body.click(); expect(details.open).toBe(true);
-    expect(view.root.innerHTML).toBe('');
+  it.each([[false, false], [true, true]])('installation entry links to the independent release and localized guide (en=%s, docs=%s)', async (en, showDocs) => {
+    const view = await mount(BrowserInstall, {en, showDocs});
+    expect(view.root.querySelector('.bv-primary')?.getAttribute('href')).toBe('https://github.com/YEMIN11238/wild-talker/releases/latest');
+    expect(view.root.querySelector('.bv-primary')?.textContent).toContain('Chrome / Edge ZIP');
+    expect(view.root.querySelectorAll('.bv-primary .bv-browser-glyph')).toHaveLength(2);
+    expect(view.root.querySelector(`a[href="/fixture${en ? '/en' : ''}/guide/getting-started"]`)?.textContent).toBe(en ? 'Installation guide' : '安装教程');
+    expect(view.root.querySelector('.bv-docs-link')?.getAttribute('href')).toBe(showDocs ? '/fixture/en/docs/' : undefined);
+    expect(view.root.querySelectorAll('a[href*="chromewebstore"],a[href*="microsoftedge.microsoft.com"],details')).toHaveLength(0);
+    expect(view.root.querySelector('.bv-install-fallbacks')?.textContent).toContain('FluentRead');
+    view.unmount(); expect(view.root.innerHTML).toBe(''); expect(vi.getTimerCount()).toBe(0);
   });
 
   it.each(['webpage', 'image'])('%s translation action runs to the result and stops', async (kind) => {
@@ -276,8 +277,19 @@ describe('public docs client lifecycle', () => {
       if (component === TranslationDemo) expect(view.root.querySelector('.bv-paper h3')?.textContent).toBe('阅读的乐趣。');
       else if (component === SupportOptions) expect(view.root.querySelector('.support-visit')?.getAttribute('href')).toBe('https://ko-fi.com/thinkstu');
       else if (component === DocsHome) expect(view.root.querySelector('a[href="/fixture/en/guide/webpage-translation"]')?.textContent).toContain('Bilingual');
-      else expect(view.root.querySelector(`a[href="/fixture${english ? '/en' : ''}/guide/privacy"]`)?.textContent).toBe(english ? 'Data & privacy →' : '数据与隐私 →');
-      if (component === ProductHomeEn) expect(view.root.textContent).toContain('FluentRead');
+      else {
+        expect(view.root.querySelector('h1')?.textContent).toContain('Wild Talker');
+        expect(view.root.querySelector('.wt-primary')?.getAttribute('href')).toBe('https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip');
+        expect(view.root.querySelector(`a[href="/fixture${english ? '/en' : ''}/guide/getting-started"]`)?.textContent).toContain(english ? 'Install' : '安装');
+        expect(view.root.querySelector(`a[href="/fixture${english ? '/en' : ''}/guide/theme-default-fix"]`)?.textContent).toContain(english ? 'Theme fix' : '主题修复');
+        expect(view.root.querySelector('.wt-recording img')?.getAttribute('src')).toBe('/fixture/showcase/selection-demo.gif');
+        expect([...view.root.querySelectorAll('.wt-scenes img')].map(image => image.getAttribute('src'))).toEqual([
+          '/fixture/showcase/web-bilingual.png', '/fixture/showcase/selection-context.png', '/fixture/showcase/document-reader.png',
+        ]);
+        expect(view.root.querySelectorAll('.wt-improvements article')).toHaveLength(3);
+        expect(view.root.querySelector(`a[href="/fixture${english ? '/en' : ''}/guide/privacy"]`)?.textContent).toBe(english ? 'Privacy' : '隐私');
+        expect(view.root.textContent).toContain('FluentRead');
+      }
       view.unmount(); expect(vi.getTimerCount()).toBe(0);
     }
   });
@@ -308,8 +320,8 @@ describe('public docs client lifecycle', () => {
     const transform = config.transformHead as any;
     for (const [path, canonical] of [['guide/index.md', 'docs/'], ['en/writing-assistant.md', 'en/guide/writing-assistant'], ['guide/privacy-policy.md', 'guide/privacy'], ['index.md', '']]) {
       const head = transform({pageData: {relativePath: path}});
-      expect(head[0][1].href).toBe('https://read.thinkstu.com/' + canonical);
-      expect(head[2][1].href).toBe('https://read.thinkstu.com/' + (canonical.startsWith('en/') ? canonical.slice(3) : 'en/' + canonical));
+      expect(head[0][1].href).toBe('https://yemin11238.github.io/wild-talker/' + canonical);
+      expect(head[2][1].href).toBe('https://yemin11238.github.io/wild-talker/' + (canonical.startsWith('en/') ? canonical.slice(3) : 'en/' + canonical));
     }
     expect(transform({pageData: {relativePath: '404.md'}})).toEqual([['meta', {name: 'robots', content: 'noindex'}]]);
   });

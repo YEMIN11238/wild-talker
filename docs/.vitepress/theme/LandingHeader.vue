@@ -16,7 +16,7 @@ defineProps<{ en?: boolean; languageLink: string }>()
         ></a
       >
       <div class="bv-home-links">
-        <a class="wt-nav-download" href="https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip">{{ en ? 'Download ↓' : '下载插件 ↓' }}</a>
+        <a class="wt-nav-download" href="https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip">{{ en ? 'Download ↓' : '下载插件 ↓' }}</a>
         <a class="bv-home-features" :href="withBase((en ? '/en/' : '/') + '#features')">{{
           en ? 'Features' : '功能'
         }}</a>

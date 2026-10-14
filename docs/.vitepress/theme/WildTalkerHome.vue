@@ -2,7 +2,7 @@
 import { withBase } from 'vitepress'
 defineProps<{ en?: boolean }>()
 const releases = 'https://github.com/YEMIN11238/wild-talker/releases/latest'
-const download = 'https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip'
+const download = 'https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip'
 const repo = 'https://github.com/YEMIN11238/wild-talker'
 const screenshot = (name: string) => withBase('/showcase/' + name)
 </script>
@@ -15,13 +15,14 @@ const screenshot = (name: string) => withBase('/showcase/' + name)
       <p class="wt-intro">{{ en ? 'Read foreign-language webpages and documents alongside their translations, and use paragraph context to understand selected text.' : '在网页和文档中对照阅读原文与译文，借助所在段落理解你选中的词句。' }}</p>
       <figure class="wt-recording">
         <img :src="screenshot('selection-demo.gif')" width="2560" height="1626" :alt="en ? 'Recorded release build: selecting text and receiving a translation' : '发布版真实操作：选中文字、打开翻译卡片并获得译文'" />
-        <figcaption>{{ en ? 'A real release-build recording in an isolated browser. See the verification record for the service used and its limits.' : '隔离浏览器中的发布版真实操作。所用服务与验证范围见实测记录。' }}</figcaption>
+        <figcaption>{{ en ? 'Recorded with release 0.0.37 in an isolated browser. Version 0.0.38 keeps the layout and fixes the fresh-install theme default to light. See the original verification scope.' : '录于 0.0.37 发布包的真实操作；0.0.38 沿用界面布局并修正新安装默认亮色。服务与原验证范围见实测记录。' }}</figcaption>
       </figure>
       <div class="wt-actions">
         <a class="wt-primary" :href="download">{{ en ? 'Download for Chrome / Edge ↓' : '下载 Chrome / Edge 安装包 ↓' }}</a>
         <a class="wt-secondary" :href="withBase((en ? '/en' : '') + '/guide/getting-started')">{{ en ? 'Install & translate your first page →' : '安装并完成第一次翻译 →' }}</a>
       </div>
-      <p class="wt-note">{{ en ? 'Unzip the package, then load the folder containing manifest.json. Version 0.0.37 maps to release tag v0.0.37-wild-talker.1.' : '解压 ZIP 后，加载包含 manifest.json 的目录。扩展版本 0.0.37 对应发布标签 v0.0.37-wild-talker.1。' }}</p>
+      <p class="wt-note">{{ en ? 'Unzip the package, then load the folder containing manifest.json. Version 0.0.38 maps to release tag v0.0.38-wild-talker.1.' : '解压 ZIP 后，加载包含 manifest.json 的目录。扩展版本 0.0.38 对应发布标签 v0.0.38-wild-talker.1。' }}</p>
+      <p class="wt-note">{{ en ? 'Fresh installs default to light. Existing dark/system preferences are kept; choose Light in General settings once if you want to change them.' : '新安装默认亮色；旧安装的暗色或跟随系统设置会保留，需要亮色时到通用设置选择“亮色主题”一次。' }} <a :href="withBase((en ? '/en' : '') + '/guide/theme-default-fix')">{{ en ? 'Theme fix & upgrade →' : '主题修复与升级说明 →' }}</a></p>
     </section>
 
     <section id="features" class="wt-section">
@@ -36,14 +37,14 @@ const screenshot = (name: string) => withBase('/showcase/' + name)
     </section>
 
     <section id="screenshots" class="wt-section">
-      <p class="wt-eyebrow">{{ en ? 'THE RELEASE IN USE' : '发布版场景实拍' }}</p>
+      <p class="wt-eyebrow">{{ en ? 'RECORDED WITH 0.0.37' : '0.0.37 发布版场景实拍' }}</p>
       <h2>{{ en ? 'Webpages, selected text, documents' : '网页、词句、文档' }}</h2>
       <div class="wt-scenes">
         <figure><a :href="screenshot('web-bilingual.png')"><img :src="screenshot('web-bilingual.png')" width="2560" height="1626" loading="lazy" :alt="en ? 'Webpage with bilingual text' : '网页中的原文与译文对照'" /></a><figcaption>{{ en ? 'Bilingual webpage reading' : '网页双语阅读' }}</figcaption></figure>
         <figure><a :href="screenshot('selection-context.png')"><img :src="screenshot('selection-context.png')" width="2560" height="1626" loading="lazy" :alt="en ? 'Selected sentence and its contextual translation card' : '选中句子与上下文翻译卡片'" /></a><figcaption>{{ en ? 'Selection with paragraph context' : '上下文划词翻译' }}</figcaption></figure>
         <figure><a :href="screenshot('document-reader.png')"><img :src="screenshot('document-reader.png')" width="2560" height="1626" loading="lazy" :alt="en ? 'Document reader with original and translated text' : '文档阅读器中的原文与译文'" /></a><figcaption>{{ en ? 'Bilingual document reading' : '文档双语阅读' }}</figcaption></figure>
       </div>
-      <p class="wt-note">{{ en ? 'Bilingual display, document parsing and the reading-card foundation come from FluentRead. These screenshots show Wild Talker; older guide illustrations remain labeled as inherited references.' : '双语显示、文档解析和阅读卡片基础来自 FluentRead。此处展示 Wild Talker；旧功能指南中的示意图保留为已标注的继承参考。' }}</p>
+      <p class="wt-note">{{ en ? 'Bilingual display, document parsing and the reading-card foundation come from FluentRead. These screenshots were taken with Wild Talker 0.0.37; they are not a new theme verification for 0.0.38. Older guide illustrations remain labeled as inherited references.' : '双语显示、文档解析和阅读卡片基础来自 FluentRead。此处为 Wild Talker 0.0.37 实拍，不作为 0.0.38 新安装主题验收；旧功能指南中的示意图保留为已标注的继承参考。' }}</p>
     </section>
 
     <section class="wt-start wt-section">

@@ -734,7 +734,7 @@ async function hydrate() {
   }
   showLanguageOnboarding.value = !config.value.uiLanguageSetupCompleted;
   lastSerialized = JSON.stringify(config.value);
-  applyTheme(config.value.theme || 'auto');
+  applyTheme(config.value.theme || 'light');
   applyInterfaceSkin(config.value.interfaceSkin);
   applyInterfaceFont(config.value.interfaceFont);
   applyPopupHeightMode(popupUsesContentHeight.value);
@@ -781,7 +781,7 @@ watch(() => JSON.stringify(config.value), async serialized => {
 async function persistSiteRulePatch(patch: PopupSiteRulePatch): Promise<void> {
   await persistConfigPatch({...config.value, ...patch});
 }
-watch(() => config.value.theme, theme => applyTheme(theme || 'auto'));
+watch(() => config.value.theme, theme => applyTheme(theme || 'light'));
 watch(() => config.value.interfaceSkin, skin => applyInterfaceSkin(skin));
 watch(() => config.value.interfaceFont, font => applyInterfaceFont(font));
 watch(popupUsesContentHeight, applyPopupHeightMode, {immediate: true});

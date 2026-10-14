@@ -40,6 +40,7 @@ export default defineConfig({
         resolve(__dirname, 'docs/.vitepress/theme/SupportOptions.vue'),
         resolve(__dirname, 'docs/.vitepress/theme/TransferFlow.vue'),
         resolve(__dirname, 'docs/.vitepress/theme/TranslationDemo.vue'),
+        resolve(__dirname, 'docs/.vitepress/theme/WildTalkerHome.vue'),
         resolve(__dirname, 'src/features/area-translation/ui/AreaTranslator.vue'),
         resolve(__dirname, 'src/features/floating-ball/ui/FloatingBall.vue'),
         resolve(__dirname, 'src/features/glossary/ui/BuiltinGlossaries.vue'),
@@ -671,6 +672,7 @@ export default defineConfig({
             reportsDirectory: 'coverage/core',
             reporter: ['text', 'json-summary', 'html'],
             include: [
+                'docs/.vitepress/theme/WildTalkerHome.vue',
                 'userscript/inlineCssPlugin.ts',
                 'src/core/personal-corrections/model.ts',
                 'src/core/personal-corrections/matching.ts',

@@ -1,0 +1,438 @@
+{
+  "verified_at_local_date": "2026-10-14",
+  "extension_version": "0.0.38",
+  "zip_filename": "wild-talker-0.0.38-chrome-edge.zip",
+  "zip_sha256": "b03b1a0df5f951a7d072b6175838d4b00b7fde9e3a3b39542bca45c458e72b37",
+  "actual_tested_directory_matches_every_zip_file": true,
+  "runtime_files": 467,
+  "baseline_0_0_37": {
+    "configured_theme": "auto",
+    "dark_media_emulated": true,
+    "popup_options_document_dark": true
+  },
+  "final_results": [
+    {
+      "browser": "Chrome for Testing",
+      "version": "151.0.7922.34",
+      "launch_mode": "macos-background-cdp",
+      "focus_policy": "launchservices-no-foreground",
+      "cases": [
+        {
+          "name": "fresh-dark-os-default",
+          "configuredTheme": "light",
+          "surfaces": {
+            "popup": {
+              "dark": false,
+              "systemDark": true
+            },
+            "options": {
+              "dark": false,
+              "systemDark": true
+            },
+            "document": {
+              "dark": false,
+              "systemDark": true
+            }
+          }
+        },
+        {
+          "name": "imported-reader-default-light",
+          "configuredTheme": "light",
+          "surfaces": {
+            "popup": {
+              "dark": false,
+              "systemDark": true
+            },
+            "options": {
+              "dark": false,
+              "systemDark": true
+            },
+            "document": {
+              "dark": false,
+              "systemDark": true
+            }
+          }
+        },
+        {
+          "name": "manual-dark-on-dark-os",
+          "configuredTheme": "dark",
+          "surfaces": {
+            "popup": {
+              "dark": true,
+              "systemDark": true
+            },
+            "options": {
+              "dark": true,
+              "systemDark": true
+            },
+            "document": {
+              "dark": true,
+              "systemDark": true
+            }
+          }
+        },
+        {
+          "name": "manual-dark-ignores-light-os",
+          "configuredTheme": "dark",
+          "surfaces": {
+            "popup": {
+              "dark": true,
+              "systemDark": false
+            },
+            "options": {
+              "dark": true,
+              "systemDark": false
+            },
+            "document": {
+              "dark": true,
+              "systemDark": false
+            }
+          }
+        },
+        {
+          "name": "restart-preserves-explicit-dark",
+          "configuredTheme": "dark",
+          "surfaces": {
+            "popup": {
+              "dark": true,
+              "systemDark": false
+            },
+            "options": {
+              "dark": true,
+              "systemDark": false
+            },
+            "document": {
+              "dark": true,
+              "systemDark": false
+            }
+          }
+        },
+        {
+          "name": "manual-auto-follows-light-os",
+          "configuredTheme": "auto",
+          "surfaces": {
+            "popup": {
+              "dark": false,
+              "systemDark": false
+            },
+            "options": {
+              "dark": false,
+              "systemDark": false
+            },
+            "document": {
+              "dark": false,
+              "systemDark": false
+            }
+          }
+        },
+        {
+          "name": "manual-auto-follows-dark-os",
+          "configuredTheme": "auto",
+          "surfaces": {
+            "popup": {
+              "dark": true,
+              "systemDark": true
+            },
+            "options": {
+              "dark": true,
+              "systemDark": true
+            },
+            "document": {
+              "dark": true,
+              "systemDark": true
+            }
+          }
+        },
+        {
+          "name": "restart-preserves-explicit-auto",
+          "configuredTheme": "auto",
+          "surfaces": {
+            "popup": {
+              "dark": true,
+              "systemDark": true
+            },
+            "options": {
+              "dark": true,
+              "systemDark": true
+            },
+            "document": {
+              "dark": true,
+              "systemDark": true
+            }
+          }
+        },
+        {
+          "name": "restarted-auto-reacts-to-light-os",
+          "configuredTheme": "auto",
+          "surfaces": {
+            "popup": {
+              "dark": false,
+              "systemDark": false
+            },
+            "options": {
+              "dark": false,
+              "systemDark": false
+            },
+            "document": {
+              "dark": false,
+              "systemDark": false
+            }
+          }
+        },
+        {
+          "name": "manual-light-ignores-dark-os",
+          "configuredTheme": "light",
+          "surfaces": {
+            "popup": {
+              "dark": false,
+              "systemDark": true
+            },
+            "options": {
+              "dark": false,
+              "systemDark": true
+            },
+            "document": {
+              "dark": false,
+              "systemDark": true
+            }
+          }
+        }
+      ],
+      "passed_case_count": 10,
+      "page_error_count": 0,
+      "actual_process_launches": 3,
+      "profile_removed": true,
+      "screenshots": [
+        "popup-system-dark.png",
+        "options-system-dark.png",
+        "document-system-dark.png",
+        "pdf-reader-system-dark.png"
+      ]
+    },
+    {
+      "browser": "Microsoft Edge",
+      "version": "155.0.4283.45",
+      "launch_mode": "playwright-headless",
+      "focus_policy": "headless",
+      "cases": [
+        {
+          "name": "fresh-dark-os-default",
+          "configuredTheme": "light",
+          "surfaces": {
+            "popup": {
+              "dark": false,
+              "systemDark": true
+            },
+            "options": {
+              "dark": false,
+              "systemDark": true
+            },
+            "document": {
+              "dark": false,
+              "systemDark": true
+            }
+          }
+        },
+        {
+          "name": "imported-reader-default-light",
+          "configuredTheme": "light",
+          "surfaces": {
+            "popup": {
+              "dark": false,
+              "systemDark": true
+            },
+            "options": {
+              "dark": false,
+              "systemDark": true
+            },
+            "document": {
+              "dark": false,
+              "systemDark": true
+            }
+          }
+        },
+        {
+          "name": "manual-dark-on-dark-os",
+          "configuredTheme": "dark",
+          "surfaces": {
+            "popup": {
+              "dark": true,
+              "systemDark": true
+            },
+            "options": {
+              "dark": true,
+              "systemDark": true
+            },
+            "document": {
+              "dark": true,
+              "systemDark": true
+            }
+          }
+        },
+        {
+          "name": "manual-dark-ignores-light-os",
+          "configuredTheme": "dark",
+          "surfaces": {
+            "popup": {
+              "dark": true,
+              "systemDark": false
+            },
+            "options": {
+              "dark": true,
+              "systemDark": false
+            },
+            "document": {
+              "dark": true,
+              "systemDark": false
+            }
+          }
+        },
+        {
+          "name": "restart-preserves-explicit-dark",
+          "configuredTheme": "dark",
+          "surfaces": {
+            "popup": {
+              "dark": true,
+              "systemDark": false
+            },
+            "options": {
+              "dark": true,
+              "systemDark": false
+            },
+            "document": {
+              "dark": true,
+              "systemDark": false
+            }
+          }
+        },
+        {
+          "name": "manual-auto-follows-light-os",
+          "configuredTheme": "auto",
+          "surfaces": {
+            "popup": {
+              "dark": false,
+              "systemDark": false
+            },
+            "options": {
+              "dark": false,
+              "systemDark": false
+            },
+            "document": {
+              "dark": false,
+              "systemDark": false
+            }
+          }
+        },
+        {
+          "name": "manual-auto-follows-dark-os",
+          "configuredTheme": "auto",
+          "surfaces": {
+            "popup": {
+              "dark": true,
+              "systemDark": true
+            },
+            "options": {
+              "dark": true,
+              "systemDark": true
+            },
+            "document": {
+              "dark": true,
+              "systemDark": true
+            }
+          }
+        },
+        {
+          "name": "restart-preserves-explicit-auto",
+          "configuredTheme": "auto",
+          "surfaces": {
+            "popup": {
+              "dark": true,
+              "systemDark": true
+            },
+            "options": {
+              "dark": true,
+              "systemDark": true
+            },
+            "document": {
+              "dark": true,
+              "systemDark": true
+            }
+          }
+        },
+        {
+          "name": "restarted-auto-reacts-to-light-os",
+          "configuredTheme": "auto",
+          "surfaces": {
+            "popup": {
+              "dark": false,
+              "systemDark": false
+            },
+            "options": {
+              "dark": false,
+              "systemDark": false
+            },
+            "document": {
+              "dark": false,
+              "systemDark": false
+            }
+          }
+        },
+        {
+          "name": "manual-light-ignores-dark-os",
+          "configuredTheme": "light",
+          "surfaces": {
+            "popup": {
+              "dark": false,
+              "systemDark": true
+            },
+            "options": {
+              "dark": false,
+              "systemDark": true
+            },
+            "document": {
+              "dark": false,
+              "systemDark": true
+            }
+          }
+        }
+      ],
+      "passed_case_count": 10,
+      "page_error_count": 0,
+      "actual_process_launches": 3,
+      "profile_removed": true,
+      "screenshots": [
+        "edge-headless/popup-system-dark.png",
+        "edge-headless/options-system-dark.png",
+        "edge-headless/document-system-dark.png",
+        "edge-headless/pdf-reader-system-dark.png"
+      ]
+    }
+  ],
+  "headed_edge_initial_validation": {
+    "version": "155.0.4283.45",
+    "cases_passed_before_focus_guard_stop": 4,
+    "default_popup_options_document_light_on_dark_media": true,
+    "PDF_reader_light_on_dark_media": true,
+    "manual_dark_ignores_light_media": true,
+    "screenshots": [
+      "edge-headed/options-system-dark.png"
+    ]
+  },
+  "harness_constraints": [
+    "Operating-system theme was reproduced with actual browser CDP Emulation.setEmulatedMedia prefers-color-scheme dark/light; native OS appearance was not changed.",
+    "CDP debug load is reactivated from the same frozen path and extension id after each browser restart; each restart retains the same task-owned temporary profile storage.",
+    "Edge headed restart became foreground and was stopped by focus-safe helper; full persistence was then tested successfully with the actual Edge binary in headless mode with extension load flags."
+  ],
+  "scope": "Theme/default and explicit preference persistence only. No translation service/API/model calls or private profile/config access. Existing 0.0.37 showcase files were not edited.",
+  "published_screenshot_sha256": {
+    "popup-system-dark.png": "dc228d2fc27796045934ca2d9aac4064d2f26fc097fc2971af0e64213ff54399",
+    "options-system-dark.png": "908b3817685d32a9a4a3796931350c95430ae26e14d22af8a4d91afea1de614d",
+    "document-system-dark.png": "b40fa637f991fa97d8a881c53cd8f0e4c7bff730a5c04b46f35426159f6868f8",
+    "pdf-reader-system-dark.png": "4f4a088ad8fa6e088437b97db43b3c2e97d743e4f7e1a55082ecb3fb579d8c7a",
+    "edge-headless/popup-system-dark.png": "0d8e070b3cce5cb53b17f8194b8ade55bb0b13eff418e9d7a3315286ba7cbb17",
+    "edge-headless/options-system-dark.png": "f0e33ee6d2b175a772f78c2b79b87a9da55302cca2103b8706dddddd6b2c0839",
+    "edge-headless/document-system-dark.png": "7931bc9ee046c173d0c30c711f28043b3737e160ee66c19deda6d2a8c193c1c4",
+    "edge-headless/pdf-reader-system-dark.png": "cf1320add539660b51894c6fe303b5e694ff8a58f410f7e0d9803ef2c59ddc06",
+    "edge-headed/options-system-dark.png": "e86891112f00cabf49b3c6881405269d9dff1f3ed8547e9c9fa1759fc14d4531"
+  }
+}

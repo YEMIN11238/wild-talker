@@ -27,6 +27,19 @@ import { Config, normalizeConfig } from '@/src/core/config/model'
 import { popupQuickFeatureIconPaths, popupQuickFeatureIconTones } from '@/src/ui/popupQuickFeatureIcons'
 
 describe('界面皮肤与栏目配置', () => {
+  it('新安装、缺失和损坏的主题默认浅色，并保留已保存的手选主题', () => {
+    expect(new Config().theme).toBe('light')
+    for (const value of [undefined, null, {}, {theme: undefined}, {theme: null}, {theme: ''}, {theme: 'unknown'}, {theme: true}, {theme: 1}, {theme: {}}]) {
+      expect(normalizeConfig(value).theme).toBe('light')
+    }
+    for (const theme of ['light', 'dark', 'auto']) {
+      const normalized = normalizeConfig({theme, to: 'ja'})
+      expect(normalized.theme).toBe(theme)
+      expect(normalized.to).toBe('ja')
+      expect(normalizeConfig(JSON.parse(JSON.stringify(normalized))).theme).toBe(theme)
+    }
+  })
+
   it('默认保留当前界面并显示所有 Popup 栏目', () => {
     const config = new Config()
 

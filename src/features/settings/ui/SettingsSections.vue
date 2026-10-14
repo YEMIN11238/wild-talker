@@ -863,7 +863,7 @@ void configReady
     if (disposed) return;
     hydrateConfigDraft(runtimeConfig);
     hydrated = true;
-    updateTheme(config.value.theme || 'auto');
+    updateTheme(config.value.theme || 'light');
   })
   .catch((error) => console.warn('[FluentRead] 无法读取本地配置', error));
 

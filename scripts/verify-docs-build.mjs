@@ -11,7 +11,7 @@ const siteOrigin = 'https://yemin11238.github.io'
 const siteBase = '/wild-talker/'
 const siteUrl = siteOrigin + siteBase
 const repositoryUrl = 'https://github.com/YEMIN11238/wild-talker'
-const releaseDownloadUrl = repositoryUrl + '/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip'
+const releaseDownloadUrl = repositoryUrl + '/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip'
 const based = (route) => siteBase + route.replace(/^\//, '')
 const distReal = fs.realpathSync(dist)
 const isArtifactFile = (file) => {

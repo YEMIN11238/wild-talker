@@ -1,7 +1,7 @@
 /**
  * @file src/core/config/model.ts
  *
- * 文件职责：定义 FluentRead 完整配置模型、默认值及各项设置的合法范围，包括默认开启并按服务独立保存的原生翻译合批偏好，是配置读取、保存、迁移和 UI 绑定共同依赖的领域契约。
+ * 文件职责：定义 FluentRead 完整配置模型、默认值及各项设置的合法范围，包括默认浅色且尊重已保存主题、默认开启并按服务独立保存的原生翻译合批偏好，是配置读取、保存、迁移和 UI 绑定共同依赖的领域契约。
  * 主要内容：支持单图选择本地识别引擎，包含正文/全部节点识别范围，保留各功能独立服务，并将所有功能服务的空值解释为继承网页默认；统一中文简繁标识及历史配置别名，并保存常用服务顺序，保存默认空的 Origin/Referer 域名移除名单，包含 Config 接口、字幕和翻译模式类型、延迟与字号范围、默认 API 地址及多项功能开关，使新增配置项在一个位置获得类型和初始语义；归一化时以迭代克隆保留深层数据和共享引用，安全迁移任意自有凭据键，升级历史默认提示词，只迁移已登记模型编号，并在线性目录遍历中保护自定义服务的当前模型和 Thinking 偏好。 可核对的公开符号包括 DeepSeekApiType、DeepSeekThinkingMode、VideoSubtitleDisplayMode、FullPageTranslationMode、DEFAULT_VIDEO_SUBTITLE_FONT_SIZE、DEFAULT_NEW_API_URL、DEFAULT_MOUSE_HOVER_TRANSLATION_DELAY。
  * 模块边界：本文件属于 core 领域层，只定义规则、类型与纯转换；个人校订默认关闭且仅接受显式布尔开启，userscript 不保留该不可用设置；不直接读写浏览器存储、不发起网络请求、不挂载 Vue/WXT 入口，持久化、协议调用和界面编排分别由 services、providers 与 features 承担。
  */
@@ -615,7 +615,7 @@ export class Config {
         this.system_role = systemRoleFactory();
         this.user_role = userRoleFactory();
         this.count = 0;
-        this.theme = 'auto';  // 默认跟随系统
+        this.theme = 'light'; // 新安装默认浅色，跟随系统需由用户主动选择。
         this.shareCard = normalizeShareCardPreferences();
         this.interfaceSkin = 'default'; // 默认保留当前界面
         this.interfaceFont = DEFAULT_INTERFACE_FONT; // 默认使用现代无衬线字体栈
@@ -1119,6 +1119,9 @@ export function normalizeConfig(value: unknown): Config {
         source.inputBoxTranslationSystemPrompt,
     );
     normalized.uiLanguage = normalizeUiLanguage(source.uiLanguage);
+    // 缺失或损坏的主题统一回退浅色；旧用户明确保存的 dark/auto 不迁移。
+    normalized.theme = ['light', 'dark', 'auto'].includes(source.theme as string)
+        ? source.theme! : 'light';
     const cacheLimits = normalizeTranslationCacheLimits({
         maxBytes: source.translationCacheMaxBytes,
         maxEntries: source.translationCacheMaxEntries,

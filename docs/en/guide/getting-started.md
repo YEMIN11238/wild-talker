@@ -9,11 +9,13 @@ The current release is an unpacked desktop Chrome / Edge extension. Wild Talker 
 
 ## 1. Download
 
-Open **[Wild Talker Releases](https://github.com/YEMIN11238/wild-talker/releases/latest)** and download the **Chrome / Edge ZIP** from Assets. Source code.zip is developer source, not a ready-to-load extension.
+Download the **[0.0.38 Chrome / Edge ZIP](https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip)**, or open **[this release](https://github.com/YEMIN11238/wild-talker/releases/tag/v0.0.38-wild-talker.1)** and select the same package from Assets. Source code.zip is developer source, not a ready-to-load extension.
 
 Extract it to a permanent folder. Open its **chrome-mv3** subfolder and find **manifest.json**: load the folder that directly contains this file, not the ZIP or an empty parent folder.
 
-The browser shows extension version **0.0.37**, corresponding to release tag **v0.0.37-wild-talker.1**. The release tag distinguishes this fork; the browser manifest only supports numeric versions. Check the product name, tag and package together.
+The browser shows extension version **0.0.38**, corresponding to release tag **v0.0.38-wild-talker.1**. A fresh 0.0.38 install defaults to light, even when the operating system is dark. Existing saved dark/system preferences remain; use **Settings → General settings → Interface theme → Light** once to change them. **Follow operating system** remains selectable. See [the theme fix](/en/guide/theme-default-fix).
+
+The release tag distinguishes this fork; the browser manifest only supports numeric versions. Check the product name, tag and package together.
 
 ## 2. Load the extension
 
@@ -25,7 +27,7 @@ The browser shows extension version **0.0.37**, corresponding to release tag **v
 4. Select the folder containing **manifest.json**. Confirm the card says **Wild Talker** (or its Chinese localized name).
 5. Pin it from the toolbar extension menu and refresh existing regular webpages.
 
-<figure class="doc-figure"><a href="/showcase/install-chrome.png"><img class="doc-screenshot" src="/showcase/install-chrome.png" width="2560" height="1626" alt="Clean Chrome installation with developer mode and the Wild Talker card" /></a><figcaption>Installation in an isolated Chrome profile.</figcaption></figure>
+<figure class="doc-figure"><a href="/showcase/install-chrome.png"><img class="doc-screenshot" src="/showcase/install-chrome.png" width="2560" height="1626" alt="Clean Chrome installation with developer mode and the Wild Talker card" /></a><figcaption>Installation screenshot recorded with 0.0.37 in an isolated Chrome profile; the same steps apply, and the current card should show 0.0.38.</figcaption></figure>
 
 ### Edge
 
@@ -35,7 +37,7 @@ The browser shows extension version **0.0.37**, corresponding to release tag **v
 4. Select the folder containing **manifest.json** and check the product name and version.
 5. Show its toolbar icon and refresh existing webpages.
 
-<figure class="doc-figure"><a href="/showcase/install-edge.png"><img class="doc-screenshot" src="/showcase/install-edge.png" width="2544" height="1632" alt="Clean Edge installation with developer mode and the Wild Talker card" /></a><figcaption>The same Chrome / Edge MV3 ZIP is used in Edge.</figcaption></figure>
+<figure class="doc-figure"><a href="/showcase/install-edge.png"><img class="doc-screenshot" src="/showcase/install-edge.png" width="2544" height="1632" alt="Clean Edge installation with developer mode and the Wild Talker card" /></a><figcaption>Edge installation screenshot recorded with 0.0.37. Use the current Chrome / Edge MV3 ZIP and check version 0.0.38.</figcaption></figure>
 
 If manifest.json is missing, check whether you downloaded the source archive or chose an extra parent folder. Keep the installed directory in place: the browser still reads it.
 
@@ -54,7 +56,7 @@ For custom services, follow the **[verified API example](/en/guide/first-use-ver
 3. Select **Translate** and wait for translations beneath the paragraphs. Scroll to translate more content.
 4. Select **Restore original**. Change the language or provider, then translate again when needed.
 
-<figure class="doc-figure"><a href="/showcase/web-bilingual.png"><img class="doc-screenshot" src="/showcase/web-bilingual.png" width="2560" height="1626" alt="Release-build bilingual webpage translation" /></a><figcaption>See the repository verification record for the actual browser and service used.</figcaption></figure>
+<figure class="doc-figure"><a href="/showcase/web-bilingual.png"><img class="doc-screenshot" src="/showcase/web-bilingual.png" width="2560" height="1626" alt="Release-build bilingual webpage translation" /></a><figcaption>This screenshot records 0.0.37. See its original verification record for the actual browser and service used; it is not a new 0.0.38 translation test.</figcaption></figure>
 
 Enable selection translation, select text, and click the entry next to it. To receive AI explanations, configure a supported AI service and enable the reading card first. **Paragraph reference** supplies limited context while the selected text remains the translation target.
 

@@ -83,9 +83,8 @@ function brandFixture(bilingual = false) {
     return root;
 }
 
-const workflow = '<ol class="ds"><li class="ds-current"><button type="button" aria-label="First" aria-current="step">1</button></li><li><button type="button" aria-label="Second">2</button></li><li><button type="button" aria-label="Third">3</button></li></ol>';
 const siteBase = '/wild-talker/';
-const releaseDownloadUrl = 'https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip';
+const releaseDownloadUrl = 'https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip';
 function page(route: string, body: string) {
     const alternate = (route.startsWith('en/') ? route.slice(3) : 'en/' + route).replace(/index\.html$/, '').replace(/\.html$/, '');
     const productName = route.startsWith('en/') ? 'Wild Talker' : '万能说客 Wild Talker';
@@ -284,7 +283,7 @@ describe('documentation delivery CLI contracts', () => {
         const result = await checker(root, 'verify-docs-build.mjs');
         expect(result.code, result.err).toBe(0);
         expect(JSON.parse(result.out).pages).toBe(13);
-        for (const unrelated of ['https://github.com/FluentRead/FluentRead/releases/latest', 'https://github.com/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip']) {
+        for (const unrelated of ['https://github.com/FluentRead/FluentRead/releases/latest', 'https://github.com/releases/download/v0.0.38-wild-talker.1/wild-talker-0.0.38-chrome-edge.zip']) {
             const invalid = docsFixture(), homepage = path.join(invalid, 'docs/.vitepress/dist/index.html');
             fs.writeFileSync(homepage, fs.readFileSync(homepage, 'utf8').replaceAll(releaseDownloadUrl, unrelated));
             const rejected = await checker(invalid, 'verify-docs-build.mjs');
