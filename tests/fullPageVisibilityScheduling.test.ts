@@ -6,6 +6,7 @@ import productionReleaseCases from './fixtures/target-language-releases.json';
 import type {TranslationCandidate, TranslationSiteAdapter} from '@/src/core/translation/types';
 import {TranslationCandidateCore} from '@/src/core/translation/engine';
 import {compileSiteRulePack} from '@/src/core/site-adaptation/compiler';
+import {builtinSiteRulePack} from '@/src/core/site-adaptation/catalog';
 import {collapseMutationRescanRoot, isOwnSyntheticSegmentMarkerMutation, mutationRootContains} from '@/src/features/full-page-translation/content/mutationObservation';
 import {DEFAULT_EAGER_TRANSLATION_CHARACTERS} from '@/src/core/config/pageTranslation';
 
@@ -1460,6 +1461,55 @@ describe("全文翻译可见性锚点", () => {
         runtime.config.translationScope = 'all';
         autoTranslateEnglishPage(); await finishScheduledWork();
         expect(button.textContent).toBe('译:Open menu'); expect(item.textContent).toBe('译:Execute workflow');
+    });
+
+    it('GitHub 全部节点会话在正文译完后通过真实候选核心持续翻译新展开的 dialog 导航', async () => {
+        runtime.config.translationScope = 'all';
+        runtime.config.fullPageTranslationMode = 'all';
+        runtime.config.display = 1;
+        runtime.realTextExtraction = true;
+        runtime.realCore = new TranslationCandidateCore({url: new URL('https://github.com/'), scope: 'all',
+            adapters: compileSiteRulePack(builtinSiteRulePack)});
+        replaceGlobal('innerWidth', 1000);
+        replaceGlobal('innerHeight', 800);
+        replaceGlobal('getComputedStyle', (element: HTMLElement) => ({
+            display: element.hidden ? 'none' : element.style.display || 'block',
+            visibility: 'visible', opacity: '1', position: 'static', zIndex: '0',
+        }));
+        document.body.innerHTML = '<main><p id="morning">Good morning, reader.</p></main>';
+        const paragraph = document.querySelector<HTMLElement>('#morning')!;
+        setLayoutBox(paragraph, 600, 90);
+        autoTranslateEnglishPage();
+        await finishScheduledWork();
+        expect(getTranslationState(paragraph)?.phase).toBe('translated');
+        const originalWrapper = paragraph.querySelector('.fluent-read-bilingual-content');
+        expect(originalWrapper).not.toBeNull();
+        runtime.requests.mockClear();
+        const labels = ['Home', 'Feed', 'All issues', 'All pull requests', 'All repositories', 'Projects', 'Discussions', 'Codespaces', 'Copilot', 'Explore', 'Marketplace', 'MCP registry'];
+        const menu = document.createElement('div');
+        menu.setAttribute('role', 'dialog');menu.setAttribute('aria-label', 'Global navigation');menu.setAttribute('aria-modal', 'true');
+        menu.innerHTML = `<nav aria-label="Global"><ul>${labels.map((label, index) => `<li><a id="global-${index}" href="/navigation-${index}">${label}</a></li>`).join('')}</ul></nav><input value="Unsubmitted search"><pre><code>console.log('Original code');</code></pre>`;
+        document.body.append(menu);
+        const links = Array.from(menu.querySelectorAll<HTMLElement>('a'));
+        const originalNodes = links.map(link => link.firstChild);
+        for (const element of [menu, ...links]) {setLayoutBox(element, 240, 30);setViewportRect(element, 80, 30);}
+        TestMutationObserver.instances.at(-1)!.emit([{
+            type: 'childList', target: document.body, addedNodes: [menu], removedNodes: [],
+        } as unknown as MutationRecord]);
+        await finishScheduledWork();
+        expect(runtime.requests.mock.calls.flatMap(([origins]) => origins)).toEqual(labels);
+        for (const [index, link] of links.entries()) {
+            expect(link.textContent).toBe(`译:${labels[index]}`);
+            expect(link.firstChild).toBe(originalNodes[index]);
+            expect(link.getAttribute('href')).toBe(`/navigation-${index}`);
+            expect(getTranslationState(link)).toMatchObject({phase: 'translated', kind: 'control', scope: 'all'});
+        }
+        expect(paragraph.querySelector('.fluent-read-bilingual-content')).toBe(originalWrapper);
+        expect(menu.querySelector('input')?.getAttribute('value')).toBe('Unsubmitted search');
+        expect(menu.querySelector('code')?.textContent).toBe("console.log('Original code');");
+        restoreOriginalContent();
+        expect(links.map(link => link.textContent)).toEqual(labels);
+        expect(paragraph.textContent).toBe('Good morning, reader.');
     });
 
     it("Issue 422 保存范围不取消在途请求，恢复后拒绝迟到的全部节点译文", async () => {

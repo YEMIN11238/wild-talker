@@ -3173,6 +3173,41 @@ describe('translation candidate core', () => {
         expect(core.resolve(document.querySelector('#search-result')?.firstChild)).toBeNull();
     });
 
+    it.each([
+        ['content', false, false],
+        ['content', true, false],
+        ['all', false, true],
+    ] as const)('GitHub 后展开的全局导航使用真实 dialog/nav 结构，%s 范围与侧栏 %s 遵循显式授权', (scope, includeSidebarRegions, translatesMenu) => {
+        const {document} = parseHTML('<html><body><main><p id="morning">Good morning, reader.</p></main></body></html>');
+        const core = createTranslationCore({url: new URL('https://github.com/'), scope, includeSidebarRegions});
+        expect(core.discover(document).map(candidate => candidate.element.id)).toEqual(['morning']);
+        // GitHub 的 Open menu 在当前页面正文之后动态挂载 div[role=dialog]，不是一次新页面导航。
+        const menu = document.createElement('div');
+        menu.setAttribute('role', 'dialog');
+        menu.setAttribute('aria-label', 'Global navigation');
+        menu.setAttribute('aria-modal', 'true');
+        const labels = ['Home', 'Feed', 'All issues', 'All pull requests', 'All repositories', 'Projects', 'Discussions', 'Codespaces', 'Copilot', 'Explore', 'Marketplace', 'MCP registry'];
+        menu.innerHTML = `<nav aria-label="Global"><ul>${labels.map((label, index) => `<li><a id="global-${index}" href="/navigation-${index}">${label}</a></li>`).join('')}</ul></nav><input id="menu-input" value="Unsubmitted search"><pre><code id="menu-code">console.log('Original code');</code></pre>`;
+        document.body.append(menu);
+        const candidates = core.discover(menu);
+        expect(candidates.map(candidate => candidate.element.textContent)).toEqual(translatesMenu ? labels : []);
+        for (const [index, label] of labels.entries()) {
+            const link = menu.querySelector(`#global-${index}`)!;
+            if (translatesMenu) {
+                expect(core.resolve(link.firstChild)).toMatchObject({element: link, kind: 'control', scope: 'all'});
+                expect(candidates[index]).toMatchObject({element: link, kind: 'control'});
+                expect(link.textContent).toBe(label);
+            } else expect(core.resolve(link.firstChild)).toBeNull();
+        }
+        expect(core.resolve(menu.querySelector('#menu-input'))).toBeNull();
+        expect(core.resolve(menu.querySelector('#menu-code')!.firstChild)).toBeNull();
+        expect(core.discover(document).map(candidate => candidate.element.id)).toEqual([
+            'morning', ...(translatesMenu ? labels.map((_, index) => `global-${index}`) : []),
+        ]);
+        menu.remove();
+        expect(core.discover(document).map(candidate => candidate.element.id)).toEqual(['morning']);
+    });
+
     it('translates GitHub markdown prose inside live-updatable conversation containers', () => {
         const {document, core} = page(`
             <main>
