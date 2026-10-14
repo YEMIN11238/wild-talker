@@ -1,77 +1,66 @@
-# Quick start
+---
+title: Your first translation with Wild Talker
+description: Download the ZIP, load the folder containing manifest.json, choose a service and translate.
+---
 
-Learn how to install FluentRead and use its basic translation features.
+# Your first translation with Wild Talker
 
-## Install
+The current release is an unpacked desktop Chrome / Edge extension. Wild Talker does not currently have its own store listing.
 
-Install FluentRead from your browser’s official extension store.
+## 1. Download
 
-<BrowserInstall en />
+Open **[Wild Talker Releases](https://github.com/YEMIN11238/wild-talker/releases/latest)** and download the **Chrome / Edge ZIP** from Assets. Source code.zip is developer source, not a ready-to-load extension.
 
-If the Chrome Web Store does not open, download the latest stable package from the [official GitHub release page](https://github.com/FluentRead/FluentRead/releases/latest) and follow the [offline installation instructions](/en/guide/offline-install). You can also try [CRXSOso](https://www.crxsoso.com/webstore/detail/djnlaiohfaaifbibleebjggkghlmcpcj), a third-party distribution website whose version may differ from the official store.
+Extract it to a permanent folder. Open its **chrome-mv3** subfolder and find **manifest.json**: load the folder that directly contains this file, not the ZIP or an empty parent folder.
 
-The walkthrough below uses Chrome. Click **Add to Chrome**, review the requested permissions, then choose **Add extension**.
+The browser shows extension version **0.0.37**, corresponding to release tag **v0.0.37-wild-talker.1**. The release tag distinguishes this fork; the browser manifest only supports numeric versions. Check the product name, tag and package together.
 
-<GuideVisual kind="install" en />
+## 2. Load the extension
 
-<details class="guide-details">
-<summary>Mobile, userscripts & Thunderbird</summary>
+### Chrome
 
-On **Edge for Android** versions that support extensions, find FluentRead through the extension menu. After installation, open FluentRead from the extensions list and translate the page. Use the menu or floating ball on mobile. Check your browser for extension availability on iPhone and iPad.
+1. Enter `chrome://extensions/` in the address bar.
+2. Enable **Developer mode**.
+3. Click **Load unpacked**.
+4. Select the folder containing **manifest.json**. Confirm the card says **Wild Talker** (or its Chinese localized name).
+5. Pin it from the toolbar extension menu and refresh existing regular webpages.
 
-Other installation options: [Userscript](/en/guide/userscript) · [Thunderbird email translation](/en/guide/thunderbird).
+<figure class="doc-figure"><a href="/showcase/install-chrome.png"><img class="doc-screenshot" src="/showcase/install-chrome.png" width="2560" height="1626" alt="Clean Chrome installation with developer mode and the Wild Talker card" /></a><figcaption>Installation in an isolated Chrome profile.</figcaption></figure>
 
-</details>
+### Edge
 
-## Pin the extension
+1. Enter `edge://extensions/` in the address bar.
+2. Enable **Developer mode**.
+3. Click **Load unpacked**.
+4. Select the folder containing **manifest.json** and check the product name and version.
+5. Show its toolbar icon and refresh existing webpages.
 
-Keep FluentRead in your toolbar so you can open it easily.
+<figure class="doc-figure"><a href="/showcase/install-edge.png"><img class="doc-screenshot" src="/showcase/install-edge.png" width="2544" height="1632" alt="Clean Edge installation with developer mode and the Wild Talker card" /></a><figcaption>The same Chrome / Edge MV3 ZIP is used in Edge.</figcaption></figure>
 
-In Chrome:
+If manifest.json is missing, check whether you downloaded the source archive or chose an extra parent folder. Keep the installed directory in place: the browser still reads it.
 
-1. Click the puzzle-shaped **Extensions** icon beside the address bar.
-2. Find **FluentRead** and click its pin icon.
-3. Click the FluentRead icon that now appears in the toolbar to open its menu.
+## 3. Choose a service
 
-Other browsers may use different toolbar menu names. Refresh any webpages that were open before you installed the extension.
+Open **Settings → Translation providers**. Ordinary webpage translation and basic selection translation can use built-in translation services without your own AI API. Public endpoints can fail because of network, regional restrictions or rate limits; no continued free availability is promised. Try a short paragraph first.
 
-<GuideVisual kind="pin" en />
+AI reading explanations and AI prompt presets require a compatible AI provider or a local model service. A chat subscription does not necessarily include API quota. Account requirements, pricing and data policies come from the provider.
 
-## Translate a webpage
+For custom services, follow the **[verified API example](/en/guide/first-use-verification)**, enter the endpoint and model, and select **Check connection**. Keep keys out of screenshots. After checking, set it as default or assign it to the feature you need; selecting a provider in the directory alone does not change the default.
 
-1. Open an article in another language, such as a news story or blog post. Browser settings and extension stores cannot be translated.
-2. Click FluentRead in the toolbar. On first use, choose **Set interface language**, select your language, and click **Confirm**.
-3. Check the target language in the main menu. You can keep the source on **Automatic detection** and use the default **Free translation service**.
-4. Click **Translate this page**. Translations appear below the original paragraphs. Scroll down to keep reading.
+## 4. Translate for the first time
 
-The free translation service works without configuration. Your interface language controls the buttons and settings labels; your target language controls the translated content. Choose them separately.
+1. Open a normal foreign-language page such as [Example Domain](https://example.com/). Browser settings, extension management and store pages cannot be translated.
+2. Open the extension, choose **Auto detect → Simplified Chinese**, and confirm the service.
+3. Select **Translate** and wait for translations beneath the paragraphs. Scroll to translate more content.
+4. Select **Restore original**. Change the language or provider, then translate again when needed.
 
-<GuideVisual kind="first-translation" en />
+<figure class="doc-figure"><a href="/showcase/web-bilingual.png"><img class="doc-screenshot" src="/showcase/web-bilingual.png" width="2560" height="1626" alt="Release-build bilingual webpage translation" /></a><figcaption>See the repository verification record for the actual browser and service used.</figcaption></figure>
 
-To return to the original, open FluentRead and choose **Restore this page**. Restore first if you want to translate again with another language or provider.
+Enable selection translation, select text, and click the entry next to it. To receive AI explanations, configure a supported AI service and enable the reading card first. **Paragraph reference** supplies limited context while the selected text remains the translation target.
 
-## Translate selected text
+## Next steps
 
-Open the **Selection translation** card in the extension menu and enable its switch. Select a word or sentence. Click the FluentRead icon beside your selection to see the translation.
-
-<GuideVisual kind="selection" en />
-
-See [Selection translation](/en/guide/deepseek-harness) for dictionary lookup, read-aloud controls, and sentence explanations.
-
-## Translate a paragraph
-
-Open the **Hover translation** card and check that the default hover shortcut is enabled. Move your pointer over a paragraph and press **Control**. Its translation appears underneath. Press **Control** again to restore the original paragraph.
-
-<GuideVisual kind="hover" en />
-
-You can change the shortcut and trigger behavior. See [Hover translation](/en/guide/hover-translation).
-
-## Troubleshooting
-
-If translation does not start, make sure the extension is enabled and refresh a normal webpage. If the free service is busy, try again later or [switch providers](/en/config/translation-engines). See [Troubleshooting](/en/guide/faq) for other issues.
-
-## Related guides
-
-- [Webpage translation](/en/guide/webpage-translation)
-- [Appearance & reading aids](/en/config/appearance)
-- [Translation providers](/en/config/translation-engines)
+- [Why Wild Talker](/en/guide/why-wild-talker): examples and activation conditions.
+- [Offline installation & upgrades](/en/guide/offline-install).
+- [Provenance & distribution](/en/guide/oauth-and-source): licensing and OAuth limits.
+- [Report a problem](https://github.com/YEMIN11238/wild-talker/issues) with versions, a public URL and redacted screenshots.

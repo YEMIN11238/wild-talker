@@ -6,7 +6,7 @@
 
 ## 直接安装
 
-打开 [Greasy Fork 安装流畅阅读油猴脚本](https://greasyfork.org/zh-CN/scripts/482986-%E6%B5%81%E7%95%85%E9%98%85%E8%AF%BB)，按照脚本管理器提示完成安装。
+Wild Talker 尚无独立 Greasy Fork 条目。历史 FluentRead 商店条目安装的是上游产品。当前验证的安装路线是[桌面 Chrome / Edge ZIP](/guide/getting-started)；从源码构建脚本属于保留的开发选项。
 
 Greasy Fork 上的版本可能晚于 GitHub 源码。排查问题时，请先查看安装页和脚本设置中的版本号。当前运行验证覆盖 Chrome 与 Violentmonkey，以及 Android 模拟器中的 Via 7.3.3；Safari Userscripts 和 Via 真机仍需设备验证。
 

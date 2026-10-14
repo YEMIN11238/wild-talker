@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SiteHome from './SiteHome.vue'
+import WildTalkerHome from './WildTalkerHome.vue'
 </script>
 
-<template><SiteHome en /></template>
+<template><WildTalkerHome en /></template>

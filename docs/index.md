@@ -1,7 +1,7 @@
 ---
 layout: home
 markdownStyles: false
-title: 流畅阅读
+title: 万能说客 Wild Talker
 titleTemplate: false
 ---
 

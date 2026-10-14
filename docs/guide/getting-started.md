@@ -1,79 +1,66 @@
-# 快速开始
+---
+title: 第一次使用 Wild Talker
+description: 下载 ZIP、加载包含 manifest.json 的目录、选择服务并完成第一次翻译。
+---
 
-本页介绍流畅阅读的安装方法和基本用法。
+# 第一次使用 Wild Talker
 
-## 安装
+按这四步完成第一次翻译。当前发布的是 Chrome / Edge 桌面版 ZIP；Wild Talker 尚未以独立产品上架扩展商店。
 
-通过当前浏览器的官方扩展商店安装流畅阅读。
+## 1. 下载安装
 
-<BrowserInstall />
+打开 **[Wild Talker 下载页](https://github.com/YEMIN11238/wild-talker/releases/latest)**，在 Assets 中下载 **Chrome / Edge ZIP**。不要下载 Source code.zip；它是开发源码，不能直接作为扩展加载。
 
-Chrome 商店打不开时，可以从 [GitHub 官方发布页](https://github.com/FluentRead/FluentRead/releases/latest) 下载最新正式版的安装包，并参照[离线安装说明](/guide/offline-install)安装。也可以使用 [CRX搜搜（国内可用）](https://www.crxsoso.com/webstore/detail/djnlaiohfaaifbibleebjggkghlmcpcj)，这是第三方分发网站，版本同步时间可能与官方商店不同。
+将安装包解压到一个长期保留的文件夹。打开解压后的 **chrome-mv3** 子目录，找到 **manifest.json**，记住它所在的目录；后面加载的正是这个目录，不是 ZIP，也不是外层空文件夹。
 
-下面演示在 Chrome 中的安装过程。点击 **添加至 Chrome** 后，核对浏览器列出的权限并点击 **添加扩展程序**。
+扩展管理页中显示的版本是 **0.0.37**，对应发布标签 **v0.0.37-wild-talker.1**。发布标签包含分支版本信息，浏览器只能显示数字格式的 manifest 版本；核对品牌、标签和安装包一起确认版本。
 
-<GuideVisual kind="install" />
+## 2. 加载扩展
 
-<details class="guide-details">
-<summary>手机、油猴脚本与 Thunderbird</summary>
+### Chrome
 
-支持扩展的 **安卓 Edge** 可从扩展入口搜索流畅阅读。安装后在扩展列表中打开流畅阅读菜单，再点击网页翻译。手机可通过菜单或悬浮球操作。iPhone/iPad 上的 Edge 是否支持扩展，请以浏览器提供的功能为准。
+1. 在地址栏输入 `chrome://extensions/`。
+2. 打开右上角的 **开发者模式**。
+3. 点击 **加载已解压的扩展程序**。
+4. 选择包含 **manifest.json** 的目录，确认卡片名称为 **万能说客（Wild Talker）**。
+5. 从工具栏的扩展菜单固定图标，刷新安装前已打开的普通网页。
 
-其他安装方式：[油猴脚本](/guide/userscript) · [Thunderbird 邮件翻译](/guide/thunderbird)。
+<figure class="doc-figure"><a href="/showcase/install-chrome.png"><img class="doc-screenshot" src="/showcase/install-chrome.png" width="2560" height="1626" alt="干净 Chrome 中开发者模式与 Wild Talker 扩展卡片" /></a><figcaption>隔离 Chrome 安装验证；加载完成后应出现 Wild Talker 卡片。</figcaption></figure>
 
-</details>
+### Edge
 
-## 固定扩展图标
+1. 在地址栏输入 `edge://extensions/`。
+2. 开启 **开发人员模式**。
+3. 点击 **加载解压缩的扩展**。
+4. 选择同一个包含 **manifest.json** 的目录，核对名称与版本。
+5. 从工具栏扩展菜单显示图标，刷新原来打开的网页。
 
-将流畅阅读图标固定到工具栏后即可随时打开扩展菜单。
+<figure class="doc-figure"><a href="/showcase/install-edge.png"><img class="doc-screenshot" src="/showcase/install-edge.png" width="2544" height="1632" alt="干净 Edge 中开发人员模式与 Wild Talker 扩展卡片" /></a><figcaption>隔离 Edge 安装验证；Chrome / Edge 使用同一个 MV3 ZIP。</figcaption></figure>
 
-在 Chrome 中：
+找不到 manifest.json 时，检查是否误下载源码包，或是否多解压了一层。不要移动或删除已加载的目录；浏览器会继续从这里读取文件。
 
-1. 点击地址栏右侧的 **扩展程序** 图标，形状像一块拼图。
-2. 在列表中找到 **流畅阅读**，点击右侧的固定图标。
-3. 工具栏中出现流畅阅读图标后，点击它即可打开扩展菜单。
+## 3. 选择服务
 
-其他浏览器的工具栏菜单可能使用不同的名称。安装前已经打开的网页需要刷新后才能使用扩展。
+打开插件 **设置 → 翻译服务**。普通网页双语翻译和基础划词翻译可以选择内置翻译服务，不要求自备 AI API；公开服务可能有地区、网络或限流问题，不保证持续免费或可用。先翻译一小段，失败时查看错误并切换服务。
 
-<GuideVisual kind="pin" />
+AI 阅读解释和三种 AI 提示词预设需要支持相应能力的 AI 服务或本地模型服务。网页聊天产品的会员不等于 API 额度；服务商账号、费用与数据政策由服务商决定。
 
-## 翻译网页
+自定义接口请按 **[实测 API 配置示例](/guide/first-use-verification#自定义-api-示例)** 填写地址和模型名，再点击 **检查连接**。不要把 API Key 放进截图或公开反馈。连接成功后，把服务设为默认或明确选给所需功能；目录中选中一个服务不等于已经切换默认服务。
 
-1. 打开一篇外语文章，例如新闻或博客。浏览器设置页和扩展商店不支持翻译。
-2. 点击工具栏中的流畅阅读图标。首次使用时，点击 **设置界面语言 / Set interface language**，选择语言并点击 **确认 / Confirm**。
-3. 在主菜单中确认目标语言。源语言可保留 **自动检测**，翻译服务可保留默认的 **免费翻译服务**。
-4. 点击 **翻译当前网页**，译文会显示在原文下方。向下滚动即可继续阅读。
+## 4. 完成第一次翻译
 
-免费翻译服务可以直接使用。界面语言用于显示按钮和设置名称，目标语言用于翻译网页内容，两者可以分别选择。
+1. 打开 [Example Domain](https://example.com/) 等普通外语网页。扩展管理页、浏览器设置页和扩展商店属于受保护页面，无法用于网页翻译。
+2. 打开插件，选择 **自动检测 → 简体中文**，确认当前服务。
+3. 点击 **翻译**，等待段落下出现译文。阅读更多段落时可继续滚动。
+4. 点击 **恢复原文**，确认原文恢复。更换语言或服务后，再重新翻译。
 
-确认界面语言后，请等待保存完成再继续。保存失败时会显示提示，可以重试；设置中的界面语言也遵循这一保存流程。
+<figure class="doc-figure"><a href="/showcase/web-bilingual.png"><img class="doc-screenshot" src="/showcase/web-bilingual.png" width="2560" height="1626" alt="Wild Talker 网页双语翻译实拍" /></a><figcaption>发布版网页双语显示。服务与浏览器的实测信息见仓库实测记录。</figcaption></figure>
 
-<GuideVisual kind="first-translation" />
+想试划词，在 **划词翻译** 中开启功能，选中一段文字，点击旁边的入口。需要 AI 解释时，先配置支持的 AI 服务，再启用阅读卡片。**可参考本段** 会提供有限的段落语境；选中的内容仍是翻译对象。
 
-需要回到原文时，打开扩展菜单并点击 **恢复当前网页**。更换目标语言或服务后，请先恢复原文再重新翻译。
+## 安装之后
 
-## 划词翻译
-
-点击扩展菜单中的 **划词翻译** 卡片并在弹出的设置面板中开启开关。然后用鼠标选中一个单词或句子。点击选中文字旁的流畅阅读图标，即可查看译文。
-
-<GuideVisual kind="selection" />
-
-查词、朗读和句子讲解的详细用法见[划词翻译](/guide/deepseek-harness)。
-
-## 悬浮段落翻译
-
-点击扩展菜单中的 **鼠标悬停翻译** 卡片并确认 **默认悬浮快捷键** 已开启。将鼠标停在需要翻译的段落上并按下 **Control**，译文就会显示在这一段下方。再次按下 **Control** 可以恢复原文。
-
-<GuideVisual kind="hover" />
-
-触发方式和快捷键可以修改，详见[悬浮段落翻译](/guide/hover-translation)。
-
-## 常见问题
-
-如果点击翻译后没有变化，请确认扩展已开启，并刷新普通网页后重试。免费服务繁忙时可以稍后再试，或[切换翻译服务](/config/translation-engines)。其他问题见[常见问题](/guide/faq)。
-
-## 相关文档
-
-- [网页翻译](/guide/webpage-translation)
-- [译文外观与阅读辅助](/config/appearance)
-- [翻译服务](/config/translation-engines)
+- [为什么使用 Wild Talker](/guide/why-wild-talker)：三个改进、启用条件与验证边界。
+- [更新与离线安装](/guide/offline-install)：保留目录、备份设置和重新加载。
+- [来源与独立发行](/guide/oauth-and-source)：上游来源、许可证与 OAuth 限制。
+- [问题反馈](https://github.com/YEMIN11238/wild-talker/issues)：附浏览器、扩展版本、可公开网址和脱敏截图。

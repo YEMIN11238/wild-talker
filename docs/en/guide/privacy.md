@@ -47,7 +47,11 @@ The PDF export font is stored in the browser's CacheStorage after integrity veri
 
 Recent documents are stored in this browser’s local IndexedDB, including original file bytes, parsed content, translations, edits, progress, and the translation-settings fingerprint. History keeps at most 20 documents and 80 MiB of original file bytes, evicting the least recently updated entries when a limit is exceeded. There is currently no time-based expiry. Delete individual entries or clear all history on the document home page. Document history is excluded from configuration cloud backups. Download files you need to retain; clearing browser data or uninstalling the extension may remove local records.
 
+For ordinary selection translation, AI context can additionally include up to 500 characters of paragraph reference. That limit covers this added reference only: the inherited AI-context chain can also send a page summary and readable page content. It is not a paragraph-only privacy boundary.
+
 ## Google Drive configuration sync
+
+The current Wild Talker package retains upstream public OAuth identifiers; it is not an independently verified OAuth app. This first-use check does not cover Drive authorization or sync. See [OAuth and source identity](/en/guide/oauth-and-source).
 
 Drive configuration sync is currently being tested in the Chrome extension. Availability depends on the settings page of your installed version. Its purpose is to back up and restore FluentRead settings across your own devices. It does not provide translation or require a persistent connected state.
 
@@ -133,4 +137,4 @@ GitHub Pages hosts the website, which requires no registration or login. Chinese
 
 The policy is updated as features and data handling change, with the date shown at the top. Changes to the purposes or scope of Google data use will be disclosed, and consent requested before new access or use.
 
-For privacy questions or data-deletion help, contact the project maintainers through [GitHub Issues](https://github.com/FluentRead/FluentRead/issues) or [email](mailto:a1914493943@gmail.com). Remove credentials, account information, and private text from public reports.
+For privacy questions or data-deletion help, contact the project maintainers through [GitHub Issues](https://github.com/YEMIN11238/wild-talker/issues) in this repository. Remove credentials, account information, and private text from public reports.

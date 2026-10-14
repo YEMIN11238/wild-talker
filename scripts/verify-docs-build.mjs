@@ -7,9 +7,12 @@ import { fileURLToPath } from 'node:url'
 import { parseHTML } from 'linkedom'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const dist = path.join(root, 'docs/.vitepress/dist')
-const brandTaglines = JSON.parse(
-  fs.readFileSync(path.join(root, 'src/core/i18n/messages/brand-taglines.json'), 'utf8')
-)
+const siteOrigin = 'https://yemin11238.github.io'
+const siteBase = '/wild-talker/'
+const siteUrl = siteOrigin + siteBase
+const repositoryUrl = 'https://github.com/YEMIN11238/wild-talker'
+const releaseDownloadUrl = repositoryUrl + '/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip'
+const based = (route) => siteBase + route.replace(/^\//, '')
 const distReal = fs.realpathSync(dist)
 const isArtifactFile = (file) => {
   const inside = (base, target) => {
@@ -32,14 +35,15 @@ const resolvedPaths = new Map()
 const resolve = (href) => {
   let name
   try {
-    const url = new URL(href, 'https://read.thinkstu.com')
-    if (url.origin !== 'https://read.thinkstu.com') return null
-    name = decodeURIComponent(url.pathname)
+    const url = new URL(href, siteUrl)
+    if (url.origin !== siteOrigin) return null
+    if (!url.pathname.startsWith(siteBase)) return null
+    name = decodeURIComponent(url.pathname.slice(siteBase.length))
   } catch {
     return null
   }
   if (name.includes('\0')) return null
-  if (name.endsWith('/')) name += 'index.html'
+  if (!name || name.endsWith('/')) name += 'index.html'
   if (resolvedPaths.has(name)) return resolvedPaths.get(name)
   const exact = path.join(dist, name)
   const target = isArtifactFile(exact)
@@ -61,25 +65,45 @@ const docs = new Map(
 )
 const report = { pages: docs.size, links: 0, anchors: 0, images: 0 }
 for (const [file, doc] of docs) {
+  const route = path.relative(dist, file)
   assert(doc.querySelector('h1') || file.endsWith('/404.html'), `Missing page title: ${file}`)
-  if (file.endsWith('/404.html')) {
+  if (route === 'showcase/reading-example.html') {
+    // This exact public original sample is a standalone article, not a VitePress route.
+    // Keep artifact ownership/link scans, and verify that the shipped bytes are the reviewed source.
+    const source = path.join(root, 'docs/public/showcase/reading-example.html')
+    const sourceRoot = fs.realpathSync(path.join(root, 'docs/public'))
+    const sourceRelative = path.relative(sourceRoot, fs.realpathSync(source))
+    assert(!sourceRelative.startsWith('..') && !path.isAbsolute(sourceRelative) && fs.statSync(source).isFile(), 'Reading example source must belong to public documentation assets')
+    const html = fs.readFileSync(file, 'utf8')
+    assert.equal(html, fs.readFileSync(source, 'utf8'), 'Reading example must match its reviewed public source')
+    assert(doc.querySelector('title')?.textContent.includes('Wild Talker demo'), 'Reading example needs its public demo title')
+    assert(doc.querySelector('#intro') && doc.querySelector('#river') && doc.querySelector('#finance') && doc.querySelector('#technical') && doc.querySelector('#bank-word')?.textContent === 'bank', 'Reading example must retain the original public reading paragraphs')
+    assert(doc.body.textContent.includes('无个人资料') && doc.body.textContent.includes('原创阅读示例'), 'Reading example must identify its public original content')
+    assert(!doc.querySelector('script,iframe,object,embed,form,input,textarea,meta[http-equiv]'), 'Reading example must remain a static public article')
+    assert(!/\b(?:on[a-z]+\s*=|file:\/\/|\/Users\/|\/home\/|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})/iu.test(html), 'Reading example must not contain executable handlers, local user paths or credentials')
+    assert(!/url\s*\(/iu.test(doc.querySelector('style')?.textContent || ''), 'Reading example must not load hidden CSS resources')
+    for (const element of doc.querySelectorAll('[src],link[href]')) {
+      const reference = element.getAttribute('src') || element.getAttribute('href')
+      const url = new URL(reference, siteUrl + route)
+      assert(resolve(url.href), `Missing reading-example asset ${reference}`)
+    }
+  } else if (file.endsWith('/404.html')) {
     assert(doc.querySelector('meta[name="robots"]')?.getAttribute('content') === 'noindex')
     assert(
       !doc.querySelector('link[rel="alternate"]'),
       '404 must not advertise missing translations'
     )
   } else {
-    const route = path.relative(dist, file)
     const alternatePath = (route.startsWith('en/') ? route.slice(3) : 'en/' + route)
       .replace(/index\.html$/, '')
       .replace(/\.html$/, '')
     assert.equal(
       doc.querySelector('.bv-language')?.getAttribute('href'),
-      '/' + alternatePath,
+      based(alternatePath),
       `Language switch must preserve the page without a language-specific hash: ${route}`
     )
     const canonical = doc.querySelector('link[rel="canonical"]')?.getAttribute('href')
-    assert(canonical?.startsWith('https://read.thinkstu.com/'), `Missing canonical: ${file}`)
+    assert(canonical?.startsWith(siteUrl), `Missing canonical: ${file}`)
     assert(resolve(canonical), `Missing canonical target: ${canonical}`)
     for (const alternate of doc.querySelectorAll('link[rel="alternate"][hreflang]')) {
       assert(resolve(alternate.getAttribute('href')), `Missing translated URL: ${file}`)
@@ -104,11 +128,11 @@ for (const [file, doc] of docs) {
     const href = a.getAttribute('href')
     let url
     try {
-      url = new URL(href, 'https://read.thinkstu.com/' + path.relative(dist, file))
+      url = new URL(href, siteUrl + path.relative(dist, file))
     } catch {
       assert.fail(`Invalid link ${href} in ${path.relative(dist, file)}`)
     }
-    if (url.origin !== 'https://read.thinkstu.com') continue
+    if (url.origin !== siteOrigin) continue
     const target = resolve(url.href)
     assert(target, `Missing link ${href} in ${path.relative(dist, file)}`)
     report.links++
@@ -130,7 +154,7 @@ for (const [file, doc] of docs) {
     const src = img.getAttribute('src')
     if (!src.startsWith('/') || src.startsWith('//')) continue
     assert(resolve(src), `Missing image ${src}`)
-    if (img.closest('.vp-doc,.bv-site'))
+    if (img.closest('.vp-doc,.wt-site'))
       assert(
         img.hasAttribute('width') && img.hasAttribute('height'),
         `Image needs dimensions: ${src}`
@@ -147,192 +171,45 @@ for (const file of files(path.join(root, 'docs/guide'))
   )
 }
 for (const prefix of ['', '/en']) {
-  const home = docs.get(resolve(prefix + '/'))
-  assert(
-    home.querySelector('.bv-home-brand img[src="/brand-icon.webp"]'),
-    'Primary brand icon missing'
-  )
-  assert(
-    !home.querySelector('[data-visual="input"]') &&
-      !home.querySelector('a[href$="/guide/input-translation"]'),
-    'Input translation should not be marketed on the homepage'
-  )
-  assert(
-    ['document', 'image', 'video', 'selection'].every((kind) =>
-      home.querySelector(`[data-visual="${kind}"]`)
-    ),
-    'The five primary translation features must be present'
-  )
-  assert(
-    ['YouTube', 'X', 'Google Meet', 'Teams', 'Zoom'].every((name) =>
-      home.querySelector('.bv-video-platforms')?.textContent.includes(name)
-    ),
-    'Video and meeting platforms missing'
-  )
-  assert(!home.querySelector('.bv-hero [data-demo]'), 'Full demonstration belongs below the hero')
-  assert(home.querySelector('.bv-home-header'), 'Homepage must use focused marketing navigation')
-  assert(
-    !home.querySelector('.bv-identity,.bv-platforms'),
-    'Competing brand block and browser row must be removed'
-  )
-  assert(
-    home.querySelector('.bv-translation-section [data-demo="brand-reader"]'),
-    'Translation demo must appear below the hero'
-  )
-  assert(!home.querySelector('.bv-walkthrough'), 'Numbered walkthrough controls must be removed')
-  assert.equal(home.querySelectorAll('.bv-hero h1').length, 1, 'Hero needs one primary headline')
-  assert.equal(
-    home.querySelectorAll('.bv-hero .bv-install-actions > a.bv-primary').length,
-    1,
-    'Hero needs one primary install action'
-  )
-  const docsAction = home.querySelector('.bv-hero .bv-docs-link')
-  assert.equal(docsAction?.getAttribute('href'), `${prefix}/docs/`)
-  assert.equal(docsAction?.textContent.trim(), prefix ? 'Documentation' : '使用文档')
-  const workflows = [...home.querySelectorAll('.bv-feature-row .ds')]
-  assert.equal(workflows.length, 5, 'Each feature demo needs a workflow')
-  assert(
-    workflows.every(
-      (flow) =>
-        flow.querySelectorAll('li').length === 3 &&
-        flow.querySelectorAll('[aria-current="step"]').length === 1
-    ),
-    'Feature workflows need three stages and one current stage'
-  )
-  const docsBrand = docs.get(resolve(prefix + '/docs/')).querySelector('.VPNavBarTitle .title')
-  const productName = prefix ? 'FluentRead' : '流畅阅读'
-  assert.equal(docsBrand?.querySelector('strong')?.textContent.trim(), productName)
-  for (const page of [home, docs.get(resolve(prefix + '/docs/'))]) {
+  const home = docs.get(resolve(based(prefix + '/')))
+  assert(home.querySelector('.bv-home-header'), 'Homepage must use focused product navigation')
+  assert(home.querySelector(`.bv-home-brand img[src="${based('/brand-icon.png')}"]`), 'Primary brand icon missing')
+  const productName = prefix ? 'Wild Talker' : '万能说客 Wild Talker'
+  assert(home.querySelector('.bv-home-brand')?.textContent.includes(prefix ? 'Wild Talker' : '万能说客'), 'Product navigation identity missing')
+  assert.equal(home.querySelectorAll('.wt-hero h1').length, 1, 'Hero needs one primary headline')
+  assert(home.querySelector('.wt-hero h1 span')?.textContent.includes(prefix ? 'Bilingual' : '双语翻译'), 'Product category must be explicit')
+  assert(home.querySelector('.wt-intro')?.textContent.trim(), 'One-sentence introduction missing')
+  const demo = home.querySelector(`.wt-recording img[src="${based('/showcase/selection-demo.gif')}"]`)
+  assert(demo && resolve(demo.getAttribute('src')), 'Recorded release-build selection demo missing')
+  assert(home.querySelector('.wt-recording figcaption')?.textContent.trim(), 'Recorded demo needs scope caption')
+  assert.equal(home.querySelectorAll('.wt-improvements article').length, 3, 'Three focused improvements required')
+  assert.equal(home.querySelector('.wt-actions .wt-primary')?.getAttribute('href'), releaseDownloadUrl, 'Download must be the exact Wild Talker Chrome / Edge ZIP')
+  assert.equal(home.querySelector('.bv-home-header .wt-nav-download')?.getAttribute('href'), releaseDownloadUrl, 'Header download must be the exact Wild Talker Chrome / Edge ZIP')
+  assert(home.querySelector(`a[href="${based(prefix + '/guide/getting-started')}"]`), 'First-use guide missing')
+  assert(home.querySelector(`a[href="${based(prefix + '/guide/why-wild-talker')}"]`), 'Activation and verification conditions missing')
+  for (const image of ['web-bilingual.png', 'selection-context.png', 'document-reader.png']) {
+    const scene = home.querySelector(`.wt-scenes img[src="${based('/showcase/' + image)}"]`)
+    assert(scene && resolve(scene.getAttribute('src')), 'Release scene missing: ' + image)
+  }
+  assert(!home.querySelector('.bv-promo,.support-options,.bv-browser-options'), 'Upstream promo or store installation must not appear on the product page')
+  assert(home.querySelector('.wt-footer')?.textContent.includes('FluentRead') && home.querySelector('.wt-footer')?.textContent.includes('GPL-3.0'), 'Upstream provenance and license must be retained')
+  const hub = docs.get(resolve(based(prefix + '/docs/')))
+  assert(hub, 'Documentation hub missing')
+  assert.equal(hub.querySelector('.VPNavBarTitle .title strong')?.textContent.trim(), prefix ? 'Wild Talker' : '万能说客')
+  for (const page of [home, hub]) {
     assert.equal(page.querySelector('meta[property="og:site_name"]')?.getAttribute('content'), productName)
     assert(page.querySelector('title')?.textContent.includes(productName), 'Page title needs its locale product name')
   }
-  assert.equal(
-    home.querySelectorAll('.bv-browser-options a').length,
-    3,
-    'Other browser installation options missing'
-  )
-  assert(
-    [...home.querySelectorAll('[data-visual],[data-demo]')].every(
-      (d) => d.getAttribute('data-playing') === 'true'
-    ),
-    'Homepage demonstrations must start automatically'
-  )
-  assert(
-    home.querySelector('[data-demo="brand-reader"]') &&
-      home.querySelector('.fd-sentence-card') &&
-      home.querySelector('.fd-structure-card') &&
-      home.querySelector('.fd-word-card'),
-    'Homepage must contain readable SSR examples'
-  )
-  assert(
-    home.querySelector(`a[href="${prefix}/docs/"]`),
-    'Documentation must be reachable from the homepage'
-  )
-  const hub = docs.get(resolve(prefix + '/docs/'))
-  assert(
-    hub.querySelector('.fr-docs-start a') && hub.querySelectorAll('.fr-docs-links a').length >= 20,
-    'Quick start and functional documentation directory missing'
-  )
-  assert(
-    !hub.querySelector('.fr-docs-mini,.fr-docs-route'),
-    'Documentation hub must focus on instructions and named guide links'
-  )
-  assert(
-    home
-      .querySelector('.bv-translation-section h2')
-      ?.textContent.includes(prefix ? 'Bilingual' : '双语翻译'),
-    'Primary feature needs a visible bilingual translation heading'
-  )
-  assert(
-    home.querySelector('.bv-hero-intro > span')?.textContent.trim() ===
-      (prefix
-        ? 'FluentRead is an open-source browser extension for bilingual translation.'
-        : '流畅阅读，一款开源的浏览器双语翻译插件') &&
-      home.querySelector('.bv-hero h1.bv-hero-slogan')?.textContent.trim() ===
-        (prefix ? brandTaglines['en-US'] : brandTaglines['zh-CN']),
-    'Canonical slogan must be the headline, with the product name in the localized introduction'
-  )
-  assert(
-    home.querySelector('.bv-home-brand')?.textContent.includes(prefix ? 'FluentRead' : '流畅阅读'),
-    'Localized product name missing'
-  )
-  assert(
-    home.querySelector('.bv-hero-orbit')?.textContent.includes('Hello') &&
-      home.querySelector('.bv-hero-orbit')?.textContent.includes('你好'),
-    'Multilingual greetings missing'
-  )
-  assert.equal(
-    home.querySelectorAll('.bv-feature-row').length,
-    5,
-    'Five consistent feature sections required'
-  )
-  assert(
-    ['page', 'document', 'grammar'].every((kind) =>
-      home.querySelector(`.bv-hero-orbit .bv-orbit-${kind}`)
-    ),
-    'Hero scene decorations must stay present'
-  )
-  assert(
-    home.querySelector(
-      '.fd-selection button[aria-label="' +
-        (prefix ? 'Preview reading the original' : '演示朗读原文') +
-        '"]'
-    ) &&
-      home.querySelector(
-        '.fd-selection button[aria-label="' +
-          (prefix ? 'Preview reading the translation' : '演示朗读译文') +
-          '"]'
-      ),
-    'Selection card needs original and translation read-aloud previews'
-  )
-  assert.equal(
-    home.querySelectorAll('.bv-promo video,.bv-promo iframe').length,
-    1,
-    'Homepage carries one introduction video'
-  )
-  assert(
-    !home.querySelector('.bv-hero video,.bv-hero iframe'),
-    'Introduction video belongs below the hero'
-  )
-  const promo = home.querySelector('.bv-promo video')
-  assert(promo, 'Homepage must initially show the original introduction video')
-  assert(
-    promo.hasAttribute('controls') &&
-      !promo.hasAttribute('autoplay') &&
-      promo.getAttribute('preload') === 'none',
-    'Introduction video must stay visitor-controlled and avoid loading before it is needed'
-  )
-  for (const src of [
-    promo.getAttribute('poster'),
-    promo.querySelector('source')?.getAttribute('src'),
-  ])
-    assert(
-      src?.includes(`fluentread-promo-${prefix ? 'en' : 'zh'}`) && resolve(src),
-      `Missing introduction video asset ${src}`
-    )
-  assert(!home.querySelector('.bv-promo iframe'), 'Bilibili must only load after the original fails')
-  assert(!home.querySelector('.bv-promo-link'), 'Homepage should not repeat the short-video link')
-  const officialIntroduction = home.querySelector('.bv-promo-more a')
-  assert.equal(officialIntroduction?.getAttribute('href'), 'https://www.bilibili.com/video/BV1qhHJ6uEiF/')
-  assert.equal(officialIntroduction?.getAttribute('target'), '_blank')
-  assert(officialIntroduction?.getAttribute('rel')?.includes('noopener'))
-  assert(
-    !home.querySelector('.bv-pointer,.bv-end'),
-    'Confusing cursor paths and repeated installation section must be removed'
-  )
-  assert(
-    !home.querySelector('.bv-hero')?.textContent.includes('AI'),
-    'Hero should foreground translation, without AI marketing'
-  )
+  assert(hub.querySelector('.fr-docs-start a') && hub.querySelectorAll('.fr-docs-links a').length >= 20, 'Quick start and inherited guide directory missing')
   assert(
     docs
-      .get(resolve(prefix + '/config/translation-engines'))
+      .get(resolve(based(prefix + '/config/translation-engines')))
       .querySelector('.vp-doc')
       .textContent.includes('{{apiKey}}'),
     'Provider placeholders must remain readable literal text'
   )
   const input = docs
-    .get(resolve(prefix + '/guide/input-translation'))
+    .get(resolve(based(prefix + '/guide/input-translation')))
     .querySelector('.vp-doc').textContent
   assert(input.includes('{{origin}}') && input.includes('{{to}}'), 'Prompt placeholders missing')
 }
@@ -341,4 +218,5 @@ assert(
   'Internal reports must stay out of the public website'
 )
 assert(fs.existsSync(path.join(dist, 'sitemap.xml')), 'Missing sitemap')
+assert(!fs.existsSync(path.join(dist, 'CNAME')), 'No inherited custom-domain CNAME may be shipped')
 console.log(JSON.stringify({ ok: true, ...report }))

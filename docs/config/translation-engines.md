@@ -231,7 +231,7 @@ DeepSeek 的新编号见[官方更新记录](https://api-docs.deepseek.com/updat
 
 ### 使用本机 Agent 的 ACP 桥接
 
-浏览器扩展不能直接启动本机 CLI，也不能连接 ACP 的标准输入输出。流畅阅读提供可选的[本机 ACP 桥接程序](https://github.com/FluentRead/FluentRead/blob/main/scripts/agent-bridge/bridge.mjs)：它只监听 `127.0.0.1`，将自定义服务的文本请求交给已登录的 [GitHub Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/acp-server) 或 [OpenCode ACP Agent](https://opencode.ai/docs/acp/)。需要在自己的电脑上安装对应官方 CLI，并先按官方说明完成登录。无需在流畅阅读中填写 Agent 的登录凭据；CLI 使用自己的登录状态或环境变量。桥接不替代服务商的额度与使用规则。
+浏览器扩展不能直接启动本机 CLI，也不能连接 ACP 的标准输入输出。流畅阅读提供可选的[本机 ACP 桥接程序](https://github.com/YEMIN11238/wild-talker/blob/main/scripts/agent-bridge/bridge.mjs)：它只监听 `127.0.0.1`，将自定义服务的文本请求交给已登录的 [GitHub Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/acp-server) 或 [OpenCode ACP Agent](https://opencode.ai/docs/acp/)。需要在自己的电脑上安装对应官方 CLI，并先按官方说明完成登录。无需在流畅阅读中填写 Agent 的登录凭据；CLI 使用自己的登录状态或环境变量。桥接不替代服务商的额度与使用规则。
 
 1. 在流畅阅读源码目录运行 `node scripts/agent-bridge/bridge.mjs --agent=copilot`。OpenCode 用户改用 `--agent=opencode`。保持这个终端运行。
 2. 终端会显示本机接口地址和本次启动生成的令牌。在 **自定义服务** 中新增服务，地址填 `http://127.0.0.1:47627/v1/chat/completions`，**API Key** 填终端显示的令牌，模型填 `default`，然后点击 **检查连接**。`default` 使用 CLI 已配置的默认模型；也可以填 Agent 通过 ACP 提供的模型 ID。重启桥接程序后若生成新令牌，需要更新此 API Key。

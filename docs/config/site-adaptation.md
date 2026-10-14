@@ -38,10 +38,10 @@ Product Hunt 首页逐卡翻译产品介绍，保留产品名称、分类、投�
 
 ## 仍然识别不对
 
-可以到 [GitHub Issues](https://github.com/FluentRead/FluentRead/issues) 提供网址、浏览器版本和经过隐私处理的截图。说明你希望翻译哪个区域、哪个区域保持原文，通常比描述页面结构更有帮助。
+可以到 [GitHub Issues](https://github.com/YEMIN11238/wild-talker/issues) 提供网址、浏览器版本和经过隐私处理的截图。说明你希望翻译哪个区域、哪个区域保持原文，通常比描述页面结构更有帮助。
 
 熟悉网页结构的用户可以使用[自定义网站适配教程](/guide/custom-site-rules)。这不是日常使用的必需步骤，修改前建议先导出规则备份。
 
-完整字段说明与规则维护资料保存在[仓库参考文档](https://github.com/FluentRead/FluentRead/blob/main/docs/maintainers/product-reference/site-adaptation-20260906.md)。
+完整字段说明与规则维护资料保存在[仓库参考文档](https://github.com/YEMIN11238/wild-talker/blob/main/docs/maintainers/product-reference/site-adaptation-20260906.md)。
 
 </details>

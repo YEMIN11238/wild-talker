@@ -155,4 +155,4 @@ If you see an invalid exact credential snapshot error, keep the original file. S
 
 ## Still need help?
 
-Open a [GitHub issue](https://github.com/FluentRead/FluentRead/issues) with browser and extension versions, a public URL, reproduction steps, and a redacted screenshot. Do not include keys, cookies, account details, or private text.
+Open a [GitHub issue](https://github.com/YEMIN11238/wild-talker/issues) with browser and extension versions, a public URL, reproduction steps, and a redacted screenshot. Do not include keys, cookies, account details, or private text.

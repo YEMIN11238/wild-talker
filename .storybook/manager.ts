@@ -4,10 +4,10 @@ import { create } from 'storybook/internal/theming'
 addons.setConfig({
   theme: create({
     base: 'light',
-    brandTitle: 'FluentRead UI',
-    brandUrl: 'https://read.thinkstu.com/guide/design-system',
+    brandTitle: 'Wild Talker UI',
+    brandUrl: 'https://yemin11238.github.io/wild-talker/guide/design-system',
     brandTarget: '_blank',
-    colorPrimary: '#ef4776',
-    colorSecondary: '#dc315f',
+    colorPrimary: '#708b42',
+    colorSecondary: '#506b2b',
   }),
 })

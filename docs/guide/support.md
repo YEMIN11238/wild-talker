@@ -1,18 +1,12 @@
 ---
-title: 支持流畅阅读
-description: 通过微信赞赏或 Ko-fi 支持流畅阅读开源项目。
+title: 反馈与贡献
+description: 向 Wild Talker 提供脱敏反馈或贡献，并了解上游来源。
 ---
 
-<script setup>
-import SupportOptions from '../.vitepress/theme/SupportOptions.vue'
-</script>
+# 反馈与贡献
 
-# 支持流畅阅读
+在 [Wild Talker Issues](https://github.com/YEMIN11238/wild-talker/issues) 描述问题，附浏览器与扩展版本、可公开网址、操作步骤和脱敏截图。请勿提交 API Key、Cookie、完整配置备份或私人文档。
 
-流畅阅读是一个开源项目，其持续开发离不开社区的慷慨支持。 项目采用 GPL-3.0 许可证。感谢您通过反馈、贡献代码、完善文档或赞赏，支持项目的开发与维护。
+代码和文档贡献请提交到[本仓库](https://github.com/YEMIN11238/wild-talker)。阅读[开发说明](https://github.com/YEMIN11238/wild-talker/blob/main/docs/maintainers/wild-talker-development.md)，保留许可证与第三方来源。
 
-<SupportOptions />
-
-如需参与项目开发，请访问 [GitHub](https://github.com/FluentRead/FluentRead)；使用中遇到问题，可以[提交反馈](https://github.com/FluentRead/FluentRead/issues)。
-
-扩展设置的“关于流畅阅读”页面以宽幅品牌区展示宣传语、简介和版本。下方项目链接区提供官网、文档、源码与反馈渠道；“开源项目”和“问题反馈”下方的“微信交流”按钮采用相同卡片样式，横跨两列，点击后在当前页弹窗显示作者微信二维码。独立支持区域展示微信赞赏码和 Ko-fi 入口，赞赏图片随卡片宽度放大，四周保留少量留白；窄屏时各区域自动纵向排列。点击“官方网站”或左上角品牌图标、名称，即可在新标签页打开 [流畅阅读官网](https://read.thinkstu.com)；点击赞赏码会在当前页面弹窗放大图片。两种二维码弹窗均可用关闭按钮、点击遮罩或按 Escape 关闭，关闭后焦点返回对应入口。
+本页面不提供赞赏码或冒称上游维护者的联系方式。FluentRead 的基础工作与贡献历史见[来源说明](/guide/oauth-and-source)。

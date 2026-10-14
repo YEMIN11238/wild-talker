@@ -1,7 +1,10 @@
 import brandTaglines from '../../src/core/i18n/messages/brand-taglines.json'
 import { defineConfig, type DefaultTheme } from 'vitepress'
 
-const supportUrl = 'https://github.com/FluentRead/FluentRead#support'
+const repositoryUrl = 'https://github.com/YEMIN11238/wild-talker'
+const siteOrigin = 'https://yemin11238.github.io'
+const siteBase = '/wild-talker/'
+const siteUrl = siteOrigin + siteBase
 
 const guide = (en = false): DefaultTheme.SidebarItem[] => {
   const p = en ? '/en' : ''
@@ -14,6 +17,9 @@ const guide = (en = false): DefaultTheme.SidebarItem[] => {
       text: en ? 'Start here' : '快速开始',
       items: [
         item('文档首页', 'Documentation', '/docs/'),
+        item('为什么使用 Wild Talker', 'Why Wild Talker', '/guide/why-wild-talker'),
+        item('来源与独立发行', 'Provenance & distribution', '/guide/oauth-and-source'),
+        item('本次实测与 API 配置', 'Verification & API setup', '/guide/first-use-verification'),
         item('快速开始', 'Quick start', '/guide/getting-started'),
         item('离线下载与安装', 'Offline download & installation', '/guide/offline-install'),
         item('功能概览', 'Feature overview', '/guide/features'),
@@ -87,7 +93,7 @@ const guide = (en = false): DefaultTheme.SidebarItem[] => {
       items: [
         item('常见问题', 'Troubleshooting', '/guide/faq'),
         item('隐私政策', 'Privacy policy', '/guide/privacy'),
-        { text: en ? 'Support the project' : '支持项目', link: supportUrl },
+        { text: en ? 'Feedback & contribution' : '反馈与贡献', link: (en ? '/en' : '') + '/guide/support' },
       ],
     },
   ]
@@ -95,7 +101,7 @@ const guide = (en = false): DefaultTheme.SidebarItem[] => {
 const theme = (en = false): DefaultTheme.Config => ({
   siteTitle: false,
   nav: [
-    { text: en ? 'Features' : '功能', link: en ? '/en/#features' : '/#features' },
+    { text: en ? 'Why Wild Talker' : '产品改进', link: en ? '/en/#features' : '/#features' },
     {
       text: en ? 'Documentation' : '使用文档',
       link: en ? '/en/docs/' : '/docs/',
@@ -104,8 +110,9 @@ const theme = (en = false): DefaultTheme.Config => ({
     { text: en ? 'Help' : '帮助', link: en ? '/en/guide/faq' : '/guide/faq' },
     {
       text: en ? 'Install' : '安装',
-      link: en ? '/en/guide/getting-started#install' : '/guide/getting-started#安装',
+      link: en ? '/en/guide/getting-started' : '/guide/getting-started',
     },
+    { text: en ? 'Development' : '开发文档', link: repositoryUrl + '/blob/main/docs/maintainers/wild-talker-development.md' },
   ],
   sidebar: en
     ? { '/en/docs/': guide(true), '/en/guide/': guide(true), '/en/config/': guide(true) }
@@ -124,18 +131,18 @@ const theme = (en = false): DefaultTheme.Config => ({
   lastUpdated: { text: en ? 'Last updated' : '最后更新' },
   footer: {
     message: en
-      ? `${brandTaglines['en-US']} · <a href="/en/guide/privacy">Privacy policy</a>`
-      : `${brandTaglines['zh-CN']} · <a href="/guide/privacy">隐私政策</a>`,
-    copyright: '© FluentRead · GPL-3.0',
+      ? `${brandTaglines['en-US']} · <a href="${siteBase}en/guide/privacy">Privacy policy</a>`
+      : `${brandTaglines['zh-CN']} · <a href="${siteBase}guide/privacy">隐私政策</a>`,
+    copyright: 'Wild Talker · Based on FluentRead · GPL-3.0',
   },
 })
 export default defineConfig({
-  title: '流畅阅读',
-  description: `${brandTaglines['zh-CN']} 一款开源的浏览器双语翻译插件。`,
+  title: '万能说客 Wild Talker',
+  description: '万能说客 Wild Talker：基于 FluentRead 的浏览器双语翻译与 AI 阅读扩展，支持上下文划词和文档阅读。',
   lang: 'zh-CN',
   appearance: false,
-  base: '/',
-  sitemap: { hostname: 'https://read.thinkstu.com' },
+  base: siteBase,
+  sitemap: { hostname: siteUrl },
   transformHead({ pageData }) {
     if (pageData.relativePath === '404.md') {
       return [['meta', { name: 'robots', content: 'noindex' }]]
@@ -144,7 +151,7 @@ export default defineConfig({
     route = route.replace(/^(en\/)?guide\/$/, '$1docs/')
     route = route.replace(/^(en\/)?writing-assistant$/, '$1guide/writing-assistant')
     route = route.replace(/^(en\/)?guide\/privacy-policy$/, '$1guide/privacy')
-    const canonical = `https://read.thinkstu.com/${route}`
+    const canonical = `${siteUrl}${route}`
     const opposite = route.startsWith('en/') ? route.slice(3) : `en/${route}`
     return [
       ['link', { rel: 'canonical', href: canonical }],
@@ -157,12 +164,22 @@ export default defineConfig({
         {
           rel: 'alternate',
           hreflang: route.startsWith('en/') ? 'zh-CN' : 'en',
-          href: `https://read.thinkstu.com/${opposite}`,
+          href: `${siteUrl}${opposite}`,
         },
       ],
       ['meta', { property: 'og:type', content: 'website' }],
       ['meta', { property: 'og:url', content: canonical }],
     ]
+  },
+  markdown: {
+    config(md) {
+      // Raw HTML links in inherited guides also need the repository Pages base.
+      const rewrite = (html: string) => html.replace(/(\bhref=['"])\/(?!\/|wild-talker\/)/g, `$1${siteBase}`)
+      for (const name of ['html_block', 'html_inline']) {
+        const original = md.renderer.rules[name]
+        if (original) md.renderer.rules[name] = (...args) => rewrite(original(...args))
+      }
+    },
   },
   lastUpdated: true,
   cleanUrls: true,
@@ -176,31 +193,31 @@ export default defineConfig({
     'free-translation-apis.md',
   ],
   head: [
-    ['meta', { name: 'theme-color', content: '#b8214e' }],
-    ['link', { rel: 'icon', href: '/brand-icon.webp' }],
+    ['meta', { name: 'theme-color', content: '#cbe977' }],
+    ['link', { rel: 'icon', href: '/wild-talker/brand-icon.png' }],
   ],
   locales: {
     // GuideLayout provides a stable page-level switch; translated headings have different hashes.
     root: {
       label: '',
       lang: 'zh-CN',
-      title: '流畅阅读',
-      head: [['meta', { property: 'og:site_name', content: '流畅阅读' }]],
+      title: '万能说客 Wild Talker',
+      head: [['meta', { property: 'og:site_name', content: '万能说客 Wild Talker' }]],
       themeConfig: theme(),
     },
     en: {
       label: '',
       lang: 'en',
-      title: 'FluentRead',
-      head: [['meta', { property: 'og:site_name', content: 'FluentRead' }]],
-      description: `${brandTaglines['en-US']} An open-source browser extension for bilingual translation.`,
+      title: 'Wild Talker',
+      head: [['meta', { property: 'og:site_name', content: 'Wild Talker' }]],
+      description: 'Wild Talker: a FluentRead-based browser extension for bilingual translation and AI reading, with selection context and document reading.',
       themeConfig: theme(true),
     },
   },
   themeConfig: {
-    logo: '/brand-icon.webp',
-    siteTitle: '流畅阅读',
-    socialLinks: [{ icon: 'github', link: 'https://github.com/FluentRead/FluentRead' }],
+    logo: '/brand-icon.png',
+    siteTitle: '万能说客 Wild Talker',
+    socialLinks: [{ icon: 'github', link: repositoryUrl }],
     search: {
       provider: 'local',
       options: {

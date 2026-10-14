@@ -51,7 +51,7 @@ onBeforeUnmount(() => observer?.disconnect())
         <thead><tr><th>文字变量</th><th>示例</th><th>对比度</th><th>普通文字 AA</th></tr></thead>
         <tbody><tr v-for="token in pairs" :key="token">
           <td><code>{{ token }}</code></td>
-          <td :style="{ color: `var(${token})`, background: 'var(--surface)' }">流畅阅读 Aa</td>
+          <td :style="{ color: `var(${token})`, background: 'var(--surface)' }">Wild Talker Aa</td>
           <td>{{ ratio(token)?.toFixed(2) ?? '—' }}:1</td>
           <td>{{ ratio(token) === null ? '无法计算' : ratio(token)! >= 4.5 ? '达到参考值' : '低于参考值' }}</td>
         </tr></tbody>

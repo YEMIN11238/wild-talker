@@ -1,42 +1,42 @@
 ---
-title: Offline download & installation
-description: Install FluentRead through CRXSOso or the official ZIP package when the Chrome Web Store is unavailable.
+title: ZIP installation & upgrades
+description: Install the Wild Talker Chrome / Edge ZIP and update the same directory.
 ---
 
-# Offline download & installation
+# ZIP installation & upgrades
 
-If the Chrome Web Store does not open, download the latest stable ZIP package from the **[official GitHub release page](https://github.com/FluentRead/FluentRead/releases/latest)** and install it manually in desktop Chrome / Edge. You can also try **[CRXSOso](https://www.crxsoso.com/webstore/detail/djnlaiohfaaifbibleebjggkghlmcpcj)**.
+**[Download the Chrome / Edge ZIP](https://github.com/YEMIN11238/wild-talker/releases/latest)** and follow [the first-use guide](/en/guide/getting-started). This repository's Release is the current independent distribution. FluentRead store, CRX mirror and script-store listings install the upstream product.
 
-## Get FluentRead through CRXSOso
+## Choose the correct folder
 
-Open [FluentRead on CRXSOso](https://www.crxsoso.com/webstore/detail/djnlaiohfaaifbibleebjggkghlmcpcj) and follow the website’s installation or download instructions.
+```text
+permanent-extraction-folder/
+└── chrome-mv3/                ← load this folder
+    ├── manifest.json
+    ├── background.js
+    ├── assets/
+    └── ...
+```
 
-CRXSOso is a third-party distribution website. Its version may differ from the official store, so check the version shown before downloading.
+Other files can change between builds. The rule is always **select the folder directly containing manifest.json**. Do not load the source archive or the still-compressed ZIP.
 
-## Download the official offline package
+## Upgrade an existing installation
 
-Open the [official GitHub release page](https://github.com/FluentRead/FluentRead/releases/latest). This address takes you to the latest stable release. Use that page for current packages and version information.
+1. Export necessary settings from **Settings → Backup & restore**. A backup can include keys or private records; do not upload it publicly.
+2. Download the new package from [this repository's Release](https://github.com/YEMIN11238/wild-talker/releases/latest) and read its version mapping and upgrade notes.
+3. Keep a copy of the old folder, then replace its contents with the new package. Reuse the original loaded directory and avoid duplicate installations.
+4. Open `chrome://extensions/` or `edge://extensions/` and select Wild Talker's **Reload** action.
+5. Check the name and version, then refresh webpages and any already-open settings or document tabs.
 
-Expand **Assets** below the release notes and choose the Chrome / Edge extension package ending in **`-chrome.zip`**. For checksums, download **`SHA256SUMS.txt`** from the same release’s Assets.
+Unpacked installations do not receive automatic store updates. Keeping the directory and manifest key/ID usually preserves local settings; a new directory, uninstall/reinstall or changed public key can change installation identity, so back up first.
 
-The **`-sources.zip`** file and GitHub’s automatic **Source code** downloads contain source code and cannot be installed directly.
+## Identify the current version
 
-GitHub downloads still depend on your network. Try CRXSOso above if the download is unavailable. Offline installation means you can install the downloaded package without accessing the Chrome Web Store; online translation still needs a connection to your chosen provider.
+| Item | Current release |
+| --- | --- |
+| Product | Wild Talker |
+| Extension manager / manifest version | `0.0.37` |
+| GitHub release tag | `v0.0.37-wild-talker.1` |
+| Package | Chrome / Edge MV3 ZIP |
 
-## Install in Chrome / Edge
-
-1. Extract the ZIP into a folder you intend to keep.
-2. Enter **`chrome://extensions`** in the address bar, or **`edge://extensions`** in Edge.
-3. Enable **Developer mode**, then choose **Load unpacked**.
-4. Select the extracted folder that directly contains **`manifest.json`**. Do not select the ZIP file or its parent folder.
-5. Pin FluentRead to the toolbar and refresh any normal webpages that were already open.
-
-Copy browser internal addresses into the address bar; normal websites cannot link directly to them. Keep the extracted folder in place after installation.
-
-## Update an offline installation
-
-An unpacked extension does not receive store updates automatically. Before updating, export your configuration from **Backup & sync** in FluentRead’s settings.
-
-Download the new Chrome ZIP from the [official GitHub release page](https://github.com/FluentRead/FluentRead/releases/latest) and extract it over the original installation folder, then select FluentRead’s **Reload** button on the extensions page. Refresh webpages you want to translate. Reuse the same folder to avoid duplicate installations and keep a backup of the previous folder before replacing files.
-
-After installation, follow [Quick start](/en/guide/getting-started) to pin FluentRead and translate a webpage.
+This presentation/documentation update does not change the runtime or ZIP. Future changed packages will list the numeric version, tag and checksum in their Release rather than relying on filenames alone.

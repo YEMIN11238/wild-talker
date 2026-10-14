@@ -6,7 +6,7 @@ If you use Tampermonkey, Violentmonkey, Via, or Safari Userscripts, you can inst
 
 ## Install
 
-Open the [FluentRead Greasy Fork page](https://greasyfork.org/en/scripts/482986), follow your script manager’s installation prompts, then open a regular webpage. Confirm that the script is enabled.
+Wild Talker has no independent Greasy Fork listing. The historical FluentRead listing installs the upstream product, not this release. Use [the desktop Chrome / Edge ZIP](/en/guide/getting-started) for the verified installation path; source-built userscripts remain an inherited developer option.
 
 The Greasy Fork release may lag behind the GitHub source. Check the version on the installation page and in script settings when reporting a problem. Runtime checks cover Chrome with Violentmonkey and Via 7.3.3 in an Android emulator; Safari Userscripts and Via on a physical device still need testing.
 

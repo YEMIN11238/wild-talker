@@ -1,116 +1,110 @@
-<div align="center">
+# 万能说客 Wild Talker · 浏览器双语翻译与 AI 阅读扩展
 
-<img src="./assets/brand/icon-512.png" alt="万能说客 Wild Talker" width="96" />
+在 Chrome / Edge 中对照阅读外文网页与文档，用所在段落辅助划词翻译，并连接自己的 AI 服务。
 
-# 万能说客 · Wild Talker
+![从选中文字到获得译文的真实操作](./docs/public/showcase/selection-demo.gif)
 
-浏览器双语翻译与阅读工具，可连接自己的翻译服务和 AI 模型。
+*实际发布包的操作录制；场景、模型与验证范围见[实测说明](./docs/guide/first-use-verification.md)。*
 
-[下载安装包](https://github.com/YEMIN11238/wild-talker/releases) · [问题反馈](https://github.com/YEMIN11238/wild-talker/issues) · [来源与改动](./ATTRIBUTION.md) · [GPL-3.0](./LICENSE)
+## [⬇ 下载 Chrome / Edge 安装包](https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip)
 
-</div>
+[发布说明与校验文件](https://github.com/YEMIN11238/wild-talker/releases/latest) · [产品演示与安装教程](https://yemin11238.github.io/wild-talker/) · [问题反馈](https://github.com/YEMIN11238/wild-talker/issues)
 
-Wild Talker 基于 [FluentRead](https://github.com/FluentRead/FluentRead) 改造。网页、文档、图片、视频字幕与学习工具的基础能力主要来自上游；本仓保留其源码、开源许可及历史，增加界面改造、选区上下文、提示词预设和文档翻译恢复等改进。具体范围见 [ATTRIBUTION.md](./ATTRIBUTION.md)。
+基于 [FluentRead](https://github.com/FluentRead/FluentRead)，本仓重点改进三件事：
 
-## 能做什么
+- **划词带上段落语境**：参考上下文理解词义，选中的文字仍是翻译对象。
+- **按阅读目的选择提示词**：自然阅读、技术文档、忠实直译三种预设，主动选择后生效。
+- **文档失败时保留进度、尝试恢复**：特定格式校验失败可降低请求粒度，持续失败会停下并保留已完成译文。
 
-| 功能 | 使用方式 |
-| --- | --- |
-| 网页双语翻译 | 在原文附近显示译文，支持全文、鼠标悬停、划词、局部翻译与恢复原文。 |
-| 自定义 AI 服务 | 配置 OpenAI 兼容接口的地址、API Key 和模型，也可使用已有服务适配器或本地 Ollama。 |
-| 上下文阅读 | 划词翻译可参考所在段落；AI 阅读辅助支持解释、句子分析和连续追问。需要配置支持相应功能的 AI 服务。 |
-| 输入与写作 | 翻译输入框内容，并使用写作辅助调整语言和表达。 |
-| 文档阅读与翻译 | 导入 PDF、EPUB、DOCX、HTML、TXT、Markdown、JSON 和常见字幕格式，双语阅读、校订译文并导出。 |
-| 图片与圈选翻译 | 识别图片或选定区域的文字，展示可复制的译文；识别效果受图像清晰度和文字排版影响。 |
-| 视频字幕与学习 | 支持上游已适配站点的双语字幕及完整句学习面板；部分 X 视频可使用本地 AI 转写。 |
-| 阅读配置 | 术语库、收藏与学习记录、网站规则、快捷键、译文样式，以及浅色、深色和系统主题。 |
+## 三个阅读场景
 
-## 本仓的主要改进
+### 网页双语翻译
 
-- 使用「万能说客（Wild Talker）」名称和项目图标，重新整理弹窗、设置页、文档阅读器及其他功能面板的配色和控件。
-- 文档页和完整句学习面板跟随插件主题，学习外观预览与实际面板共享样式。
-- 清理界面中的上游宣传、赞赏图片与误导性跳转；「关于」页提供本地功能入口和完整 GPL 许可，上游来源仍明确保留。
-- 为网页划词增加有界的段落参考。开启 AI 精翻并使用支持通用提示词的服务时，最多参考所在段落的 500 个字符，只翻译选中的文字。
-- 增加自然阅读、技术文档、忠实直译三组可主动选择的翻译提示词。
-- 文档翻译遇到术语保护标记损坏时，从合批降级为逐段请求；单段重试后仍失败，可在适用的纯文本句界拆成最多八个片段继续恢复。每个结果仍经过术语校验，持续失败会暂停并保留已完成译文。
+![网页原文与译文对照](./docs/public/showcase/web-bilingual.png)
 
-## 安装到 Chrome / Edge
+保留原网页，在原文附近显示译文。网页翻译能力继承自 FluentRead；Wild Talker 整理了入口、弹窗和主题。
 
-本仓通过 [GitHub Releases](https://github.com/YEMIN11238/wild-talker/releases) 提供安装包。请使用此处的 Wild Talker 包；上游浏览器商店发布的是 FluentRead。
+### 上下文划词翻译
 
-1. 下载 Chrome / Edge ZIP，解压到一个固定文件夹。解压后找到包含 `manifest.json` 的目录；若包内还有 `chrome-mv3` 子目录，选择该子目录。
-2. Chrome 打开 `chrome://extensions`，Edge 打开 `edge://extensions`，开启 **开发者模式**。
-3. 点击 **加载已解压的扩展程序**，选择包含 `manifest.json` 的目录。
-4. 在浏览器工具栏固定 Wild Talker，刷新需要翻译的网页。
-5. 打开插件，选择翻译服务与目标语言，点击翻译。划词、悬停等功能可在设置中开启。
+![带所在段落参考的划词翻译](./docs/public/showcase/selection-context.png)
 
-更新时将新版文件放到原来的扩展目录，再在扩展管理页点击重新加载，并刷新网页。请保留该目录；浏览器需要从这里加载扩展。卸载扩展会删除浏览器中的相关本地数据，更新前可按需使用插件的备份功能。
+选中词语或一句话，打开译文卡片；需要解释时可继续使用 AI 阅读辅助。上下文与提示词是否生效取决于服务和开关，见下文。
 
-## 配置自己的 API
+### 文档阅读
 
-进入 **设置 → 翻译服务**，添加或选择 OpenAI 兼容服务，并填写以下内容。
+![实际发布版的文档阅读界面](./docs/public/showcase/document-reader.png)
 
-| 配置 | 说明 |
-| --- | --- |
-| 接口地址 | 使用服务商提供的地址，按编辑器要求填写完整接口或基础地址。不同服务对路径的约定可能不同。 |
-| API Key | 填写自己的密钥。无需认证的本地服务按其接口要求配置。 |
-| 模型 | 填写服务商实际支持的模型名；同一家服务的模型名也可能不同。 |
-| 提示词 | 可选择本仓预设或编辑自己的模板，保留目标语言与原文变量。 |
+在插件内打开文档，对照原文、译文并查看进度。文件解析、PDF 排版和导出基础来自上游；本仓统一了文档 UI，并增加有界的校验失败恢复。
 
-保存后使用连接检查，再将该服务选为网页、划词或文档翻译所用的服务。连接成功表示该次接口调用可用，不保证所有模型都支持所有功能。遇到认证、模型不存在或限流提示，按错误信息检查服务配置。
+## 为什么使用 Wild Talker
 
-## 数据与限制
+**划词时，段落能帮助区分同一个词的不同含义。** 例如段落讲到河流时，选中 `bank` 的请求可以携带所在段落作为参考，翻译对象仍只有 `bank`，不会把整段改成翻译对象。需开启划词翻译与 **AI 精翻**，并使用支持通用提示词的 AI 服务；网页段落参考最多 500 字符。实际请求和结果见[实测案例](./docs/guide/first-use-verification.md#上下文划词)。此开关也启用继承的页面上下文能力，可能发送摘要及可读页面内容；500 字符只约束新增段落参考。模型可能不完全遵守输出约束，不代表一定比上游或其他模型更准确。
 
-设置、文档译文和学习记录默认保存在当前浏览器中。使用云翻译或 AI 讲解时，待处理文字以及启用的上下文会发送给所选服务。图片识别和视频转写的网络行为取决于所选方案；本地模型首次使用可能需要下载。
+**读文章、读接口文档和核对原文，可以选择不同的翻译要求。** 在服务的提示词设置中主动选择：
 
-云备份、配置导出属于用户主动操作，其中可能包含服务凭据。不要将个人备份、浏览器配置、API Key 或阅读记录提交到仓库。权限与数据处理的详细说明见 [隐私文档](./docs/guide/privacy.md)。
+| 预设 | 阅读目的 | 交给模型的要求 |
+| --- | --- | --- |
+| 自然阅读 | 阅读一般文章 | 保持意思、语气与不确定程度，允许调整句式，使译文自然。 |
+| 技术文档 | 阅读 API、教程、论文 | 保留标识符、代码、单位、条件和警告，保持术语一致。 |
+| 忠实直译 | 对照学习、核对论证 | 尽量贴近措辞和逻辑，保留歧义、重复、否定与保留意见。 |
 
-当前存在以下边界。
+例如翻译带 `--dry-run` 与 `may` 的技术句子，要求模型保留参数及“可能”的语气；具体输出与使用条件见[预设实测](./docs/guide/first-use-verification.md#提示词预设)。预设修改的是翻译要求，效果取决于所选模型，不保证输出一定不同。
 
-- 浏览器内部页面、扩展商店及部分受限页面不能注入网页翻译。动态网页和站点改版也可能需要新的适配。
-- 第三方免费接口、模型价格、认证要求与限流策略由服务商决定；本仓不提供通用免费的 AI API。
-- PDF 原版排版、扫描件 OCR、复杂表格和公式仍可能需要校订。自动重试与格式校验不能保证语义准确或任何文档都能完整翻译。
-- 视频功能以实际适配的站点和可获得的字幕或音频为准，不宣称支持所有网站或会议平台。
-- Chrome / Edge 使用上述手动安装方式。源码保留 Firefox 与 userscript 构建目标，具体发布包和验证范围以各次 Release 说明为准。
+**长文档不应因一段格式问题丢失此前进度。** 曾遇到 MiMo 报告中一个 624 字符段落的术语保护标记被服务丢弃，整个任务暂停。本仓在此类校验失败时尝试从合批请求降为单段，再对符合条件的纯文本段落拆句恢复；结果仍需通过原有校验，无法恢复时保留进度并显示错误。这一案例通过故障回放验证恢复路径，未声称完整报告在所有云服务上都能翻译成功。[案例与限制](./docs/guide/first-use-verification.md#文档恢复) · [开发层机制](./docs/maintainers/wild-talker-development.md)
 
-## 本地构建
+## 第一次使用：下载安装 → 加载扩展 → 选择服务 → 完成第一次翻译
 
-建议使用 **Node.js 22** 和 **pnpm 9**。仓库锁文件记录 pnpm 9.12.1，不需要升级依赖即可构建。
+### 1. 下载安装
 
-```sh
-git clone https://github.com/YEMIN11238/wild-talker.git
-cd wild-talker
-corepack enable
-corepack prepare pnpm@9.12.1 --activate
-pnpm install --frozen-lockfile
-pnpm compile
-pnpm build
+下载上方 Chrome / Edge ZIP，**解压到一个固定目录**。当前包的结构如下，应选择 `chrome-mv3` 这一层：
+
+```text
+解压目录/
+└── chrome-mv3/     ← 加载这一层
+    ├── manifest.json
+    └── …
 ```
 
-Chrome 构建输出位于 `.output/chrome-mv3`，可按上面的开发者模式流程加载。
+不要选择 ZIP 文件或外层解压目录。以后包结构若有变化，仍以**目录直接包含 manifest.json**为准。
 
-| 命令 | 用途 |
+| GitHub 发布标签 | 扩展管理页版本 | 安装包 |
+| --- | --- | --- |
+| `v0.0.37-wild-talker.1` | `0.0.37` | `wild-talker-0.0.37-chrome-edge.zip` |
+
+标签中的 `wild-talker.1` 区分本仓改进版。检查名称 **万能说客（Wild Talker）**、本仓图标和下载来源，不能凭相同的 `0.0.37` 把上游包当成本仓包。本次展示改进没有改动扩展代码与安装包。
+
+### 2. 加载扩展
+
+Chrome 打开 `chrome://extensions`，Edge 打开 `edge://extensions`，开启 **开发者模式**，点击 **加载已解压的扩展程序**，选择**包含 manifest.json 的目录**。
+
+| Chrome | Edge |
 | --- | --- |
-| `pnpm dev` | 启动 Chrome 开发构建。 |
-| `pnpm dev:firefox` | 启动 Firefox 开发构建。 |
-| `pnpm build` | 构建 Chrome 扩展。 |
-| `pnpm build:firefox` | 构建 Firefox 扩展。 |
-| `pnpm zip` / `pnpm zip:edge` / `pnpm zip:firefox` | 生成相应目标的打包产物。 |
-| `pnpm build:userscript` | 构建 userscript。 |
-| `pnpm compile` | 检查 TypeScript 与 Vue 类型。 |
-| `pnpm test:audit` | 审核测试归类、重复与跳过规则。 |
-| `pnpm test:unit` / `pnpm test:functional` / `pnpm test:regression` | 按分组运行测试。 |
-| `pnpm test:coverage` | 执行仓库规定的覆盖率检查。 |
-| `pnpm verify:extension-manifests` | 检查已经生成的扩展 manifest。 |
-| `pnpm docs:build` | 构建文档。 |
-| `pnpm storybook` | 查看真实 Vue 组件与主题。 |
+| ![Chrome 实际加载已解压扩展](./docs/public/showcase/install-chrome.png) | ![Edge 实际加载已解压扩展](./docs/public/showcase/install-edge.png) |
 
-构建输出不包含你的浏览器设置或 API Key。Google Drive 的公开 OAuth 应用标识与 Chrome 扩展公钥沿用上游默认配置；如需独立发布、接入自己的 OAuth 应用，参考 [.env.example](./.env.example) 和 [Google Drive 配置说明](./docs/maintainers/google-drive-sync-guide.md)。这些公开标识不等于服务密钥，也不授予使用他人账号的权限。
+固定工具栏图标，刷新已经打开的网页。浏览器内部页、扩展商店等受限页面不能执行网页翻译。
 
-开发规则见 [AGENTS.md](./AGENTS.md)、[架构说明](./docs/architecture.md) 和 [测试说明](./docs/testing.md)。仓库中的部分文档与历史材料仍记录 FluentRead 的上游功能和开发过程，不能视为本仓独立完成的工作或当前发布版的验证结果。
+### 3. 选择服务
 
-## 反馈与许可
+打开插件，设定目标语言，再选择翻译服务。普通网页与文档翻译可以使用无需自备 AI API Key 的网页翻译服务；可用性取决于接口、地区与网络。AI 精翻、上下文解释及自定义提示词需要可用的 AI 服务，或自己运行的本地模型。
 
-通过 [Issues](https://github.com/YEMIN11238/wild-talker/issues) 报告问题时，请附浏览器版本、操作步骤、错误提示和可公开的示例，并遮挡密钥与个人信息。欢迎提交 Pull Request。
+[无需 AI 与需要 AI 的能力划分](./docs/guide/first-use-verification.md#服务与启用条件) · [经过实测的自定义 API 示例](./docs/guide/first-use-verification.md#自定义-api-示例)
 
-本项目遵循 [GPL-3.0](./LICENSE)，保留 FluentRead 及其他组件的原有版权与许可。[ATTRIBUTION.md](./ATTRIBUTION.md) 记录上游基线及本仓改动，[第三方声明](./public/third-party-notices/) 保留各组件的许可。
+### 4. 完成第一次翻译
+
+打开一篇可公开阅读的英文网页，点击 **翻译当前网页**，确认原文附近出现译文。需要划词时，在设置中启用划词翻译，选中文字并触发译文卡片；使用上下文功能还需完成 AI 服务配置并开启 AI 精翻。
+
+遇到错误时先查看当前服务、模型和连接检查结果，再检查是否是受限页面。连接检查失败时，先解决报错再重试。[逐步教程](https://yemin11238.github.io/wild-talker/guide/getting-started)
+
+## 升级
+
+先按需导出备份，将新版 ZIP 解压后的内容放到**原来的扩展目录**，在扩展管理页点击 **重新加载**，再刷新网页。保持扩展目录与 ID，避免先卸载导致本地设置和学习记录丢失。不要把个人备份或 API Key 放进源码仓库。
+
+## 来源、维护与参与
+
+网页、划词、文档、OCR、视频字幕及学习工具等基础主要继承自 FluentRead。本仓保留上游贡献历史、[GPL-3.0](./LICENSE) 和[第三方声明](./public/third-party-notices/)，增量范围见 [ATTRIBUTION.md](./ATTRIBUTION.md)。旧功能参考文档和历史测试材料不代表本仓独立原创或当前版本的实测结论。
+
+已确定维护界面与入口一致性、划词段落参考、三种提示词预设，以及文档校验失败恢复。上游更新先在独立分支审阅，与本仓改动合并后验证；通过检查才发布新版本，不自动改变已有发布标签。[维护与上游同步流程](./docs/maintainers/wild-talker-development.md#维护与上游同步)
+
+[开发与构建](./docs/maintainers/wild-talker-development.md) · [架构](./docs/architecture.md) · [完整测试说明](./docs/testing.md) · [数据处理](./docs/guide/privacy.md)
+
+反馈请附浏览器版本、操作步骤、服务类型、错误提示与可公开示例，遮挡密钥和私人内容。本次素材使用干净测试配置和可公开文本；它们不构成翻译质量排名，也不能保证所有网页、模型或 PDF 都能成功处理。

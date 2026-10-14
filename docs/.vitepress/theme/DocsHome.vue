@@ -60,12 +60,12 @@ const groups = computed(() => [
 <template>
   <div class="fr-docs">
     <div class="fr-docs-intro">
-      <p class="fr-docs-eyebrow">{{ t('流畅阅读', 'FluentRead') }}</p>
+      <p class="fr-docs-eyebrow">{{ t('万能说客', 'Wild Talker') }}</p>
       <h1>{{ t('使用文档', 'Documentation') }}</h1>
       <p>
         {{
           t(
-            '这里介绍流畅阅读的安装方法、翻译功能和设置选项。',
+            '先完成 Chrome / Edge 安装和第一次翻译，再查看继承功能的详细指南。',
             'Find instructions for installation, translation and settings.'
           )
         }}

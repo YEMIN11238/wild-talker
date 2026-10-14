@@ -1,6 +1,6 @@
 ---
 title: Documentation
-description: FluentRead installation, translation, learning, and settings guides.
+description: Wild Talker installation, translation, learning, and settings guides.
 sidebar: true
 outline: false
 next: false

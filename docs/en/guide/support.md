@@ -1,18 +1,12 @@
 ---
-title: Support FluentRead
-description: Support the FluentRead open-source project through WeChat Support or Ko-fi.
+title: Feedback & contribution
+description: Report a redacted Wild Talker issue or contribute while preserving upstream attribution.
 ---
 
-<script setup>
-import SupportOptions from '../../.vitepress/theme/SupportOptions.vue'
-</script>
+# Feedback & contribution
 
-# Support FluentRead
+Use [Wild Talker Issues](https://github.com/YEMIN11238/wild-talker/issues). Include browser/extension versions, a public URL, steps and redacted screenshots. Do not attach keys, cookies, complete configuration backups or private documents.
 
-FluentRead is an open-source project whose continued development is made possible by the generous support of its community. The project is licensed under GPL-3.0. Thank you for supporting its development and maintenance through feedback, code, documentation, or financial contributions.
+Submit code or documentation to [this repository](https://github.com/YEMIN11238/wild-talker) and read the [development guide](https://github.com/YEMIN11238/wild-talker/blob/main/docs/maintainers/wild-talker-development.md). Keep licenses and third-party attribution.
 
-<SupportOptions en />
-
-To contribute to development, visit [GitHub](https://github.com/FluentRead/FluentRead). For help with the extension, [report an issue](https://github.com/FluentRead/FluentRead/issues).
-
-In the extension settings, “About FluentRead” uses one card for the introduction, version, website, documentation, source code, feedback, and support links. Click “Official website” or the brand icon or name in the upper-left corner to open the [FluentRead website](https://read.thinkstu.com) in a new tab. Click the WeChat support code to view the original image.
+This page does not provide donation codes or present an upstream maintainer's contact as our own. See [provenance](/en/guide/oauth-and-source) for FluentRead's work and contribution history.

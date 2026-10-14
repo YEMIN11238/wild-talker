@@ -30,10 +30,10 @@ Content rules adjust translation regions by host, path, and CSS selectors. Effec
 
 ## Still wrong?
 
-Report the public URL, browser version, and a screenshot with private information removed on [GitHub Issues](https://github.com/FluentRead/FluentRead/issues). Explain which area should translate and which should stay original.
+Report the public URL, browser version, and a screenshot with private information removed on [GitHub Issues](https://github.com/YEMIN11238/wild-talker/issues). Explain which area should translate and which should stay original.
 
 If you know webpage structure, you can use [custom site rules](/en/guide/custom-site-rules). They are optional; export a backup before editing.
 
-Detailed fields and examples are in the [repository reference](https://github.com/FluentRead/FluentRead/blob/main/docs/maintainers/product-reference/site-adaptation-20260906.md).
+Detailed fields and examples are in the [repository reference](https://github.com/YEMIN11238/wild-talker/blob/main/docs/maintainers/product-reference/site-adaptation-20260906.md).
 
 </details>

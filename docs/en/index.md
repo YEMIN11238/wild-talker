@@ -1,7 +1,7 @@
 ---
 layout: home
 markdownStyles: false
-title: FluentRead
+title: Wild Talker
 titleTemplate: false
 ---
 

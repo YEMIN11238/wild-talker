@@ -1,42 +1,42 @@
 ---
-title: 离线下载与安装
-description: Chrome 商店无法访问时，通过 CRX搜搜或官方 ZIP 包安装流畅阅读。
+title: ZIP 安装与升级
+description: 下载 Wild Talker 的 Chrome / Edge ZIP，解压加载并安全升级。
 ---
 
-# 离线下载与安装
+# ZIP 安装与升级
 
-Chrome 商店打不开时，可以从 **[GitHub 官方发布页](https://github.com/FluentRead/FluentRead/releases/latest)** 下载最新正式版的 ZIP 包，在桌面 Chrome / Edge 中手动安装。也可以使用 **[CRX搜搜（国内可用）](https://www.crxsoso.com/webstore/detail/djnlaiohfaaifbibleebjggkghlmcpcj)**。
+**[下载 Chrome / Edge ZIP](https://github.com/YEMIN11238/wild-talker/releases/latest)**，安装步骤见[第一次使用教程](/guide/getting-started)。当前独立发行入口只有本仓库 Release；FluentRead 的扩展商店、CRX 镜像和脚本商店条目安装的是上游版本。
 
-## 通过 CRX搜搜获取
+## 选对目录
 
-打开 [流畅阅读在 CRX搜搜的页面](https://www.crxsoso.com/webstore/detail/djnlaiohfaaifbibleebjggkghlmcpcj)，按网站提供的安装或下载说明操作。
+```text
+你保留的解压目录/
+└── chrome-mv3/          ← 加载这里
+    ├── manifest.json
+    ├── background.js
+    ├── assets/
+    └── ...
+```
 
-CRX搜搜是第三方分发网站，版本同步时间可能与官方商店不同。下载前查看页面标出的版本号。
+具体文件随构建变化，判断依据始终是 **该目录直接包含 manifest.json**。不要加载 Source code.zip，也不要加载仍然压缩的 ZIP。
 
-## 下载官方离线包
+## 升级现有安装
 
-打开 [GitHub 官方发布页](https://github.com/FluentRead/FluentRead/releases/latest)，这个地址会跳转到最新正式版。安装包和版本信息以发布页为准。
+1. 先在 **设置 → 备份与恢复** 导出必要配置。备份可能包含密钥和私人记录，不要公开上传。
+2. 从 [本仓库 Release](https://github.com/YEMIN11238/wild-talker/releases/latest) 下载新包，查看该 Release 的版本对应和升级说明。
+3. 保留原目录的备份，把新包解压到原来加载的目录。不要改用一个全新位置或同时安装两份。
+4. 在 `chrome://extensions/` 或 `edge://extensions/` 找到 Wild Talker，点击 **重新加载**。
+5. 核对名称与版本，刷新所有需要翻译的网页；仍打开的设置、文档页也需要刷新。
 
-在发布说明下方展开 **Assets**，选择文件名以 **`-chrome.zip`** 结尾的 Chrome / Edge 扩展包。如需校验文件，也可以在同一版本的 Assets 中下载 **`SHA256SUMS.txt`**。
+解压加载的扩展不会自动跟随商店更新。同一目录、原 manifest 公钥与 ID 保持一致时，本机设置通常会继续保留；换目录、删除后重装或更改公钥可能改变安装身份，因此仍应先备份。
 
-**`-sources.zip`** 和 GitHub 自动生成的 **Source code** 是源码包，不能直接安装。
+## 当前版本怎么认
 
-GitHub 下载仍受网络环境影响；无法下载时，可以尝试上面的 CRX搜搜入口。离线安装指下载后不需要访问 Chrome 商店即可安装，在线翻译仍需要连接所选服务。
+| 项目 | 当前发行 |
+| --- | --- |
+| 名称 | 万能说客（Wild Talker） |
+| 扩展管理页 / manifest 版本 | `0.0.37` |
+| GitHub 发布标签 | `v0.0.37-wild-talker.1` |
+| 包类型 | Chrome / Edge MV3 ZIP |
 
-## 安装到 Chrome / Edge
-
-1. 将 ZIP 包解压到一个准备长期保留的文件夹。
-2. 在地址栏输入 **`chrome://extensions`**；Edge 用户输入 **`edge://extensions`**。
-3. 开启 **开发者模式**，点击 **加载已解压的扩展程序**。
-4. 选择解压后直接包含 **`manifest.json`** 的文件夹。不要选择 ZIP 文件或外层目录。
-5. 将流畅阅读固定到工具栏，刷新已打开的普通网页，再开始翻译。
-
-浏览器内部地址需要复制到地址栏打开，不能由普通网页直接跳转。加载后不要删除或移动解压目录。
-
-## 更新离线安装的版本
-
-离线安装的扩展不会随商店版本自动更新。更新前，先在流畅阅读设置的 **备份与同步** 中导出配置。
-
-从 [GitHub 官方发布页](https://github.com/FluentRead/FluentRead/releases/latest) 下载新版 Chrome ZIP 包，将内容解压覆盖到原安装目录，再回到扩展管理页点击流畅阅读的 **重新加载**。刷新需要翻译的网页。使用同一目录更新，避免另装一份而出现重复翻译；操作前保留原目录的备份。
-
-安装完成后，请参照[快速开始](/guide/getting-started)固定图标并翻译网页。
+本次展示与文档更新没有改变扩展运行代码或 ZIP。后续安装包发生变化时，会在 Release 同步列出数字版本、标签和校验值，不只靠文件名区分。

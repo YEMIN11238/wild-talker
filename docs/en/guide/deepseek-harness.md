@@ -84,7 +84,7 @@ Completed answers are reused when switching learning actions within the current 
 
 Upgrades preserve services, custom models, actions, context and prompts. Existing standalone cards migrate to the unified feature, including their activation method when ordinary selection translation was disabled. Old settings links still work.
 
-Learning conversations continue to use the browser adaptation of DeepSeek Harness, without requiring a DeepSeek model. [Source and license](https://github.com/FluentRead/FluentRead/blob/main/public/third-party-notices/deepseek-harness-MIT.txt)
+Learning conversations continue to use the browser adaptation of DeepSeek Harness, without requiring a DeepSeek model. [Source and license](https://github.com/YEMIN11238/wild-talker/blob/main/public/third-party-notices/deepseek-harness-MIT.txt)
 
 </details>
 

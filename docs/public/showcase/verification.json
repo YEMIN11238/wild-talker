@@ -1,0 +1,112 @@
+{
+  "verified_date": "2026-10-14",
+  "release": "v0.0.37-wild-talker.1",
+  "extension_version": "0.0.37",
+  "release_zip_sha256": "162d1483941f6ffd7b2c4fdfcf74821ac3e354d6dd7ac75b780b984cb54f0340",
+  "unauthenticated_public_release_download": true,
+  "platform": "macOS / Apple Silicon",
+  "browsers": [
+    {
+      "name": "Chrome for Testing",
+      "version": "151.0.7922.34",
+      "fresh_temporary_profile": true,
+      "launch_mode": "macos-background-cdp",
+      "focus_policy": "launchservices-no-foreground"
+    },
+    {
+      "name": "Microsoft Edge",
+      "version": "155.0.4283.45",
+      "fresh_temporary_profile": true,
+      "launch_mode": "macos-background-cdp",
+      "focus_policy": "launchservices-no-foreground"
+    }
+  ],
+  "web_bilingual": {
+    "service": "Microsoft Translator web endpoint",
+    "api_key_provided": false,
+    "Chrome_connection_check_ms": 506,
+    "Edge_connection_check_ms": 893,
+    "source": "reading-example.html",
+    "browser_first_translation": "Chrome for Testing and Microsoft Edge both completed actual UI onboarding, service choice, connection check and first bilingual page translation."
+  },
+  "document_reader": {
+    "service": "Microsoft Translator web endpoint",
+    "source": "reading-example.pdf",
+    "pages": 1,
+    "segments_completed": 8,
+    "segments_total": 8,
+    "browser": "Chrome for Testing",
+    "OCR_tested": false
+  },
+  "selection_demo": {
+    "browser": "Chrome for Testing",
+    "model": "qwen2.5:3b",
+    "preset": "natural",
+    "AI_context_enabled": true,
+    "source_scope": "Complete selected sentence",
+    "recording": "Actual CDP screencast during native mouse drag, loading and model result. No fixture answers or injected UI.",
+    "frames": 11,
+    "GIF_seconds": 3.883,
+    "translated_result": "在一次漫长的散步之后，我们坐在河边的河岸上，看着河水流过旧桥。"
+  },
+  "custom_api": {
+    "base_endpoint": "http://127.0.0.1:11434/v1",
+    "full_endpoint": "http://127.0.0.1:11434/v1/chat/completions",
+    "model": "qwen2.5:3b",
+    "local_runtime": "Official Ollama-distributed llama-server + actual official Qwen GGUF; OpenAI Chat Completions protocol.",
+    "UI_connection_check_ms": 266,
+    "anonymous_UI_check": "Allowed-empty API Key setting + blank API Key tested successfully.",
+    "actual_anonymous_http_authorization_present": false,
+    "public_doc_key": "YOUR_API_KEY is a placeholder; local test server accepts anonymous requests."
+  },
+  "limitations": [
+    "Qwen2.5:1.5B and3B both incorrectly translated the paragraph when only bank was selected; request scope remains selected bank but model output is not guaranteed.",
+    "Only authored English examples, one 1-page text PDF, and the local Qwen3B complete-sentence example were verified. OCR, large PDFs, live video platforms and cloud AI accounts were not tested.",
+    "Install load directory was supplied through Chrome/Edge Extensions.loadUnpacked CDP, using the actual developer-mode UI; native folder-picker interaction was not tested."
+  ],
+  "Chrome_developer_diagnostics": "Inspected modulepreload cross-world/unused-preload warnings, retained raw diagnostic evidence; cleared warning list through developer UI before final installation screenshot.",
+  "privacy": "Fresh profiles, original public sample text/PDF, no existing browser profile, personal record or real credential. Screenshots are actual viewport captures; no content fabricated.",
+  "temporary_profiles_removed": true,
+  "assets": {
+    "reading-example.html": {
+      "bytes": 2167,
+      "sha256": "522f418702220517eb0cce1af19270f1de3d38f0a5dd4f682d0e3819e7dde631"
+    },
+    "prompt-presets.png": {
+      "bytes": 336262,
+      "sha256": "2262764271f1cbaab44365551429e80470741353d0ff92a1d431ae661d08e726"
+    },
+    "reading-example.pdf": {
+      "bytes": 2347,
+      "sha256": "ebb4e83a07fc8925854e44ed132ab148bf78040b5a7b5db0d4f8750af0283490"
+    },
+    "selection-context.png": {
+      "bytes": 257267,
+      "sha256": "a6a1364482708e320508826e67ff6f8a4f36b6c371a21ed4f8683792a6b66ffd"
+    },
+    "web-bilingual.png": {
+      "bytes": 237425,
+      "sha256": "a566dd978fb026bcb4308c2480b3626161bc33aa49cc27757e67d5952415961c"
+    },
+    "document-reader.png": {
+      "bytes": 299828,
+      "sha256": "0e439e781420d610f4b501e8e06aeeb97fac8dd88599a00753431f6a51bbd1c2"
+    },
+    "install-chrome.png": {
+      "bytes": 164667,
+      "sha256": "ceb14f3263122b401536f913ed7c3590bc0eea07f0265801e27c047e8804760a"
+    },
+    "install-edge.png": {
+      "bytes": 194605,
+      "sha256": "95150bc38bd65e22d5473038ffde5d4756623ce02c35dab3da51bd4b4da691e0"
+    },
+    "custom-api.png": {
+      "bytes": 337650,
+      "sha256": "cb7561c70ce8d4d930f923efd568716e76d6d965bf6ccbffbb6ee205f0266823"
+    },
+    "selection-demo.gif": {
+      "bytes": 1056316,
+      "sha256": "df4274748cf351ef8a425009ba54398b074bd0c7acd554643233931f36729a8a"
+    }
+  }
+}

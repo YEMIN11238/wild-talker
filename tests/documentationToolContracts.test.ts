@@ -84,34 +84,35 @@ function brandFixture(bilingual = false) {
 }
 
 const workflow = '<ol class="ds"><li class="ds-current"><button type="button" aria-label="First" aria-current="step">1</button></li><li><button type="button" aria-label="Second">2</button></li><li><button type="button" aria-label="Third">3</button></li></ol>';
+const siteBase = '/wild-talker/';
+const releaseDownloadUrl = 'https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip';
 function page(route: string, body: string) {
     const alternate = (route.startsWith('en/') ? route.slice(3) : 'en/' + route).replace(/index\.html$/, '').replace(/\.html$/, '');
-    const productName = route.startsWith('en/') ? 'FluentRead' : '流畅阅读';
-    return `<!doctype html><html><head><title>${productName} fixture</title><meta property="og:site_name" content="${productName}"><link rel="canonical" href="https://read.thinkstu.com/${route}"><link rel="alternate" hreflang="en" href="/${alternate}"></head><body><a class="bv-language" href="/${alternate}">Language</a>${body}</body></html>`;
+    const productName = route.startsWith('en/') ? 'Wild Talker' : '万能说客 Wild Talker';
+    return `<!doctype html><html><head><title>${productName} fixture</title><meta property="og:site_name" content="${productName}"><link rel="canonical" href="https://yemin11238.github.io/wild-talker/${route}"><link rel="alternate" hreflang="en" href="${siteBase}${alternate}"></head><body><a class="bv-language" href="${siteBase}${alternate}">Language</a>${body}</body></html>`;
 }
 function home(prefix: string) {
-    const english = Boolean(prefix), slogan = taglines[english ? 'en-US' : 'zh-CN'];
-    return `<div class="bv-site"><header class="bv-home-header"><div class="bv-home-brand"><img src="/brand-icon.webp" width="96" height="96">${english ? 'FluentRead' : '流畅阅读'}</div></header>
-        <section class="bv-hero"><h1 class="bv-hero-slogan">${slogan}</h1><div class="bv-hero-intro"><span>${english ? 'FluentRead is an open-source browser extension for bilingual translation.' : '流畅阅读，一款开源的浏览器双语翻译插件'}</span></div><div class="bv-install-actions"><a class="bv-primary" href="https://example.test/install">Install</a></div><a class="bv-docs-link" href="${prefix}/docs/">${english ? 'Documentation' : '使用文档'}</a><div class="bv-hero-orbit">Hello 你好<i class="bv-orbit-page"></i><i class="bv-orbit-document"></i><i class="bv-orbit-grammar"></i></div></section>
-        <section class="bv-translation-section"><h2>${english ? 'Bilingual' : '双语翻译'}</h2><div class="bv-feature-row"><div data-demo="brand-reader" data-playing="true">${workflow}<div class="fd-sentence-card"></div><div class="fd-structure-card"></div><div class="fd-word-card"></div></div></div></section>
-        ${['document', 'image', 'video', 'selection'].map(kind => `<div class="bv-feature-row"><div data-visual="${kind}" data-playing="true">${workflow}</div></div>`).join('')}
-        <div class="bv-video-platforms">YouTube X Google Meet Teams Zoom</div><div class="bv-browser-options"><a>1</a><a>2</a><a>3</a></div>
-        <div class="fd-selection"><button aria-label="${english ? 'Preview reading the original' : '演示朗读原文'}"></button><button aria-label="${english ? 'Preview reading the translation' : '演示朗读译文'}"></button></div>
-        <div class="bv-promo"><video controls preload="none" poster="/videos/fluentread-promo-${english ? 'en' : 'zh'}-poster.webp"><source src="/videos/fluentread-promo-${english ? 'en' : 'zh'}.mp4"></video><p class="bv-promo-more"><a href="https://www.bilibili.com/video/BV1qhHJ6uEiF/" target="_blank" rel="noopener">Official introduction</a></p></div></div>`;
+    const english = Boolean(prefix);
+    return `<div class="wt-site"><header class="bv-home-header"><div class="bv-home-brand"><img src="${siteBase}brand-icon.png" width="512" height="512">${english ? 'Wild Talker' : '万能说客'}</div><a class="wt-nav-download" href="${releaseDownloadUrl}">Download</a></header>
+        <section class="wt-hero"><h1>${english ? 'Wild Talker' : '万能说客 Wild Talker'}<span>${english ? 'Bilingual translation and AI reading' : '浏览器双语翻译与 AI 阅读'}</span></h1><p class="wt-intro">One sentence introduction</p><figure class="wt-recording"><img src="${siteBase}showcase/selection-demo.gif" width="1280" height="800"><figcaption>Recorded release with isolated data</figcaption></figure><div class="wt-actions"><a class="wt-primary" href="${releaseDownloadUrl}">Download</a></div><a href="${siteBase}${prefix.replace(/^\//,'')}${prefix ? '/' : ''}guide/getting-started">First use</a></section>
+        <div class="wt-improvements">${'<article>Improvement</article>'.repeat(3)}</div><a href="${siteBase}${prefix.replace(/^\//,'')}${prefix ? '/' : ''}guide/why-wild-talker">Conditions</a><div class="wt-scenes">${['web-bilingual.png','selection-context.png','document-reader.png'].map(name=>`<img src="${siteBase}showcase/${name}" width="1280" height="800">`).join('')}</div><footer class="wt-footer">Based on FluentRead · GPL-3.0</footer></div>`;
 }
 function docsFixture(extra = '') {
     const root = fixture(), dist = 'docs/.vitepress/dist';
     write(root, 'src/core/i18n/messages/brand-taglines.json', JSON.stringify(taglines));
+    // Raw-root markup is rewritten during the Pages build; fixtures represent that exact artifact.
+    const basedExtra = extra.replace(/(\b(?:href|src)=['"])\/(?!\/)/g, '$1' + siteBase);
     for (const prefix of ['', 'en/']) {
-        write(root, `${dist}/${prefix}index.html`, page(`${prefix}index.html`, home(prefix ? '/en' : '') + extra));
-        write(root, `${dist}/${prefix}docs/index.html`, page(`${prefix}docs/index.html`, `<h1>Documentation</h1><div class="VPNavBarTitle"><div class="title"><strong>${prefix ? 'FluentRead' : '流畅阅读'}</strong></div></div><div class="fr-docs-start"><a href="/docs/">Start</a></div><div class="fr-docs-links">${'<a href="/docs/">Guide</a>'.repeat(20)}</div>`));
+        write(root, `${dist}/${prefix}index.html`, page(`${prefix}index.html`, home(prefix ? '/en' : '') + basedExtra));
+        write(root, `${dist}/${prefix}docs/index.html`, page(`${prefix}docs/index.html`, `<h1>Documentation</h1><div class="VPNavBarTitle"><div class="title"><strong>${prefix ? 'Wild Talker' : '万能说客'}</strong></div></div><div class="fr-docs-start"><a href="${siteBase}docs/">Start</a></div><div class="fr-docs-links">${`<a href="${siteBase}docs/">Guide</a>`.repeat(20)}</div>`));
         write(root, `${dist}/${prefix}config/translation-engines.html`, page(`${prefix}config/translation-engines.html`, '<h1>Engines</h1><div class="vp-doc">{{apiKey}}</div>'));
         write(root, `${dist}/${prefix}guide/input-translation.html`, page(`${prefix}guide/input-translation.html`, '<h1>Input</h1><div class="vp-doc">{{origin}} {{to}}</div>'));
+        for(const name of ['getting-started','why-wild-talker']) write(root, `${dist}/${prefix}guide/${name}.html`, page(`${prefix}guide/${name}.html`, '<h1>Guide</h1>'));
         write(root, `docs/${prefix}guide/input-translation.md`, 'Fixture');
         write(root, `docs/${prefix}config/translation-engines.md`, 'Fixture');
     }
     write(root, `${dist}/404.html`, '<meta name="robots" content="noindex">');
-    for (const name of ['brand-icon.webp', 'sitemap.xml', 'videos/fluentread-promo-en.mp4', 'videos/fluentread-promo-zh.mp4', 'videos/fluentread-promo-en-poster.webp', 'videos/fluentread-promo-zh-poster.webp']) write(root, `${dist}/${name}`, 'fixture asset');
+    for (const name of ['brand-icon.png','brand-icon.webp', 'sitemap.xml','showcase/selection-demo.gif','showcase/web-bilingual.png','showcase/selection-context.png','showcase/document-reader.png']) write(root, `${dist}/${name}`, 'fixture asset');
     return root;
 }
 
@@ -244,18 +245,56 @@ async function capture(options: Record<string, unknown> = {}) {
 }
 
 describe('documentation delivery CLI contracts', () => {
+    function addPublicReadingExample(root: string, transform = (html: string) => html) {
+        const html = transform(fs.readFileSync(path.join(repo, 'docs/public/showcase/reading-example.html'), 'utf8'));
+        write(root, 'docs/public/showcase/reading-example.html', html);
+        write(root, 'docs/.vitepress/dist/showcase/reading-example.html', html);
+    }
+    it('checks the exact standalone public reading article without requiring VitePress metadata', async () => {
+        const root = docsFixture(); addPublicReadingExample(root);
+        const result = await checker(root, 'verify-docs-build.mjs');
+        expect(result.code, result.err).toBe(0); expect(JSON.parse(result.out).pages).toBe(14);
+    });
+    it('rejects a standalone reading artifact that differs from its public source', async () => {
+        const root = docsFixture(); addPublicReadingExample(root);
+        fs.appendFileSync(path.join(root, 'docs/.vitepress/dist/showcase/reading-example.html'), '<p>Unreviewed content</p>');
+        const result = await checker(root, 'verify-docs-build.mjs');
+        expect(result.code).toBe(1); expect(result.err).toContain('must match its reviewed public source');
+    });
+    it('does not grant unknown showcase HTML the standalone article metadata exception', async () => {
+        const root = docsFixture(); addPublicReadingExample(root);
+        fs.copyFileSync(path.join(root, 'docs/.vitepress/dist/showcase/reading-example.html'), path.join(root, 'docs/.vitepress/dist/showcase/other-example.html'));
+        const result = await checker(root, 'verify-docs-build.mjs');
+        expect(result.code).toBe(1); expect(result.err).toContain('Language switch must preserve'); expect(result.err).toContain('other-example.html');
+    });
+    it('rejects credential-shaped dummy text even when it appears in both article source and artifact', async () => {
+        const root = docsFixture(); addPublicReadingExample(root, html => html.replace('</body>', '<p>sk-publicdummy012345678901234567890</p></body>'));
+        const result = await checker(root, 'verify-docs-build.mjs');
+        expect(result.code).toBe(1); expect(result.err).toContain('must not contain executable handlers, local user paths or credentials');
+    });
+    it('retains relative asset validation inside the standalone reading article', async () => {
+        const root = docsFixture(); addPublicReadingExample(root, html => html.replace('</body>', '<img src="missing-local.png"></body>'));
+        const result = await checker(root, 'verify-docs-build.mjs');
+        expect(result.code).toBe(1); expect(result.err).toContain('Missing reading-example asset missing-local.png');
+    });
     it('checks VitePress pages while leaving Storybook HTML shells to their own verifier', async () => {
         const root = docsFixture();
         write(root, 'docs/.vitepress/dist/storybook/index.html', '<!doctype html><div id="storybook-root"></div>');
         write(root, 'docs/.vitepress/dist/storybook/iframe.html', '<!doctype html><div id="storybook-root"></div>');
         const result = await checker(root, 'verify-docs-build.mjs');
         expect(result.code, result.err).toBe(0);
-        expect(JSON.parse(result.out).pages).toBe(9);
+        expect(JSON.parse(result.out).pages).toBe(13);
+        for (const unrelated of ['https://github.com/FluentRead/FluentRead/releases/latest', 'https://github.com/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip']) {
+            const invalid = docsFixture(), homepage = path.join(invalid, 'docs/.vitepress/dist/index.html');
+            fs.writeFileSync(homepage, fs.readFileSync(homepage, 'utf8').replaceAll(releaseDownloadUrl, unrelated));
+            const rejected = await checker(invalid, 'verify-docs-build.mjs');
+            expect(rejected.code).toBe(1); expect(rejected.err).toContain('Download must be the exact Wild Talker Chrome / Edge ZIP');
+        }
     });
     it.each(['index.html', 'docs/index.html', 'en/index.html', 'en/docs/index.html'])('rejects product metadata belonging to the other locale at %s', async route => {
         const root = docsFixture(), file = path.join(root, 'docs/.vitepress/dist', route);
-        const productName = route.startsWith('en/') ? 'FluentRead' : '流畅阅读';
-        const wrongName = route.startsWith('en/') ? '流畅阅读' : 'FluentRead';
+        const productName = route.startsWith('en/') ? 'Wild Talker' : '万能说客 Wild Talker';
+        const wrongName = route.startsWith('en/') ? '万能说客 Wild Talker' : 'Wild Talker';
         fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(`property="og:site_name" content="${productName}"`, `property="og:site_name" content="${wrongName}"`));
         const result = await checker(root, 'verify-docs-build.mjs');
         expect(result.code).toBe(1);expect(result.err).toContain('AssertionError');
@@ -342,7 +381,7 @@ describe('documentation delivery CLI contracts', () => {
         write(root, 'docs/.vitepress/dist/space image.png', 'image');
         const result = await checker(root, 'verify-docs-build.mjs');
         expect(result.code, result.err).toBe(0);
-        expect(JSON.parse(result.out)).toEqual({ok:true,pages:9,links:54,anchors:2,images:4});
+        expect(JSON.parse(result.out)).toEqual({ok:true,pages:13,links:60,anchors:2,images:12});
     });
     it.each(['/%E0%A4%A', '#%E0%A4%A', '/safe%00.bin'])('rejects malformed encoded target %s with contextual diagnostics', async href => {
         const result = await checker(docsFixture(`<a href="${href}">Invalid</a>`), 'verify-docs-build.mjs');
@@ -374,11 +413,11 @@ describe('documentation delivery CLI contracts', () => {
     it('accepts valid relative links and external protocol-relative images', async () => {
         const result = await checker(docsFixture('<a href="docs/">Relative</a><a href="mailto:fixture@example.test">Mail</a><img src="//cdn.example.test/external.png">'), 'verify-docs-build.mjs');
         expect(result.code, result.err).toBe(0);
-        expect(JSON.parse(result.out)).toEqual({ok:true,pages:9,links:54,anchors:0,images:2});
+        expect(JSON.parse(result.out)).toEqual({ok:true,pages:13,links:60,anchors:0,images:10});
     });
     it('rejects a translated URL on another origin even when its pathname exists locally', async () => {
         const root = docsFixture(), file = path.join(root,'docs/.vitepress/dist/index.html');
-        fs.writeFileSync(file, fs.readFileSync(file,'utf8').replace('hreflang="en" href="/en/"', 'hreflang="en" href="https://outside.example.test/en/"'));
+        fs.writeFileSync(file, fs.readFileSync(file,'utf8').replace('hreflang="en" href="/wild-talker/en/"', 'hreflang="en" href="https://outside.example.test/en/"'));
         const result = await checker(root, 'verify-docs-build.mjs');
         expect(result.code).toBe(1); expect(result.err).toContain('Missing translated URL');
     });
@@ -393,7 +432,7 @@ describe('documentation delivery CLI contracts', () => {
         const root = docsFixture('<img src="/linked.webp">');
         fs.symlinkSync('brand-icon.webp',path.join(root,'docs/.vitepress/dist/linked.webp'));
         const result = await checker(root, 'verify-docs-build.mjs');
-        expect(result.code, result.err).toBe(0); expect(JSON.parse(result.out).images).toBe(4);
+        expect(result.code, result.err).toBe(0); expect(JSON.parse(result.out).images).toBe(12);
     });
     it.each([['<a href="/missing">Broken</a>', 'Missing link'], ['<a href="#missing">Broken</a>', 'Missing anchor'], ['<div class="vp-doc"><img src="/brand-icon.webp"></div>', 'Image needs dimensions']])('keeps existing artifact rejection: %s', async (extra, message) => {
         const result = await checker(docsFixture(extra), 'verify-docs-build.mjs');
@@ -588,7 +627,7 @@ describe('documentation delivery CLI contracts', () => {
         const result = await checker(root, 'verify-docs-build.mjs');
         expect(result.code, result.err).toBe(0);
         const report = JSON.parse(result.out);
-        expect(report).toEqual({ok:true,pages:9,links:292,anchors:0,images:2});
+        expect(report).toEqual({ok:true,pages:13,links:298,anchors:0,images:10});
         if (process.env.DOCUMENTATION_TOOL_PROOF) fs.writeFileSync(process.env.DOCUMENTATION_TOOL_PROOF, JSON.stringify({sourceRoot,input:{repeatedLinksPerHome:120,pages:9},output:report,sha256:createHash('sha256').update(result.out).digest('hex'),operations:JSON.parse(fs.readFileSync(path.join(root,'operations.json'),'utf8'))}, null, 2));
     });
 });

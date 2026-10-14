@@ -1,4 +1,4 @@
-name: Build and deploy documentation
+name: Build and deploy Wild Talker documentation
 
 on:
   push:
@@ -90,14 +90,14 @@ jobs:
       - name: Check website links and assets
         run: pnpm docs:check
       - name: Upload website
-        # Forks run checks without publishing the upstream documentation site.
-        if: github.repository == 'FluentRead/FluentRead' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        # Publish only this product site; other forks and pull requests run checks.
+        if: github.repository == 'YEMIN11238/wild-talker' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v4
         with:
           path: docs/.vitepress/dist
 
   deploy:
-    if: github.repository == 'FluentRead/FluentRead' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.repository == 'YEMIN11238/wild-talker' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10

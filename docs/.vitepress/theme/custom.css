@@ -2,10 +2,10 @@
 :root,
 .dark {
   color-scheme: light;
-  --vp-c-brand-1: #b92252;
-  --vp-c-brand-2: #ca315f;
-  --vp-c-brand-3: #bc2854;
-  --vp-c-brand-soft: transparent;
+  --vp-c-brand-1: #506b2b;
+  --vp-c-brand-2: #617e35;
+  --vp-c-brand-3: #d7f387;
+  --vp-c-brand-soft: #edf5df;
   --vp-c-bg: #fff;
   --vp-c-bg-alt: #fff;
   --vp-c-bg-elv: #fff;
@@ -108,12 +108,12 @@
 }
 .bv-primary,
 .vp-doc .bv-primary {
-  background: #ba2654;
-  color: white !important;
-  box-shadow: 0 6px 20px #b522511e;
+  background: #d7f387;
+  color: #242c24 !important;
+  box-shadow: none;
 }
 .bv-primary:hover {
-  background: #a51d48;
+  background: #cbe977;
 }
 .bv-secondary,
 .vp-doc .bv-secondary {

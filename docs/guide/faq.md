@@ -160,4 +160,4 @@ Ollama 连接失败时，确认本地服务正在运行，模型已下载，并�
 
 ## 仍然无法解决
 
-到 [GitHub Issues](https://github.com/FluentRead/FluentRead/issues) 反馈，附上浏览器与扩展版本、可公开的网址、复现步骤，以及隐藏隐私内容的截图。请勿提供密钥、Cookie 或账号资料。
+到 [GitHub Issues](https://github.com/YEMIN11238/wild-talker/issues) 反馈，附上浏览器与扩展版本、可公开的网址、复现步骤，以及隐藏隐私内容的截图。请勿提供密钥、Cookie 或账号资料。

@@ -9,19 +9,20 @@ defineProps<{ en?: boolean; languageLink: string }>()
       <a
         class="bv-home-brand"
         :href="withBase(en ? '/en/' : '/')"
-        :aria-label="en ? 'FluentRead' : '流畅阅读'"
-        ><img :src="withBase('/brand-icon.webp')" width="38" height="38" alt="" />
+        :aria-label="en ? 'Wild Talker' : '万能说客'"
+        ><img :src="withBase('/brand-icon.png')" width="38" height="38" alt="" />
         <span class="bv-home-brand-text"
-          ><strong :lang="en ? 'en' : 'zh-CN'">{{ en ? 'FluentRead' : '流畅阅读' }}</strong></span
+          ><strong :lang="en ? 'en' : 'zh-CN'">{{ en ? 'Wild Talker' : '万能说客' }}</strong></span
         ></a
       >
       <div class="bv-home-links">
+        <a class="wt-nav-download" href="https://github.com/YEMIN11238/wild-talker/releases/download/v0.0.37-wild-talker.1/wild-talker-0.0.37-chrome-edge.zip">{{ en ? 'Download ↓' : '下载插件 ↓' }}</a>
         <a class="bv-home-features" :href="withBase((en ? '/en/' : '/') + '#features')">{{
           en ? 'Features' : '功能'
         }}</a>
         <a :href="withBase((en ? '/en' : '') + '/docs/')">{{ en ? 'Docs' : '使用文档' }}</a>
         <a
-          href="https://github.com/FluentRead/FluentRead"
+          href="https://github.com/YEMIN11238/wild-talker"
           aria-label="GitHub"
           target="_blank"
           rel="noopener noreferrer"
@@ -41,3 +42,7 @@ defineProps<{ en?: boolean; languageLink: string }>()
     </nav>
   </header>
 </template>
+
+<style scoped>
+.bv-home-links .wt-nav-download { padding:8px 12px; border:1px solid #9cbb55; border-radius:9px; background:#d7f387; color:#242c24; font-weight:700; }
+</style>
