@@ -4,8 +4,9 @@ import chinesePosts from './fixtures/chinese-language-posts.json';
 import technicalPr906Posts from './fixtures/chinese-technical-pr-906.json';
 import productionReleaseCases from './fixtures/target-language-releases.json';
 import type {TranslationCandidate, TranslationSiteAdapter} from '@/src/core/translation/types';
+import type {SiteAdaptationSettings} from '@/src/core/site-adaptation/types';
 import {TranslationCandidateCore} from '@/src/core/translation/engine';
-import {compileSiteRulePack} from '@/src/core/site-adaptation/compiler';
+import {compileSiteRulePack, composeSiteAdapters} from '@/src/core/site-adaptation/compiler';
 import {builtinSiteRulePack} from '@/src/core/site-adaptation/catalog';
 import {collapseMutationRescanRoot, isOwnSyntheticSegmentMarkerMutation, mutationRootContains} from '@/src/features/full-page-translation/content/mutationObservation';
 import {DEFAULT_EAGER_TRANSLATION_CHARACTERS} from '@/src/core/config/pageTranslation';
@@ -67,6 +68,7 @@ const runtime = vi.hoisted(() => ({
         translationBeforeOriginal: false,
         fullPageTranslationMode: "viewport" as "viewport" | "all",
         translationScope: "content" as "content" | "all",
+        siteAdaptation: undefined as SiteAdaptationSettings | undefined,
         // 这些用例验证纯视口门禁，关闭免滚动预翻译预算以隔离被测调度路径。
         eagerTranslationCharacters: 0,
         maxConcurrentTranslations: 3,
@@ -238,13 +240,17 @@ vi.mock("@/src/core/translation/public", async (importOriginal) => {
             const key = candidate.nodes?.[0] ?? candidate.element;
             return key === start || candidate.element === start || candidate.element.contains(start);
         }) ?? null;
+    const realCoreForScope = (scope: 'content' | 'all') => runtime.realCore &&
+        (runtime.realCore.scope === scope ? runtime.realCore : actual.createTranslationCore({
+            scope, url: runtime.realCore.url, adapters: runtime.realCore.adapters,
+        }));
 
     return {
         // 属性型按钮标签的安全边界由 core 唯一定义，测试替身不复制其判定规则。
         getTranslatableControlValueAttribute: actual.getTranslatableControlValueAttribute,
         normalizeTranslationText: actual.normalizeTranslationText,
-        createCurrentTranslationResolverBatch: () => (start: Node, scope = 'content') => runtime.realCore
-            ? runtime.realCore.resolve(start) : resolveCandidate(scope)(start),
+        createCurrentTranslationResolverBatch: () => (start: Node, scope: 'content' | 'all' = 'content') => runtime.realCore
+            ? realCoreForScope(scope)!.resolve(start) : resolveCandidate(scope)(start),
         extractTranslationText: (...args: Parameters<typeof actual.extractTranslationText>) => {
             const [element, keepOriginal] = args;
             runtime.sourceReads(element as HTMLElement);
@@ -273,7 +279,7 @@ vi.mock("@/src/core/translation/public", async (importOriginal) => {
             ((element.getRootNode?.() as {host?: Element})?.host ?? null),
         isProtectedDescendantElement: (element: Element) => element.matches(protectedSelector),
         isTranslationTextElementProtected: (element: Element) => isProtected(element),
-        getCurrentTranslationCore: (scope = "content") => runtime.realCore ?? ({
+        getCurrentTranslationCore: (scope: 'content' | 'all' = "content") => realCoreForScope(scope) ?? ({
             adapters: runtime.adapters,
             shouldStayOriginal: (element: Element) => (scope !== "all" && Boolean(element.closest("[data-content-excluded]"))) || runtime.adapters.some(adapter =>
                 adapter.shouldStayOriginal?.(element, {url: new URL('https://example.com')})),
@@ -534,6 +540,7 @@ describe("全文翻译可见性锚点", () => {
         runtime.config.fullPageTranslationMode = "viewport";
         runtime.config.eagerTranslationCharacters = 0;
         runtime.config.translationScope = "content";
+        runtime.config.siteAdaptation = undefined;
         runtime.config.maxConcurrentTranslations = 3;
         runtime.ensureTranslationTruncationLayout.mockClear();
         runtime.clearlyTargetLanguage.mockReset();
@@ -1463,20 +1470,21 @@ describe("全文翻译可见性锚点", () => {
         expect(button.textContent).toBe('译:Open menu'); expect(item.textContent).toBe('译:Execute workflow');
     });
 
-    it('GitHub 全部节点会话在正文译完后通过真实候选核心持续翻译新展开的 dialog 导航', async () => {
-        runtime.config.translationScope = 'all';
+    it.each(['content', 'all'] as const)('GitHub %s 会话在正文译完后通过真实候选核心持续翻译新展开的 dialog 导航', async scope => {
+        runtime.config.translationScope = scope;
         runtime.config.fullPageTranslationMode = 'all';
         runtime.config.display = 1;
         runtime.realTextExtraction = true;
-        runtime.realCore = new TranslationCandidateCore({url: new URL('https://github.com/'), scope: 'all',
+        runtime.realCore = new TranslationCandidateCore({url: new URL('https://github.com/'), scope,
             adapters: compileSiteRulePack(builtinSiteRulePack)});
+        replaceGlobal('performance', {now: () => Date.now()});
         replaceGlobal('innerWidth', 1000);
         replaceGlobal('innerHeight', 800);
         replaceGlobal('getComputedStyle', (element: HTMLElement) => ({
             display: element.hidden ? 'none' : element.style.display || 'block',
             visibility: 'visible', opacity: '1', position: 'static', zIndex: '0',
         }));
-        document.body.innerHTML = '<main><p id="morning">Good morning, reader.</p></main>';
+        document.body.innerHTML = '<nav><a id="background-navigation" href="/outside">Background navigation</a></nav><main><p id="morning">Good morning, reader.</p></main>';
         const paragraph = document.querySelector<HTMLElement>('#morning')!;
         setLayoutBox(paragraph, 600, 90);
         autoTranslateEnglishPage();
@@ -1507,9 +1515,131 @@ describe("全文翻译可见性锚点", () => {
         expect(paragraph.querySelector('.fluent-read-bilingual-content')).toBe(originalWrapper);
         expect(menu.querySelector('input')?.getAttribute('value')).toBe('Unsubmitted search');
         expect(menu.querySelector('code')?.textContent).toBe("console.log('Original code');");
+        if (scope === 'content') expect(document.querySelector('#background-navigation')?.textContent).toBe('Background navigation');
+        expect(getFullPageTranslationFrameState().scope).toBe(scope);
+        // 同一轮属性抖动与关闭后再次打开复用当前会话，不重复发送已经完成的来源。
+        TestMutationObserver.instances.at(-1)!.emit([{type: 'attributes', target: menu,
+            attributeName: 'class', oldValue: null, addedNodes: [], removedNodes: []} as unknown as MutationRecord]);
+        await finishScheduledWork();
+        menu.hidden = true;
+        TestMutationObserver.instances.at(-1)!.emit([{type: 'attributes', target: menu,
+            attributeName: 'hidden', oldValue: null, addedNodes: [], removedNodes: []} as unknown as MutationRecord]);
+        await finishScheduledWork();
+        menu.hidden = false;
+        TestMutationObserver.instances.at(-1)!.emit([{type: 'attributes', target: menu,
+            attributeName: 'hidden', oldValue: '', addedNodes: [], removedNodes: []} as unknown as MutationRecord]);
+        await finishScheduledWork();
+        expect(runtime.requests.mock.calls.flatMap(([origins]) => origins)).toEqual(labels);
         restoreOriginalContent();
         expect(links.map(link => link.textContent)).toEqual(labels);
         expect(paragraph.textContent).toBe('Good morning, reader.');
+    });
+
+    it.each([
+        {name: '未设置自定义规则', custom: false, matching: false, disabled: false, translated: true},
+        {name: '其他网站的自定义规则', custom: true, matching: false, disabled: false, translated: true},
+        {name: '用户明确配置的本站排除', custom: true, matching: true, disabled: false, translated: false},
+        {name: '用户已关闭的自定义规则', custom: true, matching: true, disabled: true, translated: true},
+    ])('正文会话对隐藏弹窗和后续菜单项保留 $name 的边界', async ({custom, matching, disabled, translated}) => {
+        runtime.config.display = 1;
+        runtime.realTextExtraction = true;
+        runtime.config.siteAdaptation = {enabled: true, disabledRuleIds: disabled ? ['my-menu-rule'] : [],
+            custom: {version: 1, rules: custom ? [{id: 'my-menu-rule', name: 'My menu rule',
+                match: {hosts: [matching ? 'github.com' : 'example.com']}, exclude: ['[role="dialog"]']}] : []}};
+        runtime.realCore = new TranslationCandidateCore({url: new URL('https://github.com/'), scope: 'content',
+            adapters: composeSiteAdapters(builtinSiteRulePack, runtime.config.siteAdaptation)});
+        replaceGlobal('performance', {now: () => Date.now()});
+        replaceGlobal('innerWidth', 1000); replaceGlobal('innerHeight', 800);
+        replaceGlobal('getComputedStyle', (element: HTMLElement) => ({
+            display: element.hidden ? 'none' : 'block', visibility: 'visible', opacity: '1', position: 'static', zIndex: '0',
+        }));
+        document.body.innerHTML = '<nav><a href="/outside">Unopened background navigation</a></nav>';
+        autoTranslateEnglishPage(); await finishScheduledWork();
+        const menu = document.createElement('div');
+        menu.setAttribute('role', 'dialog'); menu.setAttribute('aria-modal', 'true'); menu.hidden = true;
+        menu.innerHTML = '<nav><a id="readable" href="/issues"><span>All issues</span></a><a translate="no" href="/protected">Keep my literal</a><a hidden href="/hidden">Hidden link</a></nav>';
+        document.body.append(menu);
+        for (const element of [menu, ...menu.querySelectorAll<HTMLElement>('a')]) {
+            setLayoutBox(element, 240, 30); setViewportRect(element, 80, 30);
+        }
+        const emit = (record: object) => TestMutationObserver.instances.at(-1)!.emit([{
+            addedNodes: [], removedNodes: [], ...record,
+        } as unknown as MutationRecord]);
+        emit({type: 'childList', target: document.body, addedNodes: [menu]});
+        await finishScheduledWork();
+        expect(runtime.requests).not.toHaveBeenCalled();
+        menu.hidden = false;
+        emit({type: 'attributes', target: menu, attributeName: 'hidden', oldValue: ''});
+        await finishScheduledWork();
+        const readable = menu.querySelector<HTMLElement>('#readable')!;
+        expect(readable.textContent).toBe(translated ? '译:All issues' : 'All issues');
+        expect(readable.getAttribute('href')).toBe('/issues');
+        expect(readable.querySelector('span')).not.toBeNull();
+        const late = document.createElement('a'); late.href = '/projects'; late.textContent = 'Projects';
+        menu.querySelector('nav')!.append(late); setLayoutBox(late, 240, 30); setViewportRect(late, 80, 30);
+        emit({type: 'childList', target: menu.querySelector('nav')!, addedNodes: [late]});
+        await finishScheduledWork();
+        expect(late.textContent).toBe(translated ? '译:Projects' : 'Projects');
+        expect(runtime.requests.mock.calls.flatMap(([origins]) => origins)).toEqual(translated ? ['All issues', 'Projects'] : []);
+        const outside = document.createElement('section'); outside.innerHTML = '<p>New background paragraph.</p>';
+        document.body.append(outside); setLayoutBox(outside.firstElementChild as HTMLElement, 600, 90);
+        emit({type: 'childList', target: outside, addedNodes: [outside.firstChild!]});
+        await finishScheduledWork();
+        expect(outside.textContent).toBe('New background paragraph.');
+        expect(runtime.requests.mock.calls.flatMap(([origins]) => origins)).toEqual(translated ? ['All issues', 'Projects'] : []);
+        expect(menu.querySelector('[translate="no"]')?.textContent).toBe('Keep my literal');
+        expect(menu.querySelector('[hidden]')?.textContent).toBe('Hidden link');
+        expect(document.querySelector('body > nav')?.textContent).toBe('Unopened background navigation');
+        expect(getFullPageTranslationFrameState().scope).toBe('content');
+        restoreOriginalContent();
+        expect(readable.textContent).toBe('All issues'); expect(late.textContent).toBe('Projects');
+    });
+
+    it('正文会话分片发现菜单时关闭旧弹窗，取消旧请求并拒绝迟到的导航译文', async () => {
+        runtime.config.display = 1;
+        runtime.realTextExtraction = true;
+        runtime.realCore = new TranslationCandidateCore({url: new URL('https://github.com/'), scope: 'content',
+            adapters: compileSiteRulePack(builtinSiteRulePack)});
+        let measuredTime = 0;
+        replaceGlobal('performance', {now: () => {measuredTime += 9; return measuredTime;}});
+        replaceGlobal('innerWidth', 1000); replaceGlobal('innerHeight', 800);
+        replaceGlobal('getComputedStyle', (element: HTMLElement) => ({
+            display: element.hidden ? 'none' : 'block', visibility: 'visible', opacity: '1', position: 'static', zIndex: '0',
+        }));
+        document.body.innerHTML = `<div role="dialog" aria-modal="true"><nav>${Array.from({length: 12}, (_, index) =>
+            `<a href="/first-${index}">First navigation ${index}</a>`).join('')}</nav></div>`;
+        const first = document.querySelector<HTMLElement>('[role="dialog"]')!;
+        for (const element of [first, ...first.querySelectorAll<HTMLElement>('a')]) {
+            setLayoutBox(element, 240, 30); setViewportRect(element, 80, 30);
+        }
+        const pending = deferred<string[]>();
+        runtime.requests.mockReturnValueOnce(pending.promise);
+        autoTranslateEnglishPage();
+        for (let frame = 0; frame < 100 && runtime.requests.mock.calls.length === 0; frame += 1) {
+            await vi.advanceTimersByTimeAsync(16);
+        }
+        expect(runtime.requests).toHaveBeenCalledOnce();
+        const pendingLink = first.querySelector<HTMLElement>('a')!;
+        const previousState = getTranslationState(pendingLink)!;
+        expect(previousState.phase).toBe('loading');
+        first.hidden = true;
+        const second = document.createElement('div'); second.setAttribute('role', 'dialog'); second.setAttribute('aria-modal', 'true');
+        second.innerHTML = '<nav><a href="/second">Second navigation</a></nav>';
+        document.body.append(second);
+        for (const element of [second, second.querySelector<HTMLElement>('a')!]) {
+            setLayoutBox(element, 240, 30); setViewportRect(element, 80, 30);
+        }
+        TestMutationObserver.instances.at(-1)!.emit([{type: 'childList', target: document.body,
+            addedNodes: [second], removedNodes: []} as unknown as MutationRecord]);
+        replaceGlobal('performance', {now: () => Date.now()});
+        await finishScheduledWork();
+        expect(previousState.controller.signal.aborted).toBe(true);
+        expect(second.querySelector('a')?.textContent).toBe('译:Second navigation');
+        expect(runtime.requests.mock.calls.flatMap(([origins]) => origins)).toEqual(['First navigation 0', 'Second navigation']);
+        pending.resolve(['This old menu is already closed']); await finishScheduledWork();
+        expect(first.querySelector('a')?.textContent).toBe('First navigation 0');
+        restoreOriginalContent();
+        expect(second.querySelector('a')?.textContent).toBe('Second navigation');
     });
 
     it("Issue 422 保存范围不取消在途请求，恢复后拒绝迟到的全部节点译文", async () => {
