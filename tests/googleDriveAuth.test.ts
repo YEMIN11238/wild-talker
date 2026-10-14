@@ -6,7 +6,7 @@ function fixture() {
     const ports: DriveAuthPorts = {
         userAgent: () => 'Chrome/142.0.0.0',
         identity: {getAuthToken: vi.fn(async () => ({token: 'fixture-access', grantedScopes: [...GOOGLE_DRIVE_SCOPES]})), removeCachedAuthToken: vi.fn(async () => undefined), clearAllCachedAuthTokens: vi.fn(async () => undefined)},
-        runtime: {id: GOOGLE_DRIVE_EXTENSION_ID, getManifest: () => ({oauth2: {client_id: GOOGLE_DRIVE_DEFAULT_CLIENT_ID, scopes: [...GOOGLE_DRIVE_SCOPES]}})},
+        runtime: {id: GOOGLE_DRIVE_EXTENSION_ID, getManifest: () => ({oauth2: {client_id: 'fixture-owned-client', scopes: [...GOOGLE_DRIVE_SCOPES]}})},
         fetch: vi.fn(async () => new Response(JSON.stringify({user: {permissionId: 'fixture-account', emailAddress: 'tester@fixture.invalid'}}))),
     };
     return {ports, auth: createDriveAuth(ports)};
@@ -25,7 +25,7 @@ describe('Chrome Google 身份边界', () => {
         await f.auth.disconnect();
         expect(f.ports.identity!.clearAllCachedAuthTokens).toHaveBeenCalledOnce();
     });
-    it('未配置、浏览器不支持、扩展 ID 错误和范围不全均不能发起认证', async () => {
+    it('未配置、浏览器不支持、上游客户端和范围不全均不能发起认证', async () => {
         for (const userAgent of ['Firefox/140.0', 'Chrome/142.0 Edg/142.0', 'Chrome/142.0 OPR/142.0']) {
             const unsupported = fixture(); unsupported.ports.userAgent = () => userAgent;
             expect(unsupported.auth.availability().available).toBe(false);
@@ -35,12 +35,21 @@ describe('Chrome Google 身份边界', () => {
         expect(f.auth.availability().available).toBe(false);
         await expect(f.auth.open()).rejects.toThrow('Chrome');
         await f.auth.disconnect();
-        const mismatch = fixture(); mismatch.ports.runtime.id = 'fixture-wrong-id';
-        expect(mismatch.auth.availability().reason).toContain('ID');
+        for (const id of [GOOGLE_DRIVE_EXTENSION_ID, 'fixture-wrong-id']) {
+            const inherited = fixture(); inherited.ports.runtime.id = id;
+            inherited.ports.runtime.getManifest = () => ({oauth2: {client_id: GOOGLE_DRIVE_DEFAULT_CLIENT_ID, scopes: [...GOOGLE_DRIVE_SCOPES]}});
+            expect(inherited.auth.availability().reason).toContain('自有');
+            await expect(inherited.auth.open(true)).rejects.toThrow('暂不可同步');
+            expect(inherited.ports.identity!.getAuthToken).not.toHaveBeenCalled();
+        }
         const unconfigured = fixture(); unconfigured.ports.runtime.getManifest = () => ({});
         expect(unconfigured.auth.availability().available).toBe(false);
         const emptyClient = fixture(); emptyClient.ports.runtime.getManifest = () => ({oauth2: {client_id: ''}});
         expect(emptyClient.auth.availability().available).toBe(false);
+        for (const client_id of [undefined, '   ', ` ${GOOGLE_DRIVE_DEFAULT_CLIENT_ID} `]) {
+            const blank = fixture(); blank.ports.runtime.getManifest = () => ({oauth2: {client_id}});
+            expect(blank.auth.availability().reason).toContain('暂不可同步');
+        }
         const missingScopes = fixture(); missingScopes.ports.runtime.getManifest = () => ({oauth2: {client_id: 'fixture-custom-client'}});
         expect(missingScopes.auth.availability().reason).toContain('范围');
         const custom = fixture(); custom.ports.runtime.id = 'fixture-custom-id'; custom.ports.runtime.getManifest = () => ({oauth2: {client_id: 'fixture-custom-client', scopes: [...GOOGLE_DRIVE_SCOPES]}});

@@ -115,18 +115,36 @@ describe('extension manifest capability contract', () => {
         expect(manifest.version).toBeUndefined();
     });
 
-    it('Chrome 原生 OAuth 绑定公开商店身份；其他构建不声明 Chrome 客户端', () => {
+    it('默认保留安装公钥但不继承上游 OAuth 或身份权限', () => {
+        vi.stubEnv('WXT_GOOGLE_CLIENT_ID', '');
         const chrome = createExtensionManifest({browser: 'chrome', manifestVersion: 3});
-        expect(chrome.oauth2).toEqual({client_id: GOOGLE_DRIVE_DEFAULT_CLIENT_ID, scopes: GOOGLE_DRIVE_SCOPES});
+        expect(chrome.oauth2).toBeUndefined();
         expect(chrome.key).toBe(GOOGLE_DRIVE_EXTENSION_PUBLIC_KEY);
         const digest = createHash('sha256').update(Buffer.from(GOOGLE_DRIVE_EXTENSION_PUBLIC_KEY, 'base64')).digest('hex').slice(0, 32);
         expect([...digest].map(value => String.fromCharCode(97 + parseInt(value, 16))).join('')).toBe(GOOGLE_DRIVE_EXTENSION_ID);
-        expect(permissionsFor('chrome', 3).filter(permission => permission === 'identity')).toHaveLength(1);
+        expect(permissionsFor('chrome', 3)).not.toContain('identity');
         for (const browser of ['edge', 'firefox', 'safari']) {
             const manifest = createExtensionManifest({browser, manifestVersion: browser === 'firefox' ? 2 : 3});
             expect(manifest.oauth2).toBeUndefined(); expect(manifest.key).toBeUndefined();
             expect(manifest.permissions).not.toContain('identity');
         }
+        vi.unstubAllEnvs();
+    });
+    it('仅显式自有 OAuth 配置启用 Chrome 同步，空白或上游客户端仍禁用', () => {
+        try {
+            for (const value of ['', '  ', GOOGLE_DRIVE_DEFAULT_CLIENT_ID, ` ${GOOGLE_DRIVE_DEFAULT_CLIENT_ID} `]) {
+                vi.stubEnv('WXT_GOOGLE_CLIENT_ID', value);
+                const manifest = createExtensionManifest({browser: 'chrome', manifestVersion: 3});
+                expect(manifest.oauth2).toBeUndefined();
+                expect(manifest.permissions).not.toContain('identity');
+                expect(manifest.key).toBe(GOOGLE_DRIVE_EXTENSION_PUBLIC_KEY);
+            }
+            vi.stubEnv('WXT_GOOGLE_CLIENT_ID', ' fixture-owned-client.apps.googleusercontent.com ');
+            const manifest = createExtensionManifest({browser: 'chrome', manifestVersion: 3});
+            expect(manifest.oauth2).toEqual({client_id: 'fixture-owned-client.apps.googleusercontent.com', scopes: GOOGLE_DRIVE_SCOPES});
+            expect(permissionsFor('chrome', 3).filter(permission => permission === 'identity')).toHaveLength(1);
+            for (const browser of ['edge', 'firefox']) expect(createExtensionManifest({browser, manifestVersion: 3}).oauth2).toBeUndefined();
+        } finally {vi.unstubAllEnvs();}
     });
     it('builds a separate Thunderbird package with mail display access and no browser page injection', async () => {
         const packageUrl = pathToFileURL(resolve(PROJECT_ROOT, 'scripts/thunderbird/package.mjs')).href;

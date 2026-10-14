@@ -1,10 +1,10 @@
 /**
  * @file src/platform/google-drive/auth.ts
  * 文件职责：连接 Chrome 原生身份 API，并将一次同步绑定到同一个 Google 账号。
- * 主要内容：单项 Drive 授权、Drive 账号识别、短期令牌刷新与账号切换保护。
+ * 主要内容：仅允许配置自有 OAuth 客户端的构建发起单项 Drive 授权，拒绝沿用上游公开客户端；处理 Drive 账号识别、短期令牌刷新与账号切换保护。
  * 模块边界：不保存令牌、不读取配置；账号和令牌只在后台请求期间使用。
  */
-import {GOOGLE_DRIVE_DEFAULT_CLIENT_ID, GOOGLE_DRIVE_EXTENSION_ID, GOOGLE_DRIVE_SCOPES} from './constants';
+import {GOOGLE_DRIVE_DEFAULT_CLIENT_ID, GOOGLE_DRIVE_SCOPES} from './constants';
 
 // 邮箱仅用于预览展示；账号绑定始终使用 Drive permissionId，不依赖邮箱或额外身份授权。
 export interface DriveAccount {id: string; email: string}
@@ -30,8 +30,9 @@ export interface DriveAuthPorts {
 export function createDriveAuth(ports: DriveAuthPorts) {
     function availability(): {available: boolean; reason: string} {
         const oauth = ports.runtime.getManifest().oauth2;
-        if (!/\bChrome\//u.test(ports.userAgent()) || /\b(?:Edg|OPR)\//u.test(ports.userAgent()) || !ports.identity?.getAuthToken || !oauth?.client_id) return {available: false, reason: 'Google Drive 同步目前支持 Chrome 扩展；其他浏览器可使用下方完整数据备份。'};
-        if (oauth.client_id === GOOGLE_DRIVE_DEFAULT_CLIENT_ID && ports.runtime.id !== GOOGLE_DRIVE_EXTENSION_ID) return {available: false, reason: '当前开发版扩展 ID 与 Google OAuth 客户端不匹配，请按维护者指南设置扩展公钥或单独创建开发客户端。'};
+        if (!/\bChrome\//u.test(ports.userAgent()) || /\b(?:Edg|OPR)\//u.test(ports.userAgent())) return {available: false, reason: 'Google Drive 同步目前支持 Chrome 扩展；其他浏览器可使用下方完整数据备份。'};
+        if (!oauth?.client_id?.trim() || oauth.client_id.trim() === GOOGLE_DRIVE_DEFAULT_CLIENT_ID) return {available: false, reason: '此版本未配置 Wild Talker 自有的 Google Drive 授权，暂不可同步。请使用下方本地备份或自行配置 WebDAV。'};
+        if (!ports.identity?.getAuthToken) return {available: false, reason: '当前 Chrome 构建缺少身份 API，请重新构建后使用 Google Drive 同步。'};
         if (!GOOGLE_DRIVE_SCOPES.every(scope => oauth.scopes?.includes(scope))) return {available: false, reason: '扩展缺少 Google Drive 应用数据授权范围，请重新构建。'};
         return {available: true, reason: ''};
     }

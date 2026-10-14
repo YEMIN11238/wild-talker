@@ -36,7 +36,7 @@ async function main() {
         const worker = context.serviceWorkers().find(worker => worker.url().startsWith('chrome-extension://')) || await context.waitForEvent('serviceworker', {timeout: 30_000, predicate: worker => worker.url().startsWith('chrome-extension://')});
         const extensionId = new URL(worker.url()).host;
         check(extensionId === 'djnlaiohfaaifbibleebjggkghlmcpcj', 'public key keeps official extension ID');
-        check(manifest.permissions.includes('identity') && JSON.stringify(manifest.oauth2.scopes) === JSON.stringify(['https://www.googleapis.com/auth/drive.appdata']), 'Chrome manifest requests only the single Drive application-data scope');
+        check(!manifest.oauth2 && !manifest.permissions.includes('identity'), 'Default Wild Talker package does not borrow upstream Google OAuth');
         const page = await newPageWithoutForeground(context, 30_000);
         page.on('pageerror', error => report.consoleErrors.push(error.message));
         page.on('console', message => {if (message.type() === 'error') report.consoleErrors.push(message.text());});
@@ -51,6 +51,10 @@ async function main() {
         // 夹具只修改本次临时 profile 的 worker，不授权或访问任何真实账号。
         await worker.evaluate(() => {
             Object.defineProperty(navigator, 'userAgent', {get: () => 'Chrome/142.0.0.0 fixture'});
+            const getManifest = chrome.runtime.getManifest.bind(chrome.runtime);
+            chrome.runtime.getManifest = () => ({...getManifest(), oauth2: {client_id: 'fixture-owned-client', scopes: ['https://www.googleapis.com/auth/drive.appdata']}});
+            // 默认发行包不带 identity 权限；此对象只属于本次模拟认证的隔离 worker。
+            chrome.identity ??= {};
             globalThis.__driveFixture = {content: null, version: 0, authorizations: 0, clears: 0, requests: 0, uploads: 0, removes: 0, networkFailure: false, etagMode: 'v3', accountId: 'fixture-account', email: 'tester@fixture.invalid'};
             chrome.identity.getAuthToken = async ({interactive, scopes}) => {
                 if (JSON.stringify(scopes) !== JSON.stringify(['https://www.googleapis.com/auth/drive.appdata'])) throw new Error('fixture rejected extra OAuth scopes');

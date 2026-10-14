@@ -15,13 +15,13 @@ The product site is `https://yemin11238.github.io/wild-talker/`. The inherited `
 
 The current package is a desktop Chrome / Edge ZIP. There is no independent Wild Talker extension-store, CRX mirror or Greasy Fork listing. Upstream store listings are not Wild Talker installation links. Other platform source and historical guides remain inherited references; untested devices are not included in the current verification claim.
 
-## Inherited Google OAuth identity
+## Google Drive is disabled by default
 
-Translation does not require Google sign-in. The released package retains the upstream Google OAuth client ID and extension public key to preserve installation/configuration compatibility. **These are upstream public application identifiers, not an independently verified Wild Talker Google OAuth app.** They are not private user API keys.
+Translation does not require Google sign-in. Current source builds omit Google OAuth and the `identity` permission by default. Settings explain that no owned OAuth application is configured and hide sync and cloud-delete actions. The extension public key remains unchanged for installation and local-data compatibility; it is not a private user API key.
 
-This first-use verification does not test Google Drive authorization, sync or an OAuth review. The availability check can reject an extension ID that does not match its OAuth client. Use local configuration export when needed and do not upload complete backups publicly.
+The earlier `v0.0.38-wild-talker.1` release still contains the inherited upstream OAuth identity. This audit corrects that behavior in source; the old clickable entry did not establish that independent cloud sync worked. Actual authorization, cloud reads/writes and OAuth review remain unverified. Use local backup or configure your own WebDAV endpoint. Do not upload complete backups publicly.
 
-For independent distribution, create an OAuth client in your own Google Cloud project for the actual extension ID. Review permissions, the consent screen and privacy disclosures. Set the public client ID using `WXT_GOOGLE_CLIENT_ID` in `.env.local`, and your extension public key using `WXT_EXTENSION_KEY` if needed; then separately verify authorization and backup. Changing the key changes the extension ID/data identity and needs a migration plan. This presentation update does not change the released defaults.
+To enable Drive, create an OAuth client in your own Google Cloud project for the actual extension ID. Review permissions, the consent screen and privacy disclosures. Set your public client ID using `WXT_GOOGLE_CLIENT_ID` in `.env.local`, then separately verify authorization and backup. Blank values and the inherited upstream client do not enable sync. Change `WXT_EXTENSION_KEY` only when needed, with a migration plan, because it changes extension and local-data identity.
 
 Internal `fluentread-` DOM prefixes, backup filenames and build paths remain for compatibility and isolation; they do not redirect users to upstream product pages.
 

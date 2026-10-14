@@ -112,7 +112,7 @@ import {createGlossaryLibrary} from '@/src/core/glossary';
 import {LOCAL_TTS_MODEL_STATE_KEY} from '@/src/core/config/localTts';
 import {createDriveAuth, DriveError, type DriveAuthPorts} from '@/src/platform/google-drive/auth';
 import {createDriveApi} from '@/src/platform/google-drive/api';
-import {GOOGLE_DRIVE_SCOPES, GOOGLE_DRIVE_DEFAULT_CLIENT_ID, GOOGLE_DRIVE_EXTENSION_ID, GOOGLE_DRIVE_MAX_BYTES} from '@/src/platform/google-drive/constants';
+import {GOOGLE_DRIVE_SCOPES, GOOGLE_DRIVE_EXTENSION_ID, GOOGLE_DRIVE_MAX_BYTES} from '@/src/platform/google-drive/constants';
 import {createWebDavApi} from '@/src/platform/webdav/api';
 import {createWebDavSession, type WebDavConnection} from '@/src/platform/webdav/connection';
 import {listSitePreferences, previewSitePreferences, type SitePreferences} from '@/src/features/settings/model/sitePreferences';
@@ -190,7 +190,7 @@ function authFixture() {
         removeCachedAuthToken: vi.fn(async (_details: {token: string}) => undefined), clearAllCachedAuthTokens: vi.fn(async () => undefined)};
     const fetcher = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({user: {permissionId: 'A'}})));
     const authPorts: DriveAuthPorts = {userAgent: () => 'Chrome/142.0', identity, fetch: fetcher,
-        runtime: {id: GOOGLE_DRIVE_EXTENSION_ID, getManifest: () => ({oauth2: {client_id: GOOGLE_DRIVE_DEFAULT_CLIENT_ID, scopes: [...GOOGLE_DRIVE_SCOPES]}})}};
+        runtime: {id: GOOGLE_DRIVE_EXTENSION_ID, getManifest: () => ({oauth2: {client_id: 'fixture-owned-client', scopes: [...GOOGLE_DRIVE_SCOPES]}})}};
     return {identity, fetcher, auth: createDriveAuth(authPorts)};
 }
 describe('audit49C Google account ownership through the public session', () => {

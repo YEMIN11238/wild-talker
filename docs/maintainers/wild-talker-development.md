@@ -55,6 +55,6 @@ pnpm build
 
 ## 发布配置
 
-产品站点为 `https://yemin11238.github.io/wild-talker/`，不使用上游自定义域名。部署文档需保留 `/wild-talker/` base，检查下载地址、截图和站内路径。Google Drive 的公开 OAuth 标识和扩展公钥仍沿用原发布包默认配置，本次没有注册新的 OAuth 应用。独立 OAuth 配置与扩展 ID 的关系见[配置说明](../guide/oauth-and-source.md)。
+产品站点为 `https://yemin11238.github.io/wild-talker/`，不使用上游自定义域名。部署文档需保留 `/wild-talker/` base，检查下载地址、截图和站内路径。当前源码默认不生成 Google OAuth 或 `identity` 权限，仅保留安装公钥以兼容本地配置。未注册自有 OAuth 应用时，Google Drive 入口显示不可用；显式设置自己的 `WXT_GOOGLE_CLIENT_ID` 并独立验收后才能启用。配置与扩展 ID 的关系见[配置说明](../guide/oauth-and-source.md)。
 
 API Key、个人备份、测试 profile、模型缓存、阅读记录和本机绝对路径不应提交；真实素材使用可公开例文，报告区分实际模型调用与故障夹具。

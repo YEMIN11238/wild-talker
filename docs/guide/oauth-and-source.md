@@ -15,13 +15,13 @@ Wild Talker 是基于 [FluentRead](https://github.com/FluentRead/FluentRead) 的
 
 Wild Talker 目前以 Chrome / Edge 桌面 ZIP 发行，尚无独立的商店、CRX 镜像或 Greasy Fork 安装条目。本页不将 FluentRead 的商店条目当成 Wild Talker 的安装入口。其余平台的源码和历史指南保留为继承参考，未经本次设备验证的能力不作为当前发行承诺。
 
-## Google OAuth 沿用配置的限制
+## Google Drive 默认不可用
 
-首次翻译不需要 Google 登录。发布版保留了上游的 Google OAuth 客户端 ID 和扩展公钥，以保持现有安装身份与配置兼容。**这些是上游公开应用标识，不是 Wild Talker 自有、已独立验证的 Google OAuth 应用。** 公钥和客户端 ID 不属于用户的私密 API Key。
+首次翻译不需要 Google 登录。当前源码默认构建不包含 Google OAuth 客户端及 `identity` 权限，设置页会说明未配置自有授权，并隐藏同步和删除云端备份按钮。扩展公钥继续保留，以兼容已有安装身份与本地配置；公钥不属于用户的私密 API Key。
 
-本次首次安装验证不包含 Google Drive 授权、同步或 OAuth 审核，不能据此宣称独立 Google Drive 同步可用。设置页的可用性检查可能因扩展 ID 与 OAuth 客户端不匹配而拒绝授权。需要备份时可先使用本地导出；不要在公开问题中附上完整备份。
+此前发布的 `v0.0.38-wild-talker.1` 包仍含继承的上游 OAuth 标识。本次自检修正了这一点，不能把旧包中的可点击入口理解为已验证的自有云同步。授权、真实云盘读写和 OAuth 审核仍未验证。需要备份时可使用本地导出，或自行配置 WebDAV；不要在公开问题中附上完整备份。
 
-开发者准备独立发行时，应在自己的 Google Cloud 项目创建适配实际扩展 ID 的 OAuth 客户端，核对权限、同意屏幕和隐私说明，使用 `.env.local` 的 `WXT_GOOGLE_CLIENT_ID` 指定公开客户端 ID，必要时通过 `WXT_EXTENSION_KEY` 设置自己的扩展公钥，然后单独完成授权与备份验证。更改公钥会影响扩展 ID 和本地数据身份，应先明确迁移方案；本次展示改造不修改已发布包的这些默认值。
+开发者需要启用 Google Drive 时，应在自己的 Google Cloud 项目创建适配实际扩展 ID 的 OAuth 客户端，核对权限、同意屏幕和隐私说明，使用 `.env.local` 的 `WXT_GOOGLE_CLIENT_ID` 指定自己的公开客户端 ID，再单独完成授权与备份验证。空值及上游客户端均不会启用同步。必要时可通过 `WXT_EXTENSION_KEY` 设置公钥，但更改公钥会影响扩展 ID 和本地数据身份，应先准备迁移。
 
 内部 `fluentread-` DOM 前缀、备份文件名和构建目录仍可保留，用于兼容与避免污染宿主网页；它们不代表产品跳转到上游入口。
 

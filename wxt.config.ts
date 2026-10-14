@@ -88,9 +88,12 @@ export function createExtensionManifest(
     env: Pick<ConfigEnv, 'browser' | 'manifestVersion'>,
 ): UserManifest {
     const capabilities = resolveBrowserCapabilities(env);
-    // manifest 回调在 WXT 加载 .env 后执行；公开 Client ID 可随扩展发布。
+    // 保留安装公钥以兼容已有配置；OAuth 必须由维护者显式配置，不能借用上游应用身份。
+    const configuredGoogleClientId = process.env.WXT_GOOGLE_CLIENT_ID?.trim();
+    const googleClientId = configuredGoogleClientId && configuredGoogleClientId !== GOOGLE_DRIVE_DEFAULT_CLIENT_ID
+        ? configuredGoogleClientId : undefined;
     const googleDriveManifest = env.browser === 'chrome' ? {
-        oauth2: {client_id: process.env.WXT_GOOGLE_CLIENT_ID?.trim() || GOOGLE_DRIVE_DEFAULT_CLIENT_ID, scopes: [...GOOGLE_DRIVE_SCOPES]},
+        ...(googleClientId ? {oauth2: {client_id: googleClientId, scopes: [...GOOGLE_DRIVE_SCOPES]}} : {}),
         key: process.env.WXT_EXTENSION_KEY?.trim() || GOOGLE_DRIVE_EXTENSION_PUBLIC_KEY,
     } : {};
     const firefoxManifest = env.browser === 'firefox' ? {
@@ -117,7 +120,7 @@ export function createExtensionManifest(
             'alarms',
             'contextMenus',
             'declarativeNetRequestWithHostAccess',
-            ...(env.browser === 'chrome' ? ['identity'] : []),
+            ...(env.browser === 'chrome' && googleClientId ? ['identity'] : []),
             ...(capabilities.offscreenDocument ? ['offscreen'] : []),
         ],
         content_security_policy: {

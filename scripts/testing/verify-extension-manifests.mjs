@@ -145,6 +145,15 @@ async function main() {
     ]);
 
     assert(chromeManifest.manifest_version === 3, 'Chrome 产物必须是 Manifest V3');
+    const inheritedGoogleClientId = '474699705334-7fua4hnkq1nmfu92cof0kdnmqsk5kth8.apps.googleusercontent.com';
+    assert(chromeManifest.oauth2?.client_id !== inheritedGoogleClientId, 'Wild Talker 不得沿用上游 Google OAuth 客户端');
+    if (chromeManifest.oauth2) {
+        assert(typeof chromeManifest.oauth2.client_id === 'string' && chromeManifest.oauth2.client_id.trim(), 'Google OAuth 必须由维护者显式配置客户端');
+        assert(JSON.stringify(chromeManifest.oauth2.scopes) === JSON.stringify(['https://www.googleapis.com/auth/drive.appdata']), 'Google Drive 只能申请应用数据范围');
+        assert(countPermission(chromeManifest, 'identity') === 1, '配置 Google OAuth 后必须声明一次 identity 权限');
+    } else {
+        assert(countPermission(chromeManifest, 'identity') === 0, '未配置 Google OAuth 的构建不得申请 identity 权限');
+    }
     assert(countPermission(chromeManifest, 'offscreen') === 1, 'Chrome MV3 必须且只能声明一次 offscreen 权限');
     assert(chromeArtifacts.includes('offscreen.html'), 'Chrome MV3 缺少 offscreen.html');
     assert(firefoxManifest.manifest_version === 2, 'Firefox 默认产物必须是 Manifest V2');

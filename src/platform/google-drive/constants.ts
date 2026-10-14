@@ -1,9 +1,10 @@
 /**
  * @file src/platform/google-drive/constants.ts
  * 文件职责：定义 Google Drive 同步的公开应用身份、最小权限和文件协议标识。
- * 主要内容：集中商店扩展 ID、公开 OAuth Client ID、应用数据文件名与同步状态键。
+ * 主要内容：集中为兼容安装保留的扩展公钥与 ID、用于拦截误用的上游 OAuth Client ID、应用数据文件名与同步状态键；默认构建不启用上游 OAuth。
  * 模块边界：只描述公开协议，不包含测试用户、登录令牌、用户口令或浏览器副作用。
  */
+// 仅用于识别并拒绝继承的上游客户端，不是 Wild Talker 的默认授权客户端。
 export const GOOGLE_DRIVE_DEFAULT_CLIENT_ID = '474699705334-7fua4hnkq1nmfu92cof0kdnmqsk5kth8.apps.googleusercontent.com';
 export const GOOGLE_DRIVE_EXTENSION_ID = 'djnlaiohfaaifbibleebjggkghlmcpcj';
 export const GOOGLE_DRIVE_SCOPES = [

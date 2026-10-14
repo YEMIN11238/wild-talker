@@ -51,7 +51,7 @@ For ordinary selection translation, AI context can additionally include up to 50
 
 ## Google Drive configuration sync
 
-The current Wild Talker package retains upstream public OAuth identifiers; it is not an independently verified OAuth app. This first-use check does not cover Drive authorization or sync. See [OAuth and source identity](/en/guide/oauth-and-source).
+Current source builds disable Google Drive and omit Google identity permission by default. Maintainers must explicitly configure their own OAuth client to enable it; real Drive authorization and sync remain unverified. See [OAuth and source identity](/en/guide/oauth-and-source) for the distinction from earlier release packages.
 
 Drive configuration sync is currently being tested in the Chrome extension. Availability depends on the settings page of your installed version. Its purpose is to back up and restore FluentRead settings across your own devices. It does not provide translation or require a persistent connected state.
 

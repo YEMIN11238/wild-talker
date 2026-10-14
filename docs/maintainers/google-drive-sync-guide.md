@@ -208,17 +208,13 @@ https://www.googleapis.com/auth/drive.appdata
 4. 按控制台提示完成应用所有权验证，然后创建。
 5. 复制生成的 **客户端 ID**。
 
-当前公开客户端 ID：
-
-```text
-474699705334-7fua4hnkq1nmfu92cof0kdnmqsk5kth8.apps.googleusercontent.com
-```
+Wild Talker 必须使用自己创建的客户端，不能复制上游公开 Client ID。即使保留相同安装公钥，当前授权保护也会拒绝上游客户端。
 
 Chrome 扩展原生路线不需要把 Client Secret 放进扩展，也不需要在此客户端填写普通网站的重定向 URI。创建完成后，客户端仍可从左侧客户端列表再次查看。
 
 ## 7 怎样接入并加载开发构建
 
-本次 PR 已连接默认公开 Client ID 和商店公开公钥。公钥从已发布 CRX 的签名信息取得，并核对其 SHA-256 派生的扩展 ID；它只稳定身份，不授予账号访问权。
+当前源码只保留原安装公钥以兼容本地数据；默认不声明 OAuth 和 `identity` 权限。公钥只稳定安装身份，不授予账号访问权。
 
 如需自己的独立开发客户端，复制 `.env.example` 为 `.env.local`，设置公开标识：
 
@@ -227,7 +223,7 @@ WXT_GOOGLE_CLIENT_ID=你的开发客户端.apps.googleusercontent.com
 WXT_EXTENSION_KEY=与开发扩展ID对应的公开公钥
 ```
 
-没有覆盖变量时使用默认商店身份；任何情况下都不要把测试账号、Google 登录密码、访问令牌、服务 API Key 或同步口令写入这些变量。
+没有设置 `WXT_GOOGLE_CLIENT_ID` 时，设置页会说明尚未配置自有授权，隐藏同步与删除按钮。空白或上游 Client ID 同样不可用。任何情况下都不要把测试账号、Google 登录密码、访问令牌、服务 API Key 或同步口令写入这些变量。
 
 在 FluentRead 工作树中安装依赖并生成构建：
 
@@ -240,7 +236,7 @@ pnpm build
 
 打开独立测试 Chrome 的 `chrome://extensions`，开启开发者模式，选择“加载已解压的扩展程序”，加载 `.output/chrome-mv3`。核对页面显示的扩展 ID 与客户端的内容 ID 相同。不要在仍保存唯一完整配置的日常浏览器中卸载扩展来切换测试包。
 
-manifest 由 WXT 回调在加载环境变量后生成，包含 `identity` 权限与唯一的 `oauth2.scopes`：`drive.appdata`。Firefox/Edge 专用构建不会声明这个 Chrome OAuth 客户端；Chrome 包在 Edge 中也会显示支持范围提示。
+manifest 由 WXT 回调在加载环境变量后生成；仅显式配置自有客户端的 Chrome 构建包含 `identity` 权限与唯一的 `oauth2.scopes`：`drive.appdata`。Firefox/Edge 专用构建不会声明这个 Chrome OAuth 客户端；Chrome 包在 Edge 中也会显示支持范围提示。
 
 ## 8 用户怎样完成第一次同步
 

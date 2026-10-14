@@ -47,7 +47,7 @@
 
 ## Google Drive 配置同步
 
-当前 Wild Talker 包沿用上游公开 OAuth 应用标识，不是已独立验证的自有 OAuth 应用。本次首次使用验证不包含 Drive 授权或同步。详情见[OAuth 与来源说明](/guide/oauth-and-source)。
+当前源码默认构建不启用 Google Drive，也不请求 Google 身份权限。维护者须显式配置自己的 OAuth 客户端才能启用；本次未验证真实 Drive 授权或同步。旧发布包与当前源码的差异见[OAuth 与来源说明](/guide/oauth-and-source)。
 
 Google Drive 配置同步目前处于 Chrome 扩展测试阶段，是否可用以所安装版本的设置页为准。它用于在你自己的设备间备份和恢复流畅阅读设置，不是翻译服务，也不要求持续连接账号。
 
